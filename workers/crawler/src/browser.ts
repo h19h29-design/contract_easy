@@ -74,4 +74,44 @@ export class BrowserRenderer {
       this.browser = null;
     }
   }
+
+  /**
+   * javascript:fncXxx(...) 형태의 링크를 실제 클릭하여 도착 URL을 해석한다.
+   * - selector: onclick 속성에 onclickPattern을 포함하는 첫 번째 요소
+   * - 실패 시 null 반환(추론 금지 원칙)
+   */
+  async resolveClickUrl(url: string, onclickPattern: string): Promise<string | null> {
+    const pw = await import('@playwright/test');
+    if (!this.browser) {
+      this.browser = await pw.chromium.launch({ headless: true });
+    }
+    try {
+      await this.sleep();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const context = await (this.browser as any).newContext({
+        userAgent: this.userAgent,
+        locale: 'ko-KR',
+        viewport: { width: 1280, height: 900 }
+      });
+      try {
+        const page = await context.newPage();
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await page.waitForTimeout(1200);
+        const el = page.locator(`[onclick*="${onclickPattern.replace(/'/g, "\\'")}"]`).first();
+        if ((await el.count()) === 0) return null;
+        await Promise.all([
+          page.waitForLoadState('domcontentloaded').catch(() => undefined),
+          el.click()
+        ]);
+        await page.waitForTimeout(1500);
+        const finalUrl = page.url();
+        if (/^(javascript:|#|$)/.test(finalUrl)) return null;
+        return finalUrl;
+      } finally {
+        await context.close();
+      }
+    } catch {
+      return null;
+    }
+  }
 }

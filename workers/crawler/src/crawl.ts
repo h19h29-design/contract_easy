@@ -154,28 +154,84 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
   };
   const boardSeeds = seedList().filter((s) => s.kind === 'paginated-board');
   for (const seed of boardSeeds) {
-    const walk = await walkBoard(ctx, seed.url, 30, renderer, async (snapshot, idx) => {
-      summary.pagesFetched++;
-      const upsert = store.upsertSourcePage({
-        url: snapshot.finalUrl, seedName: seed.name, kind: 'paginated-board',
-        title: `${snapshot.title} (${idx + 1}p)`, contentSha256: snapshot.sha256,
-        collectedAt: snapshot.fetchedAt, menuPath: [seed.name]
+    // 첫 페이지를 렌더링하여 동적 링크(fncDetailView/fncSearch) 해석
+    const dynamicDetails = new Set<string>();
+    const paginationUrls = new Set<string>();
+    if (renderer) {
+      try {
+        const first = await fetchAndStorePage(ctx, seed.url, { renderer });
+        summary.pagesFetched++;
+        const upsertFirst = store.upsertSourcePage({
+          url: first.snapshot.finalUrl, seedName: seed.name, kind: 'paginated-board',
+          title: first.snapshot.title || seed.name, contentSha256: first.snapshot.sha256,
+          collectedAt: first.snapshot.fetchedAt, menuPath: [seed.name]
+        });
+        if (upsertFirst.changed) summary.pagesChanged++;
+        appendManifest(dirs.manifests, 'pages.jsonl', {
+          at: first.snapshot.fetchedAt, url: first.snapshot.finalUrl, status: first.snapshot.status,
+          title: first.snapshot.title, sha256: first.snapshot.sha256, versionId: upsertFirst.versionId,
+          changed: upsertFirst.changed, page: 1
+        });
+
+        const detailCalls = [...first.html.matchAll(/fncDetailView\((\d+)|fncDetailView\('(\d+)'/g)]
+          .map((m) => m[1] ?? m[2])
+          .filter((v): v is string => Boolean(v));
+        const pageIdxCalls = [...first.html.matchAll(/fncSearch\((\d+)/g)]
+          .map((m) => m[1]!)
+          .filter((n) => n !== '1');
+
+        // 상세 URL 템플릿 해석: 첫 호출을 실제 클릭해 도착 URL 확인
+        if (detailCalls.length > 0) {
+          const sampleId = detailCalls[0]!;
+          const clicked = await renderer.resolveClickUrl(seed.url, `fncDetailView(${sampleId}`);
+          if (clicked && clicked.includes(sampleId)) {
+            for (const id of detailCalls.slice(0, 49)) {
+              dynamicDetails.add(clicked.split(sampleId).join(id));
+            }
+          }
+        }
+        // pagination URL 템플릿 해석
+        if (pageIdxCalls.length > 0) {
+          const pgId = pageIdxCalls[0]!;
+          const clickedPg = await renderer.resolveClickUrl(seed.url, `fncSearch(${pgId}`);
+          if (clickedPg && clickedPg.includes(pgId)) {
+            for (const n of pageIdxCalls.slice(0, 9)) {
+              paginationUrls.add(clickedPg.split(pgId).join(n));
+            }
+          }
+        }
+      } catch (err) {
+        summary.failures.push({ url: seed.url, category: String((err as { category?: string }).category ?? 'unknown'), message: String((err as Error).message) });
+      }
+    }
+
+    // 목록/pagination 페이지 수집
+    const listPages = new Set<string>([seed.url, ...paginationUrls]);
+    for (const listUrl of listPages) {
+      const walk = await walkBoard(ctx, listUrl, renderer ? 10 : 30, renderer, async (snapshot, idx) => {
+        summary.pagesFetched++;
+        const upsert = store.upsertSourcePage({
+          url: snapshot.finalUrl, seedName: seed.name, kind: 'paginated-board',
+          title: `${snapshot.title || seed.name} (${idx + 1}p)`, contentSha256: snapshot.sha256,
+          collectedAt: snapshot.fetchedAt, menuPath: [seed.name]
+        });
+        if (upsert.changed) summary.pagesChanged++;
+        appendManifest(dirs.manifests, 'pages.jsonl', {
+          at: snapshot.fetchedAt, url: snapshot.finalUrl, status: snapshot.status,
+          title: snapshot.title, sha256: snapshot.sha256, versionId: upsert.versionId,
+          changed: upsert.changed, page: idx + 1
+        });
       });
-      if (upsert.changed) summary.pagesChanged++;
-      appendManifest(dirs.manifests, 'pages.jsonl', {
-        at: snapshot.fetchedAt, url: snapshot.finalUrl, status: snapshot.status,
-        title: snapshot.title, sha256: snapshot.sha256, versionId: upsert.versionId,
-        changed: upsert.changed, page: idx + 1
-      });
-    });
-    summary.stopReasons[`${seed.name}:${walk.stopReason}`] = walk.pagesVisited;
+      summary.stopReasons[`${seed.name}:${walk.stopReason}`] = walk.pagesVisited;
+      for (const d of walk.detailUrls) dynamicDetails.add(d);
+    }
 
     // 상세페이지 수집: 브라우저 엔진이면 더 많이(공지·FAQ 전문 확보), HTTP면 샘플만
     const detailLimit = renderer ? 50 : 5;
     let count = 0;
-    for (const detailUrl of walk.detailUrls) {
+    for (const detailUrl of dynamicDetails) {
       if (count >= detailLimit) break;
-      if (!DETAIL_HINTS.test(detailUrl)) continue;
+      if (!DETAIL_HINTS.test(detailUrl) && !/\d{3,}/.test(detailUrl)) continue;
       try {
         const page = await fetchAndStorePage(ctx, detailUrl, { renderer: renderer ?? undefined });
         summary.pagesFetched++;
