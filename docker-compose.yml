@@ -1,0 +1,127 @@
+name: sen-contract-guide
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${API_URL:-http://api:8787}
+      - WEB_PORT=${WEB_PORT:-3000}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(0)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      - NODE_ENV=production
+      - API_PORT=8787
+      - DATABASE_URL=${DATABASE_URL:-}
+      - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET required}
+      - SEN_CONTRACT_DATA_ROOT=/data
+      - QDRANT_URL=http://qdrant:6333
+      - VALKEY_URL=redis://valkey:6379
+      - LLM_PROVIDER=${LLM_PROVIDER:-none}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-none}
+      - EMBEDDING_API_KEY=${EMBEDDING_API_KEY:-}
+    ports:
+      - "${API_PORT:-8787}:8787"
+    volumes:
+      - ${SEN_CONTRACT_DATA_ROOT:-./data}:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8787/api/health').then(r=>process.exit(0)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-sen}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      - POSTGRES_DB=${POSTGRES_DB:-sen_contract}
+    ports:
+      - "${POSTGRES_PORT:-15432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sen} -d ${POSTGRES_DB:-sen_contract}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    ports:
+      - "${QDRANT_PORT:-16333}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/readyz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  valkey:
+    image: valkey/valkey:8.0-alpine
+    ports:
+      - "${VALKEY_PORT:-16379}:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  crawler:
+    build:
+      context: .
+      dockerfile: infra/docker/crawler.Dockerfile
+    profiles: ["jobs"]
+    environment:
+      - SEN_CONTRACT_DATA_ROOT=/data
+      - CRAWLER_USER_AGENT=${CRAWLER_USER_AGENT}
+      - CRAWL_ALLOW_ATTACHMENTS=false
+    volumes:
+      - ${SEN_CONTRACT_DATA_ROOT:-./data}:/data
+    command: ["node", "dist/cli.js", "incremental"]
+    restart: "no"
+
+  ingest:
+    build:
+      context: .
+      dockerfile: infra/docker/crawler.Dockerfile
+    profiles: ["jobs"]
+    environment:
+      - SEN_CONTRACT_DATA_ROOT=/data
+    volumes:
+      - ${SEN_CONTRACT_DATA_ROOT:-./data}:/data
+    command: ["node", "../ingest/dist/cli.js", "all"]
+    restart: "no"
+
+volumes:
+  pgdata:
+  qdrant_data:

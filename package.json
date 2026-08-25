@@ -1,0 +1,37 @@
+{
+  "name": "sen-contract-guide",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.23.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "build": "pnpm -r --if-present build",
+    "crawl:preflight": "tsx workers/crawler/src/cli.ts preflight",
+    "crawl:sample": "tsx workers/crawler/src/cli.ts sample",
+    "crawl:full": "tsx workers/crawler/src/cli.ts full",
+    "crawl:incremental": "tsx workers/crawler/src/cli.ts incremental",
+    "crawl:diff": "tsx workers/crawler/src/cli.ts diff",
+    "crawl:coverage": "tsx workers/crawler/src/cli.ts coverage",
+    "ingest:all": "tsx workers/ingest/src/cli.ts all",
+    "dev:api": "tsx watch apps/api/src/server.ts",
+    "dev:web": "pnpm --filter web dev",
+    "db:generate": "drizzle-kit generate --config=packages/db/drizzle.config.ts",
+    "store:reset": "node scripts/reset-store.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0",
+    "eslint": "^9.16.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.16.0",
+    "vitest": "^2.1.0"
+  }
+}

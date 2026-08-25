@@ -1,0 +1,67 @@
+project: sen-contract-guide
+base_url: https://contract.sen.go.kr
+crawl_policy:
+  concurrency: 1
+  delay_ms: 1200
+  obey_robots: true
+  no_auth_bypass: true
+  store_raw_html: true
+  store_attachments: true
+  preserve_versions: true
+seeds:
+  - name: 이용안내
+    url: https://contract.sen.go.kr/fus/MI000000000000000419/html/cont0010v.do
+    kind: guide
+  - name: 계약방법 메인
+    url: https://contract.sen.go.kr/fus/MI000000000000000097/contract/list0010v.do
+    kind: dynamic-contract-selector
+  - name: 계약흐름도
+    url: https://contract.sen.go.kr/fus/MI000000000000000327/html/cont0010v.do
+    kind: flow
+  - name: 사전체크리스트-용역
+    url: https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
+    kind: checklist
+  - name: 사전체크리스트-공사
+    url: https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
+    kind: checklist
+  - name: FAQ-계약일반
+    url: https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0010v.do
+    kind: paginated-board
+  - name: FAQ-물품
+    url: https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do
+    kind: paginated-board
+  - name: FAQ-용역
+    url: https://contract.sen.go.kr/fus/MI000000000000000388/board/BO00000122/CD030/list0010v.do
+    kind: paginated-board
+  - name: FAQ-공사
+    url: https://contract.sen.go.kr/fus/MI000000000000000389/board/BO00000122/CD040/list0010v.do
+    kind: paginated-board
+  - name: 공지사항
+    url: https://contract.sen.go.kr/fus/MI000000000000000104/board/BO00000061/ctgynone/list0010v.do
+    kind: paginated-board
+  - name: 부정당업자 제재 방법
+    url: https://contract.sen.go.kr/fus/MI000000000000000426/html/cont0010v.do
+    kind: procedure
+  - name: 계약길잡이 소개
+    url: https://contract.sen.go.kr/fus/MI000000000000000365/html/cont0010v.do
+    kind: guide
+follow_rules:
+  allow_domains:
+    - contract.sen.go.kr
+  allow_path_prefixes:
+    - /fus/
+  deny_query_keys:
+    - session
+    - token
+  download_extensions:
+    - pdf
+    - hwp
+    - hwpx
+    - doc
+    - docx
+    - xls
+    - xlsx
+    - zip
+    - png
+    - jpg
+    - jpeg

@@ -1,0 +1,21 @@
+{
+    "name":  "@sen/crawler",
+    "version":  "0.1.0",
+    "type":  "module",
+    "private":  true,
+    "main":  "./src/cli.ts",
+    "scripts":  {
+                    "build":  "tsc -p tsconfig.json",
+                    "test":  "vitest run",
+                    "typecheck":  "tsc --noEmit"
+                },
+    "dependencies":  {
+                         "@sen/config":  "workspace:*",
+                         "@sen/db":  "workspace:*",
+                         "@sen/shared":  "workspace:*"
+                     },
+    "devDependencies":  {
+                            "@types/node":  "^22.10.0",
+                            "typescript":  "^5.6.0"
+                        }
+}
