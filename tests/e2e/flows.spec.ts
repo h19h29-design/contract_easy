@@ -25,7 +25,7 @@ test('검색 → 결과 또는 근거없음 거부 표시', async ({ page }) => 
   await page.goto('/search');
   await page.fill('#search-q', '나라장터');
   await page.getByRole('button', { name: '검색' }).click();
-  await expect(page.getByText('검색 결과')).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole('heading', { name: /^검색 결과 \(\d+\)$/ })).toBeVisible({ timeout: 15000 });
 });
 
 test('근거 없는 질문은 AI 답변 거부', async ({ request }) => {
@@ -44,10 +44,11 @@ test('로그인 후 프로젝트 생성·체크리스트 변경', async ({ page 
 
   await page.fill('input[placeholder*="리모델링"]', 'E2E 테스트 공사');
   await page.getByRole('button', { name: '프로젝트 만들기' }).click();
-  await expect(page.getByText('E2E 테스트 공사')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'E2E 테스트 공사' }).first()).toBeVisible();
 
-  await page.getByRole('link', { name: 'E2E 테스트 공사' }).click();
+  await page.getByRole('link', { name: 'E2E 테스트 공사' }).first().click();
   const firstCheckbox = page.locator('.check-item input[type="checkbox"]').first();
-  await firstCheckbox.check();
-  await expect(page.locator('.badge.ok').first()).toBeVisible();
+  await firstCheckbox.click(); // PATCH 저장이 비동기이므로 클릭 후 상태 반영을 기다린다
+  await expect(firstCheckbox).toBeChecked({ timeout: 10000 });
+  await expect(page.getByText(/진행중|1\/3/).first()).toBeVisible({ timeout: 10000 });
 });

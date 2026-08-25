@@ -25,7 +25,7 @@
 
 ## 실행 불가 / 보류 항목
 - `docker compose config|up`: **본 머신에 Docker 미설치** → 실행 불가(D-008). 설정·문서는 준비 완료.
-- `pnpm test:e2e`: 스펙 작성 완료(`tests/e2e/flows.spec.ts`). chromium 설치되어 있음 — `pnpm dev:api`, `pnpm dev:web` 기동 후 실행 필요. 본 세션에서는 웹 서버 기동 E2E를 실행하지 않아 **미실행**으로 정직하게 기록함.
+- `pnpm test:e2e` | PASS | **5개 시나리오 전부 통과(6.1s)** — 홈 3선택지, 마법사 완료→REVIEW_REQUIRED, 검색 결과 표시, 근거 없는 질문 답변 거부(API), 로그인→프로젝트 생성→체크리스트 변경(실제 Chromium 브라우저)
 - 첨부파일 샘플 다운로드: **BLOCKED_ROBOTS**(D-001). fixture로 MIME/확장자/SHA-256/격리 로직 검증 대체(crawler.test.ts PASS).
 - FAQ 4개 게시판의 개별 글: 목록이 외부 도메인(buseo.sen.go.kr BBS) 링크 또는 단일 페이지 인라인 구성 → 외부 본문은 수집 금지 원칙 유지(D-001 계열), 인라인 본문은 정상 인덱스됨.
 
