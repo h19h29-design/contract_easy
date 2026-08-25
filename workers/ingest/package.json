@@ -1,22 +1,22 @@
 {
-    "name":  "@sen/ingest",
-    "version":  "0.1.0",
-    "type":  "module",
-    "private":  true,
-    "main":  "./src/cli.ts",
-    "scripts":  {
-                    "build":  "tsc -p tsconfig.json",
-                    "test":  "vitest run",
-                    "typecheck":  "tsc --noEmit"
-                },
+  "name": "@sen/ingest",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "main": "./src/cli.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --root ../..",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@sen/config": "workspace:*",
     "@sen/db": "workspace:*",
     "@sen/shared": "workspace:*",
     "cheerio": "^1.0.0"
   },
-    "devDependencies":  {
-                            "@types/node":  "^22.10.0",
-                            "typescript":  "^5.6.0"
-                        }
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.0"
+  }
 }

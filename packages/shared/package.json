@@ -1,19 +1,19 @@
 {
-    "name":  "@sen/shared",
-    "version":  "0.1.0",
-    "type":  "module",
-    "main":  "./src/index.ts",
-    "types":  "./src/index.ts",
-    "scripts":  {
-                    "build":  "tsc -p tsconfig.json",
-                    "test":  "vitest run",
-                    "typecheck":  "tsc --noEmit"
-                },
-    "dependencies":  {
-                         "cheerio":  "^1.0.0"
-                     },
-    "devDependencies":  {
-                            "@types/node":  "^22.10.0",
-                            "typescript":  "^5.6.0"
-                        }
+  "name": "@sen/shared",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --root ../..",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.0"
+  }
 }
