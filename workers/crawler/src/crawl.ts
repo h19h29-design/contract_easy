@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  extractFromHtml, isoNow, sha256Hex, normalizeUrl,
+  extractFromHtml, isoNow, sha256Hex, normalizeUrl, stableId,
   type PageSnapshot
 } from '@sen/shared';
 import { ensureDirs, REPO_ROOT, getConfig } from '@sen/config';
@@ -73,7 +73,8 @@ export async function runCrawl(mode: 'sample' | 'full' | 'incremental'): Promise
         title: page.snapshot.title || '(제목없음)',
         contentSha256: page.snapshot.sha256,
         rawHtmlPath: page.savedPath ?? undefined,
-        collectedAt: page.snapshot.fetchedAt
+        collectedAt: page.snapshot.fetchedAt,
+        menuPath: item.seedName ? [item.seedName] : []
       });
       if (upsert.changed) summary.pagesChanged++;
 
@@ -170,7 +171,6 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
       const articleIds: string[] = [];
       const seenIds = new Set<string>();
       const maxPagesPerBoard = 8;
-      const detailLimit = 50;
 
       const collectCalls = (html: string): { ids: string[]; pages: string[] } => ({
         ids: [...new Set(
@@ -211,7 +211,8 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
         seenListSig.add(sig);
         paginated++;
         const snap = snapshotFrom(rendered.finalUrl, rendered.html, rendered.status);
-        persistPage(store, dirs, summary, seed.name, 'paginated-board', snap, null, Number(n));
+        const raw = saveContentAddressed(ctx.rawHtmlDir, snap.finalUrl, rendered.html);
+        persistPage(store, dirs, summary, seed.name, 'paginated-board', snap, raw, Number(n));
         const calls = collectCalls(rendered.html);
         for (const id of calls.ids) {
           if (!seenIds.has(id)) { seenIds.add(id); articleIds.push(id); }
@@ -221,12 +222,14 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
 
       // ---- 상세 게시물(POST 렌더) 수집 ----
       const viewBase = seed.url.replace(/list0010v\.do.*$/, 'view0010v.do');
+      const detailLimit = Number(process.env.CRAWL_DETAIL_LIMIT ?? (renderer ? 50 : 5));
       for (const id of articleIds.slice(0, detailLimit)) {
         const identityUrl = `${viewBase}?board_seq=${id}`;
         const rendered = await renderer.renderViaCall(seed.url, `fncDetailView('${id}')`);
         summary.pagesFetched++;
         const snap = snapshotFrom(identityUrl, rendered.html, rendered.status);
-        persistPage(store, dirs, summary, seed.name, 'board-detail', snap, null, 1);
+        const rawDetail = saveContentAddressed(ctx.rawHtmlDir, identityUrl, rendered.html);
+        persistPage(store, dirs, summary, seed.name, 'board-detail', snap, rawDetail, 1);
       }
     } catch (err) {
       summary.failures.push({ url: seed.url, category: String((err as { category?: string }).category ?? 'unknown'), message: String((err as Error).message) });
@@ -237,8 +240,17 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
   return summary;
 }
 
-function snapshotFrom(url: string, html: string, status: number | null): PageSnapshot {
-  const extracted = extractFromHtml(html, url);
+/** content-addressed 원본 저장(불변, 중복 재기록 없음) → 저장 경로 반환 */
+function saveContentAddressed(rawHtmlDir: string, url: string, html: string): string {
+  const sha = sha256Hex(html);
+  const sub = path.join(rawHtmlDir, sha.slice(0, 2));
+  fs.mkdirSync(sub, { recursive: true });
+  const file = path.join(sub, `${stableId('page', url)}-${sha.slice(0, 12)}.html`);
+  if (!fs.existsSync(file)) fs.writeFileSync(file, html, 'utf8');
+  return file;
+}
+
+function snapshotFrom(url: string, html: string, status: number | null): PageSnapshot {  const extracted = extractFromHtml(html, url);
   return {
     url: normalizeUrl(url),
     finalUrl: normalizeUrl(url),

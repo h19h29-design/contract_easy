@@ -10,6 +10,7 @@ pnpm install
 pnpm crawl:preflight   # robots/접근성 실측
 pnpm crawl:sample      # 샘플 수집
 pnpm crawl:full        # 전체 수집(preflight PASS 시)
+pnpm crawl:board       # 동적 게시판 수집(Playwright, 공지사항 상세 등)
 pnpm ingest:all        # 정규화+청크+인덱스+위키+규칙후보
 
 pnpm dev:api           # http://localhost:8787

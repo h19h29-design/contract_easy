@@ -178,6 +178,11 @@ export class FileStore {
     const last = rec.versions[rec.versions.length - 1];
     if (last && last.contentSha256 === input.contentSha256) {
       last.lastCheckedAt = now;
+      // 재수집으로 원본 파일/메뉴경로가 새로 확보된 경우 보완한다(해시 동일 → 중복 아님)
+      let touched = false;
+      if (!last.rawHtmlPath && input.rawHtmlPath) { last.rawHtmlPath = input.rawHtmlPath; touched = true; }
+      if ((last.menuPath?.length ?? 0) === 0 && (input.menuPath?.length ?? 0) > 0) { last.menuPath = input.menuPath ?? []; touched = true; }
+      if (touched) this.flush();
       return { sourceId, versionId: last.id, changed: false, versionIndex: last.versionIndex };
     }
     const versionIndex = (last?.versionIndex ?? 0) + 1;

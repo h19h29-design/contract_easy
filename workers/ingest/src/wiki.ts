@@ -6,26 +6,30 @@ import { todayIso } from '@sen/shared';
 
 const WIKI_DIR = path.join(REPO_ROOT, 'wiki', 'generated');
 
+/**
+ * 매핑 규칙: 구체적 seed 우선, 00(출처 현황)은 마지막 catch-all.
+ * d.kind = seed 이름(menuPath[0]).
+ */
 const WIKI_FILES = [
-  { file: '00-출처와-업데이트현황.md', title: '00. 출처와 업데이트 현황', match: () => true },
-  { file: '01-계약-전체흐름.md', title: '01. 계약 전체흐름', match: (d: DocInfo) => /흐름|flow/.test(d.key) },
-  { file: '02-공사유형-구분.md', title: '02. 공사유형 구분', match: (d: DocInfo) => /계약방법|selector|contract/.test(d.key) },
-  { file: '03-추정가격별-계약방법.md', title: '03. 추정가격별 계약방법', match: (d: DocInfo) => /계약방법|selector|contract/.test(d.key) },
-  { file: '04-발주-전-체크리스트.md', title: '04. 발주 전 체크리스트', match: (d: DocInfo) => /checklist|체크리스트/.test(d.key) },
-  { file: '05-입찰과-수의계약.md', title: '05. 입찰과 수의계약', match: (_d: DocInfo) => false }, // 원문 확보 후 작성
+  { file: '01-계약-전체흐름.md', title: '01. 계약 전체흐름', match: (d: DocInfo) => /흐름/.test(d.key) },
+  { file: '02-공사유형-구분.md', title: '02. 공사유형 구분', match: (d: DocInfo) => /계약방법 메인|공사유형/.test(d.key) },
+  { file: '03-추정가격별-계약방법.md', title: '03. 추정가격별 계약방법', match: (_d: DocInfo) => false }, // 원문 확보 후 작성
+  { file: '04-발주-전-체크리스트.md', title: '04. 발주 전 체크리스트', match: (d: DocInfo) => /체크리스트/.test(d.key) },
+  { file: '05-입찰과-수의계약.md', title: '05. 입찰과 수의계약', match: (_d: DocInfo) => false },
   { file: '06-계약체결-서류.md', title: '06. 계약체결 서류', match: (_d: DocInfo) => false },
   { file: '07-착공-감독-변경계약.md', title: '07. 착공·감독·변경계약', match: (_d: DocInfo) => false },
   { file: '08-준공-검사-대금지급.md', title: '08. 준공·검사·대금지급', match: (_d: DocInfo) => false },
   { file: '09-하자관리.md', title: '09. 하자관리', match: (_d: DocInfo) => false },
-  { file: '10-부정당업자-제재.md', title: '10. 부정당업자 제재', match: (d: DocInfo) => /부정당업자|제재/.test(d.key) },
-  { file: '11-FAQ.md', title: '11. FAQ', match: (d: DocInfo) => /faq|게시물/.test(d.key) || d.kind === 'board-detail' },
-  { file: '12-서식-목록과-사용법.md', title: '12. 서식 목록과 사용법', match: (_d: DocInfo) => false },
-  { file: '99-폐지·구버전.md', title: '99. 폐지·구버전', match: (d: DocInfo) => d.status === 'inactive' }
+  { file: '10-부정당업자-제재.md', title: '10. 부정당업자 제재', match: (d: DocInfo) => /부정당업자/.test(d.key) },
+  { file: '11-FAQ.md', title: '11. FAQ', match: (d: DocInfo) => d.key.startsWith('FAQ') },
+  { file: '12-서식-목록과-사용법.md', title: '12. 서식 목록과 사용법', match: (d: DocInfo) => /서식/.test(d.key) },
+  { file: '13-공지사항-모음.md', title: '13. 공지사항 모음(확장 파일)', match: (d: DocInfo) => /공지사항/.test(d.key) },
+  { file: '99-폐지·구버전.md', title: '99. 폐지·구버전', match: (d: DocInfo) => d.status === 'inactive' },
+  { file: '00-출처와-업데이트현황.md', title: '00. 출처와 업데이트 현황', match: () => true }
 ];
 
 interface DocInfo {
-  key: string;
-  kind: string;
+  key: string; // seed 이름(menuPath[0])
   status: string;
 }
 
@@ -45,7 +49,7 @@ export function generateWiki(
   for (const entry of docs) {
     const info: DocInfo = {
       key: `${entry.version?.menuPath.join('/') ?? ''} ${entry.doc.title}`,
-      kind: entry.doc.menuPath[0] ?? '',
+
       status: entry.version?.status ?? 'active'
     };
     for (const wf of WIKI_FILES) {

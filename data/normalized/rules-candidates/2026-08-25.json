@@ -1,0 +1,632 @@
+[
+  {
+    "candidateId": "cand-167cfde2533218-8",
+    "kindOfValue": "amount",
+    "quotedSentence": "구분 2인이상 수의계약 입찰 추정가격 2천만원 초과 ~ 1억원 이하 1억 미만 입찰 1억~2.3억 미만 입찰 참가자격 소기업, 소상공인 소기업, 소상공인 중소기업, 소상공인 중소기업자간 경쟁제품: 입찰의 경우 중기업 참가자격 있음 ※1억미만 입찰 중기업 배제 안됨 2천만원 이하인 경우 대기업.중기업 참여가 가능 | 구분 | 2인이상 수의계약 | 입찰 | 추정가격 | 2천만원 초과 ~ 1억원 이하 | 1억 미만 입찰 | 1억~2.3억 미만 입찰 | 참가자격 | 소기업, 소상공인 | 소기업, 소상공인 | 중소기업, 소상공인 | 중소기업",
+    "contextBefore": "4 | 중소기업제품 우선구매 확인 | 중소기업자와의 우선조달계약 대상 여부를 확인하였는가?",
+    "contextAfter": "구분 | 2인이상 수의계약 | 입찰",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-10",
+    "kindOfValue": "amount",
+    "quotedSentence": "추정가격 | 2천만원 초과 ~ 1억원 이하 | 1억 미만 입찰 | 1억~2.3억 미만 입찰",
+    "contextBefore": "구분 | 2인이상 수의계약 | 입찰",
+    "contextAfter": "참가자격 | 소기업, 소상공인 | 소기업, 소상공인 | 중소기업, 소상공인",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-17",
+    "kindOfValue": "amount",
+    "quotedSentence": "구분 입찰 2인이상 견적제출 수의계약 1인견적제출 수의계약 가능 추정가격 1억원 초과 1억원 이하 2천만원이하 예외 여성기업 · 장애인기업 · 사회적경제기업: 5천만원 이하 1인견적수의계약 가능 ※ 사회적경제기업 - (대상) 사회적기업, 사회적협동조합, 자활기업, 마을기업 - (조건) 취약계층 고용비율을 30%이상 충족하는 사회적경제기업 | 구분 | 입찰 | 2인이상 견적제출 수의계약 | 1인견적제출 수의계약 가능 | 추정가격 | 1억원 초과 | 1억원 이하 | 2천만원이하 | 예외 | 여성기업 · 장애인기업 · 사회적경제기업: 5",
+    "contextBefore": "추정가격 등에 따라 적절한 계약방법으로 결정하였는가?",
+    "contextAfter": "구분 | 입찰 | 2인이상 견적제출 수의계약 | 1인견적제출 수의계약 가능",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-19",
+    "kindOfValue": "amount",
+    "quotedSentence": "추정가격 | 1억원 초과 | 1억원 이하 | 2천만원이하",
+    "contextBefore": "구분 | 입찰 | 2인이상 견적제출 수의계약 | 1인견적제출 수의계약 가능",
+    "contextAfter": "예외 | 여성기업 · 장애인기업 · 사회적경제기업: 5천만원 이하 1인견적수의계약 가능 ※ 사회적경제기업 - (대상) 사회적기업, 사회적협동조합, 자활기업, 마을기업 - (조건) 취약계층 고용비율을 30%이상 충족하",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-20",
+    "kindOfValue": "ratio",
+    "quotedSentence": "예외 | 여성기업 · 장애인기업 · 사회적경제기업: 5천만원 이하 1인견적수의계약 가능 ※ 사회적경제기업 - (대상) 사회적기업, 사회적협동조합, 자활기업, 마을기업 - (조건) 취약계층 고용비율을 30%이상 충족하는 사회적경제기업",
+    "contextBefore": "추정가격 | 1억원 초과 | 1억원 이하 | 2천만원이하",
+    "contextAfter": "단일사업인 용역계약을 부당하게 분할하거나 시기적으로 나누지 않고 일괄하여 발주하였는가?",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-27",
+    "kindOfValue": "duration",
+    "quotedSentence": "5천만원 이상 용역 입찰 시 지정정보처리장치를 통하여 5일간 공개(긴급 3일) |  | 지방계약법 제9조의2 지방계약법 시행령 제32조의2",
+    "contextBefore": "구매규격 사전공개 대상 여부를 확인하였는가?",
+    "contextAfter": "관련 규정에 적합한 입찰공고(수의견적제출공고) 기간을 준수하였는가?",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-29",
+    "kindOfValue": "duration",
+    "quotedSentence": "구분 공고 시기 2인 이상 견적제출 3일 이상(공휴일과 토요일 제외) 입찰 일반(제한) 입찰 기본 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고 긴급 및 재공고 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고 협상에 의한 계약·2단계 입찰 추정가격 1억미만 입찰서 제출 마감일의 전날부터 기산하여 10일전에 공고 추정가격 1억이상~10억미만 입찰서 제출 마감일의 전날부터 기산하여 20일전에 공고 긴급 및 재공고 입찰서 제출 마감일의 전날부터 기산하여 10일 전까지 공고 | 구분 | 공고 시기 | 2인 이상 견적제출 |",
+    "contextBefore": "관련 규정에 적합한 입찰공고(수의견적제출공고) 기간을 준수하였는가?",
+    "contextAfter": "구분 | 공고 시기",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-31",
+    "kindOfValue": "duration",
+    "quotedSentence": "2인 이상 견적제출 | 3일 이상(공휴일과 토요일 제외)",
+    "contextBefore": "구분 | 공고 시기",
+    "contextAfter": "입찰 | 일반(제한) 입찰 | 기본 | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-32",
+    "kindOfValue": "duration",
+    "quotedSentence": "입찰 | 일반(제한) 입찰 | 기본 | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고",
+    "contextBefore": "2인 이상 견적제출 | 3일 이상(공휴일과 토요일 제외)",
+    "contextAfter": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-33",
+    "kindOfValue": "duration",
+    "quotedSentence": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "contextBefore": "입찰 | 일반(제한) 입찰 | 기본 | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고",
+    "contextAfter": "협상에 의한 계약·2단계 입찰 | 추정가격 1억미만 | 입찰서 제출 마감일의 전날부터 기산하여 10일전에 공고",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-34",
+    "kindOfValue": "duration",
+    "quotedSentence": "협상에 의한 계약·2단계 입찰 | 추정가격 1억미만 | 입찰서 제출 마감일의 전날부터 기산하여 10일전에 공고",
+    "contextBefore": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "contextAfter": "추정가격 1억이상~10억미만 | 입찰서 제출 마감일의 전날부터 기산하여 20일전에 공고",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-35",
+    "kindOfValue": "duration",
+    "quotedSentence": "추정가격 1억이상~10억미만 | 입찰서 제출 마감일의 전날부터 기산하여 20일전에 공고",
+    "contextBefore": "협상에 의한 계약·2단계 입찰 | 추정가격 1억미만 | 입찰서 제출 마감일의 전날부터 기산하여 10일전에 공고",
+    "contextAfter": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 10일 전까지 공고",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-36",
+    "kindOfValue": "duration",
+    "quotedSentence": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 10일 전까지 공고",
+    "contextBefore": "추정가격 1억이상~10억미만 | 입찰서 제출 마감일의 전날부터 기산하여 20일전에 공고",
+    "contextAfter": "계약기간이 30일 이상인 용역 공고문에 예정가격에 반영된 보험료 등 금액과 사후정산에 대한 내용을 명시하였는가?",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-37",
+    "kindOfValue": "duration",
+    "quotedSentence": "계약기간이 30일 이상인 용역 공고문에 예정가격에 반영된 보험료 등 금액과 사후정산에 대한 내용을 명시하였는가?",
+    "contextBefore": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 10일 전까지 공고",
+    "contextAfter": "대상보험료 등: 국민연금보험, 국민건강보험, 노인장기요양보험, 퇴직급여충당금(단, 퇴직급여충당금의 경우 시행규칙 제23조의2 각 호에 해당하는 용역계약에 한하여 적용) 안내내용: 예정가격 상의 보험료(단순노무용역의 ",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-41",
+    "kindOfValue": "amount",
+    "quotedSentence": "입찰 입찰(일반,제한) 2단계입찰 협상에의한계약 기본(추정가격 2억원 이하) 87.745%(적격심사) 예외 개별 법령 확인 최저가 낙찰하한율 없음 (종합평가 점수) 나.",
+    "contextBefore": "가.",
+    "contextAfter": "수의계약 추정가격 2천만원 초과: 88% 추정가격 2천만원 이하: 90% | 입찰(일반,제한) | 2단계입찰 | 협상에의한계약 | 기본(추정가격 2억원 이하) 87.745%(적격심사) 예외 개별 법령 확인 | 최저가",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-42",
+    "kindOfValue": "amount",
+    "quotedSentence": "수의계약 추정가격 2천만원 초과: 88% 추정가격 2천만원 이하: 90% | 입찰(일반,제한) | 2단계입찰 | 협상에의한계약 | 기본(추정가격 2억원 이하) 87.745%(적격심사) 예외 개별 법령 확인 | 최저가 | 낙찰하한율 없음 (종합평가 점수) |  | • 지방계약법 시행령 제42조 • 낙찰자 결정기준 • 서울특별시 일반용역 적격심사 세부기준 • 계약 집행기준 제5장",
+    "contextBefore": "입찰 입찰(일반,제한) 2단계입찰 협상에의한계약 기본(추정가격 2억원 이하) 87.745%(적격심사) 예외 개별 법령 확인 최저가 낙찰하한율 없음 (종합평가 점수) 나.",
+    "contextAfter": "입찰(일반,제한) | 2단계입찰 | 협상에의한계약",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-44",
+    "kindOfValue": "amount",
+    "quotedSentence": "기본(추정가격 2억원 이하) 87.745%(적격심사) 예외 개별 법령 확인 | 최저가 | 낙찰하한율 없음 (종합평가 점수)",
+    "contextBefore": "입찰(일반,제한) | 2단계입찰 | 협상에의한계약",
+    "contextAfter": "견적(입찰) 참가 자격을 부당하게 제한하고 있지 않은가?",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-167cfde2533218-47",
+    "kindOfValue": "amount",
+    "quotedSentence": "제한입찰: 각 항목별 제한요건은 추정가격 등에 따라 다르며, 각 항목을 중복적으로 제한할 수 없는 것이 기본 원칙 ※ 예외: ⑧중소기업자는 다른 항목과 중복가능 ※ ①동일 실적 제한은 추정가격 2.2억원 이상 특수한 기술이 요구되는 용역계약만 가능 ① 동일 실적 ② 기술의 보유상황 ③ 시공능력평가액 제한 ④ 지역제한 ⑤ 설비제한 ⑥ 유자격자 명부에 따른 제한 ⑦ 물품의 납품능력 ⑧ 중소기업자 ⑨ 재무상태 |  | 계약 집행기준 제5장 지방계약법 시행령 제20조 지방계약법 시행규칙 제24조, 제25조",
+    "contextBefore": "2인 이상 견적서 제출 수의계약: ①은 ②의 각 호와 중복하여 제한 가능 ① 지역제한 ② 실적(시공실적, 용역수행실적, 납품실적) 단, 특수한 기술(안전을 위해 필요한 석면 해체 등)이 요구되는 경우에 한한다",
+    "contextAfter": "이외에 공고문에 명시되어야 할 내용이 정확하게 기재되었는가?",
+    "sourceChunkId": "167cfde2533218",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-b34db5dbac9c-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "추정가격 | 2천만원 초과 ~ 1억원 이하 | 1억 미만 입찰 | 1억~2.3억 미만 입찰",
+    "contextBefore": "구분 | 2인이상 수의계약 | 입찰",
+    "contextAfter": "참가자격 | 소기업, 소상공인 | 소기업, 소상공인 | 중소기업, 소상공인",
+    "sourceChunkId": "b34db5dbac9c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-14a87f271ce7ab-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "추정가격 | 1억원 초과 | 1억원 이하 | 2천만원이하",
+    "contextBefore": "구분 | 입찰 | 2인이상 견적제출 수의계약 | 1인견적제출 수의계약 가능",
+    "contextAfter": "예외 | 여성기업 · 장애인기업 · 사회적경제기업: 5천만원 이하 1인견적수의계약 가능 ※ 사회적경제기업 - (대상) 사회적기업, 사회적협동조합, 자활기업, 마을기업 - (조건) 취약계층 고용비율을 30%이상 충족하",
+    "sourceChunkId": "14a87f271ce7ab",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-14a87f271ce7ab-2",
+    "kindOfValue": "ratio",
+    "quotedSentence": "예외 | 여성기업 · 장애인기업 · 사회적경제기업: 5천만원 이하 1인견적수의계약 가능 ※ 사회적경제기업 - (대상) 사회적기업, 사회적협동조합, 자활기업, 마을기업 - (조건) 취약계층 고용비율을 30%이상 충족하는 사회적경제기업",
+    "contextBefore": "추정가격 | 1억원 초과 | 1억원 이하 | 2천만원이하",
+    "contextAfter": "",
+    "sourceChunkId": "14a87f271ce7ab",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-730361ee1dcb9-1",
+    "kindOfValue": "duration",
+    "quotedSentence": "2인 이상 견적제출 | 3일 이상(공휴일과 토요일 제외)",
+    "contextBefore": "구분 | 공고 시기",
+    "contextAfter": "입찰 | 일반(제한) 입찰 | 기본 | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고",
+    "sourceChunkId": "730361ee1dcb9",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-730361ee1dcb9-2",
+    "kindOfValue": "duration",
+    "quotedSentence": "입찰 | 일반(제한) 입찰 | 기본 | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고",
+    "contextBefore": "2인 이상 견적제출 | 3일 이상(공휴일과 토요일 제외)",
+    "contextAfter": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "sourceChunkId": "730361ee1dcb9",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-730361ee1dcb9-3",
+    "kindOfValue": "duration",
+    "quotedSentence": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "contextBefore": "입찰 | 일반(제한) 입찰 | 기본 | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고",
+    "contextAfter": "협상에 의한 계약·2단계 입찰 | 추정가격 1억미만 | 입찰서 제출 마감일의 전날부터 기산하여 10일전에 공고",
+    "sourceChunkId": "730361ee1dcb9",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-730361ee1dcb9-4",
+    "kindOfValue": "duration",
+    "quotedSentence": "협상에 의한 계약·2단계 입찰 | 추정가격 1억미만 | 입찰서 제출 마감일의 전날부터 기산하여 10일전에 공고",
+    "contextBefore": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "contextAfter": "추정가격 1억이상~10억미만 | 입찰서 제출 마감일의 전날부터 기산하여 20일전에 공고",
+    "sourceChunkId": "730361ee1dcb9",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-730361ee1dcb9-5",
+    "kindOfValue": "duration",
+    "quotedSentence": "추정가격 1억이상~10억미만 | 입찰서 제출 마감일의 전날부터 기산하여 20일전에 공고",
+    "contextBefore": "협상에 의한 계약·2단계 입찰 | 추정가격 1억미만 | 입찰서 제출 마감일의 전날부터 기산하여 10일전에 공고",
+    "contextAfter": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 10일 전까지 공고",
+    "sourceChunkId": "730361ee1dcb9",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-730361ee1dcb9-6",
+    "kindOfValue": "duration",
+    "quotedSentence": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 10일 전까지 공고",
+    "contextBefore": "추정가격 1억이상~10억미만 | 입찰서 제출 마감일의 전날부터 기산하여 20일전에 공고",
+    "contextAfter": "",
+    "sourceChunkId": "730361ee1dcb9",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-12cb38ad7f6729-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "기본(추정가격 2억원 이하) 87.745%(적격심사) 예외 개별 법령 확인 | 최저가 | 낙찰하한율 없음 (종합평가 점수)",
+    "contextBefore": "입찰(일반,제한) | 2단계입찰 | 협상에의한계약",
+    "contextAfter": "",
+    "sourceChunkId": "12cb38ad7f6729",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-6",
+    "kindOfValue": "amount",
+    "quotedSentence": "산재보험료: 모든 건설공사 및 전기·통신·소방공사에 적용 고용보험료: 모든 건설공사 및 전기·통신·소방공사에 적용(다만, 총 공사금액 2천만원 미만의 건설공사를 건설업자가 아닌 자가 시공 시 적용 제외) 건강·국민연금·노인장기요양보험료: 공사기간 1개월 이상 시 반영 추정가격 5억원 미만 공사 - 일반관리비: (재료비 + 노무비 + 경비) × 6% - 이윤: (노무비 + 경비 + 일반관리비) × 15% 산업안전보건관리비: 총 공사금액 2천만원 이상 건설공사 시 반영 등 |  | 계약 집행기준 제2장 건축·산업환경설비공사 원가계산 제",
+    "contextBefore": "설계서는 적절하게 작성되었는가?",
+    "contextAfter": "설계·감리 용역업체에게 고의 또는 과실로 당해 용역목적물 또는 제3자에게 손해를 발생하게 한 경우 이의 배상을 담보하는 손해배상보험증서는 받았는가?",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-12",
+    "kindOfValue": "amount",
+    "quotedSentence": "구분 종합공사 전문공사 전기 등 그 밖의 공사 1인 견적서 제출 가능 수의계약 2천만원 이하 여성기업·장애인기업·사회적경제기업: 5천만원 이하 1인수의 가능 2인 이상 견적서 제출 수의계약 4억원 이하 2억원 이하 1억 6천만원 이하 5천만원 이하 사업은 여성·장애인·사회적 경제기업으로 견적서 제출대상 제한 가능 입찰 4억원 초과 2억원 초과 1억 6천만원 초과 현장설명: 300억원 이상 의무, 300억원 미만 선택 | 구분 | 종합공사 | 전문공사 | 전기 등 그 밖의 공사 | 1인 견적서 제출 가능 수의계약 | 2천만원 이하 |",
+    "contextBefore": "추정가격 등에 따라 적절한 계약방법을 결정하였는가?",
+    "contextAfter": "구분 | 종합공사 | 전문공사 | 전기 등 그 밖의 공사",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-16",
+    "kindOfValue": "amount",
+    "quotedSentence": "2인 이상 견적서 제출 수의계약 | 4억원 이하 | 2억원 이하 | 1억 6천만원 이하",
+    "contextBefore": "여성기업·장애인기업·사회적경제기업: 5천만원 이하 1인수의 가능",
+    "contextAfter": "5천만원 이하 사업은 여성·장애인·사회적 경제기업으로 견적서 제출대상 제한 가능",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-18",
+    "kindOfValue": "amount",
+    "quotedSentence": "입찰 | 4억원 초과 | 2억원 초과 | 1억 6천만원 초과",
+    "contextBefore": "5천만원 이하 사업은 여성·장애인·사회적 경제기업으로 견적서 제출대상 제한 가능",
+    "contextAfter": "현장설명: 300억원 이상 의무, 300억원 미만 선택",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-19",
+    "kindOfValue": "amount",
+    "quotedSentence": "현장설명: 300억원 이상 의무, 300억원 미만 선택",
+    "contextBefore": "입찰 | 4억원 초과 | 2억원 초과 | 1억 6천만원 초과",
+    "contextAfter": "동일구조물 공사 또는 단일공사로서 설계서 등에 따라 전체 사업내용이 확정된 공사를 시기적으로 분할하거나 공사량을 구조별·공종별로 분할하지 아니하고 일괄하여 발주하였는가?",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-27",
+    "kindOfValue": "amount",
+    "quotedSentence": "구분 공고 시기 2인 이상 견적서 제출 수의계약 3일 이상(공휴일과 토요일 제외) 입찰 현장설명 ○ 현장설명일의 전날부터 기산하여 7일 전에 공고 현장설명 X 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고(추정가격 10억원 미만) 긴급 및 재공고 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고 | 구분 | 공고 시기 | 2인 이상 견적서 제출 수의계약 | 3일 이상(공휴일과 토요일 제외) | 입찰 | 현장설명 ○ | 현장설명일의 전날부터 기산하여 7일 전에 공고 | 현장설명 X | 입찰서 제출 마감일의 전날부터 기산",
+    "contextBefore": "5 | 공고 | 견적제출(입찰) 공고 시기를 준수하였는가?",
+    "contextAfter": "구분 | 공고 시기",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-29",
+    "kindOfValue": "duration",
+    "quotedSentence": "2인 이상 견적서 제출 수의계약 | 3일 이상(공휴일과 토요일 제외)",
+    "contextBefore": "구분 | 공고 시기",
+    "contextAfter": "입찰 | 현장설명 ○ | 현장설명일의 전날부터 기산하여 7일 전에 공고",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-30",
+    "kindOfValue": "duration",
+    "quotedSentence": "입찰 | 현장설명 ○ | 현장설명일의 전날부터 기산하여 7일 전에 공고",
+    "contextBefore": "2인 이상 견적서 제출 수의계약 | 3일 이상(공휴일과 토요일 제외)",
+    "contextAfter": "현장설명 X | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고(추정가격 10억원 미만)",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-31",
+    "kindOfValue": "amount",
+    "quotedSentence": "현장설명 X | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고(추정가격 10억원 미만)",
+    "contextBefore": "입찰 | 현장설명 ○ | 현장설명일의 전날부터 기산하여 7일 전에 공고",
+    "contextAfter": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-32",
+    "kindOfValue": "duration",
+    "quotedSentence": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "contextBefore": "현장설명 X | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고(추정가격 10억원 미만)",
+    "contextAfter": "공고문에 낙찰하한율을 정확하게 명시하였는가?",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-34",
+    "kindOfValue": "amount",
+    "quotedSentence": "2인 이상 견적서 제출 수의계약: 89.745% 입찰: 기본 89.745%(추정가격 등에 따라 다름)(적격심사 실시) ※ 추정가격 300억원 이상 공사: 종합평가 낙찰자 결정 |  | 계약 집행기준 제5장 지방계약법 시행령 제42조 낙찰자 결정기준",
+    "contextBefore": "공고문에 낙찰하한율을 정확하게 명시하였는가?",
+    "contextAfter": "공사기간이 30일 이상인 건에 대하여 국민건강보험료 등의 보험료를 관련 법령에서 정하는 바에 따라 예정가격에 반영하고 이를 공개해서, 견적(입찰)금액(산출내역서 포함)에 조정 없이 반영해야 하며 사후정산하게 된다는 ",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-35",
+    "kindOfValue": "duration",
+    "quotedSentence": "공사기간이 30일 이상인 건에 대하여 국민건강보험료 등의 보험료를 관련 법령에서 정하는 바에 따라 예정가격에 반영하고 이를 공개해서, 견적(입찰)금액(산출내역서 포함)에 조정 없이 반영해야 하며 사후정산하게 된다는 내용을 공고문에 명시하였는가?",
+    "contextBefore": " 89.745% 입찰: 기본 89.745%(추정가격 등에 따라 다름)(적격심사 실시) ※ 추정가격 300억원 이상 공사: 종합평가 낙찰자 결정 |  | 계약 집행기준 제5장 지방계약법 시행령 제42조 낙찰자 결정기준",
+    "contextAfter": "|  | 계약 집행기준 제1장",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-11345726b1710c-51",
+    "kindOfValue": "amount",
+    "quotedSentence": "사업자등록증 사본, 법인등기사항전부증명서(G2B 등록정보로 대체 가능) 건설업등록증 사본(G2B 등록정보로 대체 가능), 건설업등록수첩 사본 계약보증금(현금, 증권, 지급확약서) 청렴서약서(지정정보처리장치 이용 시 제출은 참가로 갈음) 수의계약 각서 수의계약 체결제한 여부 확인서 지방자치단체를 당사자로 하는 계약에 관한 법률 제31조의5 및 같은법 시행령 제39조에 따른 서약서(조세포탈 관련 결격사유 각서) 인지세 산출내역서(견적서) 사용인감계(또는 조달청 경쟁입찰참가자격등록증) 공동수급협정서(공동계약의 경우) 국민주택채권(계약금액",
+    "contextBefore": "7 | 계약구비 서류 | 계약체결 시 구비서류를 적절하게 징구하였는가?",
+    "contextAfter": "",
+    "sourceChunkId": "11345726b1710c",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-3392cd982f947-3",
+    "kindOfValue": "amount",
+    "quotedSentence": "2인 이상 견적서 제출 수의계약 | 4억원 이하 | 2억원 이하 | 1억 6천만원 이하",
+    "contextBefore": "여성기업·장애인기업·사회적경제기업: 5천만원 이하 1인수의 가능",
+    "contextAfter": "5천만원 이하 사업은 여성·장애인·사회적 경제기업으로 견적서 제출대상 제한 가능",
+    "sourceChunkId": "3392cd982f947",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-3392cd982f947-5",
+    "kindOfValue": "amount",
+    "quotedSentence": "입찰 | 4억원 초과 | 2억원 초과 | 1억 6천만원 초과",
+    "contextBefore": "5천만원 이하 사업은 여성·장애인·사회적 경제기업으로 견적서 제출대상 제한 가능",
+    "contextAfter": "현장설명: 300억원 이상 의무, 300억원 미만 선택",
+    "sourceChunkId": "3392cd982f947",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-3392cd982f947-6",
+    "kindOfValue": "amount",
+    "quotedSentence": "현장설명: 300억원 이상 의무, 300억원 미만 선택",
+    "contextBefore": "입찰 | 4억원 초과 | 2억원 초과 | 1억 6천만원 초과",
+    "contextAfter": "",
+    "sourceChunkId": "3392cd982f947",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-bfe5b13152ee3-1",
+    "kindOfValue": "duration",
+    "quotedSentence": "2인 이상 견적서 제출 수의계약 | 3일 이상(공휴일과 토요일 제외)",
+    "contextBefore": "구분 | 공고 시기",
+    "contextAfter": "입찰 | 현장설명 ○ | 현장설명일의 전날부터 기산하여 7일 전에 공고",
+    "sourceChunkId": "bfe5b13152ee3",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-bfe5b13152ee3-2",
+    "kindOfValue": "duration",
+    "quotedSentence": "입찰 | 현장설명 ○ | 현장설명일의 전날부터 기산하여 7일 전에 공고",
+    "contextBefore": "2인 이상 견적서 제출 수의계약 | 3일 이상(공휴일과 토요일 제외)",
+    "contextAfter": "현장설명 X | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고(추정가격 10억원 미만)",
+    "sourceChunkId": "bfe5b13152ee3",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-bfe5b13152ee3-3",
+    "kindOfValue": "amount",
+    "quotedSentence": "현장설명 X | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고(추정가격 10억원 미만)",
+    "contextBefore": "입찰 | 현장설명 ○ | 현장설명일의 전날부터 기산하여 7일 전에 공고",
+    "contextAfter": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "sourceChunkId": "bfe5b13152ee3",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-bfe5b13152ee3-4",
+    "kindOfValue": "duration",
+    "quotedSentence": "긴급 및 재공고 | 입찰서 제출 마감일의 전날부터 기산하여 5일 전까지 공고",
+    "contextBefore": "현장설명 X | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고(추정가격 10억원 미만)",
+    "contextAfter": "",
+    "sourceChunkId": "bfe5b13152ee3",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-4be201da38487-3",
+    "kindOfValue": "ratio",
+    "quotedSentence": "A회사의 지분 30%, B회사의 지분 70%로 구성된 공동수급체와 ‘청양-홍성(제2공구) 도로건설공사’(이하 “이 사건 공사”라고 합니다)에 관하여 도급계약을 체결하였습니다(그 후 9차례에 걸쳐 공사금액 등을 변경하는 변경계약을 체결하였는데, 이하 총칭하여 “이 사건 요청조달계약”이라고 합니다).",
+    "contextBefore": "8.",
+    "contextAfter": "그런데 A회사와 B회사는 2015.",
+    "sourceChunkId": "4be201da38487",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-4be201da38487-7",
+    "kindOfValue": "amount",
+    "quotedSentence": "• 이 사건 요청조달계약의 해지 전까지 시공된 물공량은 49,155,000,000원으로 확인되었는데, A회사와 B회사가 해지 전까지 수요기관에 청구하여 지급받은 누계 기성금액은 52,453,000,000원이었습니다",
+    "contextBefore": "5.경 이 사건 요청조달계약을 해지한다고 통보하였습니다",
+    "contextAfter": "• 한편 A회사와 B회사는 이 사건 공사에 관하여 매년 약 8~10회에 걸쳐 기성금을 청구해 왔는데, ① 2012.",
+    "sourceChunkId": "4be201da38487",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-4be201da38487-9",
+    "kindOfValue": "ratio",
+    "quotedSentence": "12.에는 2012년도 전체 집행금액의 약 38.9%를 기성금으로 청구하여 지급 받은 다음 2013.",
+    "contextBefore": "• 한편 A회사와 B회사는 이 사건 공사에 관하여 매년 약 8~10회에 걸쳐 기성금을 청구해 왔는데, ① 2012.",
+    "contextAfter": "3.이 되어서야 다시 2013년도의 기성금을 청구하였고, ② 2013.",
+    "sourceChunkId": "4be201da38487",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-4be201da38487-11",
+    "kindOfValue": "ratio",
+    "quotedSentence": "12.에는 2013년도 전체 집행금액의 약 44.2%를 기성금으로 청구하여 지급받은 다음 2014.",
+    "contextBefore": "3.이 되어서야 다시 2013년도의 기성금을 청구하였고, ② 2013.",
+    "contextAfter": "4.이 되어서야 다시 2014년도의 기성금을 청구하였으며, ③ 2014.",
+    "sourceChunkId": "4be201da38487",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-4be201da38487-13",
+    "kindOfValue": "ratio",
+    "quotedSentence": "12.에는 2014년도 전체 집행금액의 약 41%를 기성금으로 청구하여 지급받았습니다",
+    "contextBefore": "4.이 되어서야 다시 2014년도의 기성금을 청구하였으며, ③ 2014.",
+    "contextAfter": "• 이 사건 공사에 관한 수요기관의 공사관리관 김OO는 2014.",
+    "sourceChunkId": "4be201da38487",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-4be201da38487-19",
+    "kindOfValue": "amount",
+    "quotedSentence": "A회사에 대하여 ‘이 사건 공사와 관련하여 허위의 기성금 989,400,000원을 청구하여 국가에 손해를 끼쳤다’는 이유로 구 국가를 당사자로 하는 계약에 관한 법률(2016.",
+    "contextBefore": "2.",
+    "contextAfter": "3.",
+    "sourceChunkId": "4be201da38487",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-1e3b048b73b3d0-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "도급 또는 위임에 관한 증서 중 법률에 따라 작성하는 문서로서 대통령령으로 정하는 것 | 기재금액이 1천만원 초과 3천만원 이하인 경우: 2만원",
+    "contextBefore": "과 세 문 서 | 세 액",
+    "contextAfter": "기재금액이 3천만원 초과 5천만원 이하인 경우: 4만원",
+    "sourceChunkId": "1e3b048b73b3d0",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-1e3b048b73b3d0-2",
+    "kindOfValue": "amount",
+    "quotedSentence": "기재금액이 3천만원 초과 5천만원 이하인 경우: 4만원",
+    "contextBefore": "도급 또는 위임에 관한 증서 중 법률에 따라 작성하는 문서로서 대통령령으로 정하는 것 | 기재금액이 1천만원 초과 3천만원 이하인 경우: 2만원",
+    "contextAfter": "기재금액이 5천만원 초과 1억원 이하인 경우: 7만원",
+    "sourceChunkId": "1e3b048b73b3d0",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-1e3b048b73b3d0-3",
+    "kindOfValue": "amount",
+    "quotedSentence": "기재금액이 5천만원 초과 1억원 이하인 경우: 7만원",
+    "contextBefore": "기재금액이 3천만원 초과 5천만원 이하인 경우: 4만원",
+    "contextAfter": "기재금액이 1억원 초과 10억원 이하인 경우: 15만원",
+    "sourceChunkId": "1e3b048b73b3d0",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-1e3b048b73b3d0-4",
+    "kindOfValue": "amount",
+    "quotedSentence": "기재금액이 1억원 초과 10억원 이하인 경우: 15만원",
+    "contextBefore": "기재금액이 5천만원 초과 1억원 이하인 경우: 7만원",
+    "contextAfter": "기재금액이 10억 초과인 경우: 35만원",
+    "sourceChunkId": "1e3b048b73b3d0",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-1e3b048b73b3d0-5",
+    "kindOfValue": "amount",
+    "quotedSentence": "기재금액이 10억 초과인 경우: 35만원",
+    "contextBefore": "기재금액이 1억원 초과 10억원 이하인 경우: 15만원",
+    "contextAfter": "",
+    "sourceChunkId": "1e3b048b73b3d0",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-1bcc97ee9b42fa-0",
+    "kindOfValue": "amount",
+    "quotedSentence": "「신용카드 및 현금영수증 카드 사용•관리 요령(서울특별시교육청, 2015.1)」에 따르면, 인터넷을 통한 물품구매 시 「전자상거래 등에서의 소비자보호에 관한 법」 제12조에 따라 등록된 통신판매업자가 동법 제10조(사이버몰의 운영) 규정에 의하여 운영하는 업체를 이용하여 1,000만원 이하(추정가격 기준)의 물품구매 시 가능하고, 이 경우에는 인터넷상 다른 사이버몰과의 가격을 충분히 비교검토한 후 물품을 구입하도록 명시하고 있음 「조달사업에 관한 법률」 및 「같은 법 시행령」 에 따르면 수요기관의 장은 조달청장에 의하여 계약이 체결",
+    "contextBefore": "",
+    "contextAfter": "",
+    "sourceChunkId": "1bcc97ee9b42fa",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-10ee56d09bf03-0",
+    "kindOfValue": "duration",
+    "quotedSentence": "지방자치단체 입찰 및 계약집행기준(행정안전부 예규) 제13장(공사계약 일반조건)에 따라 계약서에서 정한 착공일자에 착공신고서를 제출해야 하며, 계약 시 공사업체와 착공일자를 협의하여 결정 이미 계약이 이루어진 경우에는 반드시 계약을 변경해야 함 공사 착공일자 연기 및 공사 일시중지 등의 불가피한 경우는 공정의 성질에 따라 연기 사유가 적정한지를 판단(소속 교육지원청 학교시설지원과와 협의 등) 해야 함 (예시) 동절기 공사 중지 사유 : 콘크리트양생, 수목심기, 바닥포장 등 통상 동절기 폭설 및 혹한기 등이 지속적으로 3일 이상 지속",
+    "contextBefore": "",
+    "contextAfter": "",
+    "sourceChunkId": "10ee56d09bf03",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000389/board/BO00000122/CD040/list0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-ede6805f1289e-0",
+    "kindOfValue": "duration",
+    "quotedSentence": "청문 개최 10일 전까지 통지",
+    "contextBefore": "",
+    "contextAfter": "",
+    "sourceChunkId": "ede6805f1289e",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000426/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  },
+  {
+    "candidateId": "cand-1cb2872ca4cd27-0",
+    "kindOfValue": "duration",
+    "quotedSentence": "행정심판청구는 처분이 있음을 안 날로부터 90일 이내, 처분이 있는 날로부터 180일 이내 처분청(서울특별시교육감)에 제기할 수 있으며, 행정소송청구는 처분이 있음을 안 날로부터 90일이내, 처분이 있은 날로부터 1년 이내 관할법원에 제기 ※근거법 : 행정심판법 제27조, 행정소송법 제20조",
+    "contextBefore": "",
+    "contextAfter": "",
+    "sourceChunkId": "1cb2872ca4cd27",
+    "sourceUrl": "https://contract.sen.go.kr/fus/MI000000000000000426/html/cont0010v.do",
+    "sourceTitle": "서울특별시교육청 계약길잡이"
+  }
+]

@@ -36,3 +36,12 @@
 
 ## D-008 (2026-08-25) Docker Compose 검증 불가 기록
 - **결정**: `docker-compose.yml`/Dockerfile/healthcheck를 작성하되, 본 환경 Docker 부재로 `docker compose config` 실행 불가 → TEST_RESULTS.md에 실행 불가 사유 기록. NAS 배포는 `DEPLOY_TO_NAS=true` 확인 전까지만 문서 준비.
+
+## D-009 (2026-08-25) 동적 게시판 수집: Playwright in-page JS 실행 방식
+- **결정**: 공지사항 상세(POST 폼 + `fncDetailView('822')` 호출형)는 브라우저로 목록을 연 뒤 사이트 자체 JS 함수를 `page.evaluate`로 실행하여 도착 페이지의 렌더 HTML을 수집한다(`renderViaCall`). 저장 식별자는 관측된 프레임워크 규칙에 따른 결정적 URL(view0010v.do?board_seq=N)을 사용한다.
+- **근거**: GET 쿼리만으로는 빈 셸만 반환하는 것을 실측. URL 템플릿 추측 금지 원칙에 따라 실제 함수 실행 결과만 사용.
+- **한계/주의**: 증분 재수집 시에도 동일 방식 필요. HTTP 엔진으로 view0010v.do를 직접 GET하면 빈 셸이 수집될 수 있으므로 runCrawl 링크 확장은 이를 seed 큐에서 제외해야 함(후속 개선).
+
+## D-010 (2026-08-25) 위키 파일 하나 추가: 13-공지사항-모음.md
+- **결정**: 프롬프트 지정 14개 위키 파일 외에 `13-공지사항-모음.md`를 추가 생성한다.
+- **근거**: 공지사항 상세 38건은 어느 지정 파일과도 주제가 맞지 않음. 원문 인용+출처 메타 유지 원칙은 동일.

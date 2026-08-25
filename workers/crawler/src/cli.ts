@@ -25,6 +25,14 @@ async function main(): Promise<void> {
       console.log(`[sample] fetched=${summary.pagesFetched} changed=${summary.pagesChanged} failures=${summary.failures.length}`);
       break;
     }
+    case 'board': {
+      process.env.CRAWLER_ENGINE = 'playwright'; // 동적 게시판은 브라우저 엔진 필수
+      const summary = await runBoardCrawl();
+      writeCoverageReport({ ...summary });
+      console.log(`[board] fetched=${summary.pagesFetched} changed=${summary.pagesChanged} failures=${summary.failures.length}`);
+      for (const [k, v] of Object.entries(summary.stopReasons)) console.log(`  - ${k}: ${v}`);
+      break;
+    }
     case 'full': {
       const pfPath = path.join(REPO_ROOT, 'data', 'manifests', 'crawl-preflight.json');
       if (!fs.existsSync(pfPath)) {

@@ -25,15 +25,17 @@
 - 검증: `pnpm test --filter rules`
 
 ## T-060 workers/crawler — DONE
-- CLI: crawl:preflight / crawl:sample / crawl:full / crawl:incremental / crawl:diff / crawl:coverage
-- 실측: 12 seed 전부 HTTP 200. pagination·상세 수집 OK. 첨부 다운로드는 robots 차단(D-001)
+- CLI: crawl:preflight / crawl:sample / crawl:full / crawl:board / crawl:incremental / crawl:diff / crawl:coverage
+- 실측: 12 seed 전부 HTTP 200. 공지사항 상세 38건은 Playwright in-page JS 실행 방식으로 수집(D-009).
+  FAQ 게시판은 외부 BBS 링크/인라인 구성 → 개별 글 수집 보류.
 - 증거: `data/manifests/crawl-preflight.json`, `docs/harness/CRAWL_PREFLIGHT.md`,
-  `data/manifests/pages.jsonl`, `artifacts/preflight/`
+  `data/manifests/pages.jsonl`(160+ 레코드), `artifacts/preflight/shot-*.png`
 
 ## T-070 workers/ingest — DONE
-- HTML→normalized markdown+표 보존, chunk(typed), 키워드 인덱스, wiki/generated 생성,
-  규칙후보 추출(draft만). PDF/HWP 등은 형식감지 후 MANUAL_REVIEW_REQUIRED 격리.
-- 증거: `data/normalized/`, `wiki/generated/`, `data/app-store/chunks.json`
+- HTML→normalized markdown+표 보존, chunk(typed) 2,535개, 위키 generated 15파일 생성,
+  규칙후보 60건 추출(draft만). PDF/HWP 등은 형식감지 후 MANUAL_REVIEW_REQUIRED 격리 설계.
+- 증거: `data/normalized/rules-candidates/`, `wiki/generated/`(내용 있는 파일 7개),
+  `data/app-store/chunks.json`
 
 ## T-080 packages/retrieval — DONE
 - 키워드+메타필터(+옵션벡터 자리), rerank 스코어, 출처 없으면 답변 거부
@@ -62,7 +64,8 @@
 - 증거: `docs/harness/TEST_RESULTS.md`, `CRAWL_COVERAGE.md`, 세션 최종 메시지
 
 ## NEXT (다음 세션 권장)
-1. PostgreSQL/Qdrant/Valkey 기동 후 `docker compose up -d` + 마이그레이션 적용 검증
-2. 법무 확인 후 첨부 수집 허용 여부 결정(D-001 해제 절차)
-3. 원문 기반 규칙 초안 작성 → REVIEWER 검토 → active 승인 플로우 실데이터 운용
-4. Playwright 브라우저 설치 후 `pnpm test:e2e` 실행 및 JS렌더 필요 페이지 재분류
+1. `pnpm dev:api` + `pnpm dev:web` 기동 후 `pnpm test:e2e` 실행(브라우저 흐름 검증)
+2. PostgreSQL/Qdrant/Valkey 기동 환경에서 `docker compose up -d` + 마이그레이션 적용 검증
+3. 법무 확인 후 (a) 첨부 수집 허용 여부(D-001 해제 절차), (b) 외부 BBS(buseo.sen.go.kr) allowlist 검토
+4. 원문 기반 규칙 초안 작성 → REVIEWER 검토 → ADMIN active 승인 플로우 실데이터 운용
+5. 증분 재수집 시 view0010v.do GET 셸 페이지 오염 방지(runCrawl 링크 확장 제외, D-009 주의)

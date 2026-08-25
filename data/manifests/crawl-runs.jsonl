@@ -10,3 +10,11 @@
 {"at":"2026-08-25T14:19:09.305Z","event":"end","mode":"full","startedAt":"2026-08-25T14:18:43.065Z","finishedAt":"2026-08-25T14:19:09.304Z","pagesFetched":12,"pagesChanged":0,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
 {"at":"2026-08-25T14:23:22.039Z","event":"start","mode":"sample"}
 {"at":"2026-08-25T14:23:24.658Z","event":"end","mode":"sample","startedAt":"2026-08-25T14:23:22.037Z","finishedAt":"2026-08-25T14:23:24.658Z","pagesFetched":1,"pagesChanged":0,"attachmentsSeen":2,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
+{"at":"2026-08-25T14:34:07.369Z","event":"start","mode":"full"}
+{"at":"2026-08-25T14:34:34.173Z","event":"end","mode":"full","startedAt":"2026-08-25T14:34:07.368Z","finishedAt":"2026-08-25T14:34:34.172Z","pagesFetched":12,"pagesChanged":1,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
+{"at":"2026-08-25T14:45:48.166Z","event":"start","mode":"full"}
+{"at":"2026-08-25T14:46:14.927Z","event":"end","mode":"full","startedAt":"2026-08-25T14:45:48.163Z","finishedAt":"2026-08-25T14:46:14.925Z","pagesFetched":12,"pagesChanged":3,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
+{"at":"2026-08-25T14:50:34.870Z","event":"start","mode":"full"}
+{"at":"2026-08-25T14:51:01.982Z","event":"end","mode":"full","startedAt":"2026-08-25T14:50:34.867Z","finishedAt":"2026-08-25T14:51:01.980Z","pagesFetched":12,"pagesChanged":3,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
+{"at":"2026-08-25T15:20:01.937Z","event":"start","mode":"full"}
+{"at":"2026-08-25T15:20:16.403Z","event":"end","mode":"full","startedAt":"2026-08-25T15:20:01.931Z","finishedAt":"2026-08-25T15:20:16.397Z","pagesFetched":12,"pagesChanged":12,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
