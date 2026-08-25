@@ -117,6 +117,9 @@ export async function runCrawl(mode: 'sample' | 'full' | 'incremental'): Promise
           // pagination은 walkBoard로 처리(아래), 여기서는 상세만 큐
         }
         for (const d of targets.detailUrls) {
+          // POST 폼형 상세(view0010v.do)는 HTTP GET 시 빈 셸만 반환하므로
+          // 링크 확장에서 제외한다. 상세는 crawl:board(Playwright renderViaCall)가 전담(D-009).
+          if (/view0010v\.do/.test(d)) continue;
           if (!visited.has(d) && (mode === 'full' ? nextDepth <= maxDepthFull : false)) {
             queue.push({ url: d, seedName: item.seedName, depth: nextDepth });
           }
