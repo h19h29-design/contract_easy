@@ -2,3 +2,5 @@
 {"at":"2026-08-25T13:49:01.614Z","event":"end","mode":"sample","startedAt":"2026-08-25T13:49:00.382Z","finishedAt":"2026-08-25T13:49:01.614Z","pagesFetched":1,"pagesChanged":1,"attachmentsSeen":2,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
 {"at":"2026-08-25T13:49:11.912Z","event":"start","mode":"full"}
 {"at":"2026-08-25T13:49:26.374Z","event":"end","mode":"full","startedAt":"2026-08-25T13:49:11.911Z","finishedAt":"2026-08-25T13:49:26.374Z","pagesFetched":12,"pagesChanged":11,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
+{"at":"2026-08-25T14:02:49.458Z","event":"start","mode":"full"}
+{"at":"2026-08-25T14:03:15.861Z","event":"end","mode":"full","startedAt":"2026-08-25T14:02:49.456Z","finishedAt":"2026-08-25T14:03:15.861Z","pagesFetched":12,"pagesChanged":12,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}

@@ -1,14 +1,25 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractFromHtml, isoNow, stableId } from '@sen/shared';
-import { ensureDirs, REPO_ROOT } from '@sen/config';
+import { extractFromHtml, isoNow } from '@sen/shared';
+import { ensureDirs, REPO_ROOT, getConfig } from '@sen/config';
 import { FileStore } from '@sen/db';
+import { BrowserRenderer } from './browser.js';
 import {
   makeContext, ensureRobots, fetchAndStorePage, collectTargets, walkBoard,
   appendManifest, downloadAttachmentIfAllowed, seedList,
   DETAIL_HINTS
 } from './core.js';
 import type { PreflightReport } from './preflight.js';
+
+export async function makeRendererIfConfigured(screenshotDir?: string): Promise<BrowserRenderer | null> {
+  const cfg = getConfig();
+  if (cfg.crawler.engine !== 'playwright') return null;
+  return new BrowserRenderer({
+    delayMs: cfg.crawler.delayMs,
+    userAgent: cfg.crawler.userAgent,
+    screenshotDir
+  });
+}
 
 export interface CrawlSummary {
   mode: string;
@@ -27,6 +38,7 @@ export async function runCrawl(mode: 'sample' | 'full' | 'incremental'): Promise
   const dirs = ensureDirs();
   const store = new FileStore(dirs.appStore);
   await ensureRobots(ctx);
+  const renderer = await makeRendererIfConfigured(path.join(REPO_ROOT, 'artifacts', 'samples'));
 
   const summary: CrawlSummary = {
     mode, startedAt: isoNow(), finishedAt: '',
@@ -50,7 +62,7 @@ export async function runCrawl(mode: 'sample' | 'full' | 'incremental'): Promise
     visited.add(item.url);
 
     try {
-      const page = await fetchAndStorePage(ctx, item.url);
+      const page = await fetchAndStorePage(ctx, item.url, { renderer: renderer ?? undefined });
       summary.pagesFetched++;
       const upsert = store.upsertSourcePage({
         url: page.snapshot.finalUrl,
@@ -115,6 +127,7 @@ export async function runCrawl(mode: 'sample' | 'full' | 'incremental'): Promise
     }
   }
 
+  await renderer?.close();
   summary.finishedAt = isoNow();
   store.finishCrawlRun(runRec.id, {
     status: 'done',
@@ -133,6 +146,7 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
   const dirs = ensureDirs();
   const store = new FileStore(dirs.appStore);
   await ensureRobots(ctx);
+  const renderer = await makeRendererIfConfigured(path.join(REPO_ROOT, 'artifacts', 'preflight'));
   const summary: CrawlSummary = {
     mode: 'board', startedAt: isoNow(), finishedAt: '',
     pagesFetched: 0, pagesChanged: 0, attachmentsSeen: 0, attachmentsDownloaded: 0,
@@ -140,7 +154,7 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
   };
   const boardSeeds = seedList().filter((s) => s.kind === 'paginated-board');
   for (const seed of boardSeeds) {
-    const walk = await walkBoard(ctx, seed.url, 30, async (snapshot, idx) => {
+    const walk = await walkBoard(ctx, seed.url, 30, renderer, async (snapshot, idx) => {
       summary.pagesFetched++;
       const upsert = store.upsertSourcePage({
         url: snapshot.finalUrl, seedName: seed.name, kind: 'paginated-board',
@@ -156,13 +170,14 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
     });
     summary.stopReasons[`${seed.name}:${walk.stopReason}`] = walk.pagesVisited;
 
-    // 상세페이지 수집(상위 N건 샘플 — full은 ingest에서 확장 가능)
+    // 상세페이지 수집: 브라우저 엔진이면 더 많이(공지·FAQ 전문 확보), HTTP면 샘플만
+    const detailLimit = renderer ? 50 : 5;
     let count = 0;
     for (const detailUrl of walk.detailUrls) {
-      if (count >= 5) break; // 게시판당 상세 5건 샘플(사이트 부담 최소화)
+      if (count >= detailLimit) break;
       if (!DETAIL_HINTS.test(detailUrl)) continue;
       try {
-        const page = await fetchAndStorePage(ctx, detailUrl);
+        const page = await fetchAndStorePage(ctx, detailUrl, { renderer: renderer ?? undefined });
         summary.pagesFetched++;
         const upsert = store.upsertSourcePage({
           url: page.snapshot.finalUrl, seedName: seed.name, kind: 'board-detail',
@@ -182,6 +197,7 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
       }
     }
   }
+  await renderer?.close();
   summary.finishedAt = isoNow();
   return summary;
 }
@@ -269,15 +285,15 @@ export function writeCoverageReport(summary?: CrawlSummary): string {
   }
   const md = lines.join('\n') + '\n';
   fs.writeFileSync(path.join(REPO_ROOT, 'docs', 'harness', 'CRAWL_COVERAGE.md'), md, 'utf8');
-  fs.writeFileSync(path.join(dirs.manifests, 'versions', 'latest-sources.json'), JSON.stringify({
+  const versionsDir = path.join(dirs.manifests, 'versions');
+  fs.mkdirSync(versionsDir, { recursive: true });
+  fs.writeFileSync(path.join(versionsDir, 'latest-sources.json'), JSON.stringify({
     generatedAt: isoNow(),
     sources: sources.map((s) => ({ id: s.id, url: s.url, versions: s.versions.length, latestSha: s.versions.at(-1)?.contentSha256 }))
   }, null, 2));
   return md;
 }
 
-function classifySeedName(name: string): string { return name; }
-void classifySeedName;
 
 function classifySeedKind(seedName: string | null): string {
   const seeds = seedList();
@@ -289,4 +305,3 @@ function normalize(u: string): string {
   return u;
 }
 
-export { stableId };

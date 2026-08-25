@@ -8,6 +8,7 @@ import {
 import { ensureDirs, loadSeeds, getConfig } from '@sen/config';
 import { PoliteHttpClient, classifyError } from './http.js';
 import { fetchRobots, type RobotsInfo } from './robots.js';
+import type { BrowserRenderer } from './browser.js';
 
 export interface SeedDef { name: string; url: string; kind: string }
 
@@ -62,20 +63,32 @@ export const NEXT_PAGE_TEXT = /다음|next|>|»/i;
 export async function fetchAndStorePage(
   ctx: CrawlContext,
   url: string,
-  opts: { saveRaw?: boolean; menuPath?: string[] } = {}
+  opts: { saveRaw?: boolean; menuPath?: string[]; renderer?: BrowserRenderer } = {}
 ): Promise<FetchedPage> {
-  const res = await ctx.client.get(url);
-  if (res.status !== 200) throw Object.assign(new Error(`HTTP ${res.status}`), { category: `http_${res.status}` });
-  const html = res.body.toString('utf8');
+  let html: string;
+  let finalUrl: string;
+  let status: number;
+  if (opts.renderer) {
+    const rendered = await opts.renderer.render(url);
+    html = rendered.html;
+    finalUrl = rendered.finalUrl;
+    status = rendered.status ?? 200;
+  } else {
+    const res = await ctx.client.get(url);
+    if (res.status !== 200) throw Object.assign(new Error(`HTTP ${res.status}`), { category: `http_${res.status}` });
+    html = res.body.toString('utf8');
+    finalUrl = res.url || url;
+    status = res.status;
+  }
   const sha = sha256Hex(html);
-  const extracted = extractFromHtml(html, res.url);
+  const extracted = extractFromHtml(html, finalUrl);
 
   let savedPath: string | null = null;
   let duplicateContent = false;
   if (opts.saveRaw !== false) {
     const sub = path.join(ctx.rawHtmlDir, sha.slice(0, 2));
     fs.mkdirSync(sub, { recursive: true });
-    const fname = `${stableId('page', res.url)}-${sha.slice(0, 12)}.html`;
+    const fname = `${stableId('page', finalUrl)}-${sha.slice(0, 12)}.html`;
     savedPath = path.join(sub, fname);
     if (fs.existsSync(savedPath)) duplicateContent = true; // 불변 원본 재기록 금지
     else fs.writeFileSync(savedPath, html, 'utf8');
@@ -83,8 +96,8 @@ export async function fetchAndStorePage(
 
   const snapshot: PageSnapshot = {
     url: normalizeUrl(url),
-    finalUrl: normalizeUrl(res.url),
-    status: res.status,
+    finalUrl: normalizeUrl(finalUrl),
+    status,
     title: extracted.title,
     htmlLength: html.length,
     bodyTextLength: extracted.bodyText.length,
@@ -92,7 +105,7 @@ export async function fetchAndStorePage(
     attachments: extracted.attachments,
     fetchedAt: isoNow(),
     sha256: sha,
-    headers: { 'content-type': res.headers['content-type'] ?? '' }
+    headers: {}
   };
   return { snapshot, html, savedPath, duplicateContent };
 }
@@ -126,6 +139,7 @@ export async function walkBoard(
   ctx: CrawlContext,
   listUrl: string,
   maxPages = 30,
+  renderer?: BrowserRenderer | null,
   onPage?: (snapshot: PageSnapshot, pageIdx: number) => Promise<void> | void
 ): Promise<{ pagesVisited: number; detailUrls: Set<string>; stopReason: string }> {
   const visited = new Set<string>();
@@ -140,7 +154,7 @@ export async function walkBoard(
 
     let page: FetchedPage;
     try {
-      page = await fetchAndStorePage(ctx, current);
+      page = await fetchAndStorePage(ctx, current, { renderer: renderer ?? undefined });
     } catch (err) {
       return { pagesVisited: idx, detailUrls: allDetails, stopReason: `fetch_error:${classifyError(err)}` };
     }
