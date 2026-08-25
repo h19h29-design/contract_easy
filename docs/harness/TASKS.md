@@ -63,9 +63,24 @@
 ## T-130 최종 보고 — DONE
 - 증거: `docs/harness/TEST_RESULTS.md`, `CRAWL_COVERAGE.md`, 세션 최종 메시지
 
+## T-140 증분 수집 오염 방지 — DONE
+- view0010v.do(POST 폼형 상세)를 HTTP 링크 확장에서 제외 → 빈 셸 페이지 오염 방지(D-009 후속)
+- 실측: `crawl:incremental` 3회 — 첫 회 changedUrls=1(엔진 전환분 반영), 2·3회 **changedUrls=0(안정)**
+- `crawl:diff`로 버전 쌍 확인. 증거: `data/manifests/crawl-runs.jsonl`
+
+## T-141 규칙 후보 원문 문맥 표시 — DONE
+- RuleDefinition에 `candidate`(원문 문장/앞뒤 문맥/chunk ID) 추가, 추출 시 보존,
+  관리자 `/admin/rules` 화면에 나란히 표시, 오래된 candidate 초안 자동 정리(reviewed/active는 보존)
+- 재생성 멱등 확인: 2회 연속 실행 시 candidates=63, staleRemoved=0, active=0 유지
+
+## T-142 compose 오프라인 검증 — DONE(문서 한정)
+- `pnpm compose:validate` PASS: 7서비스, healthcheck, host/privileged 미사용,
+  latest 태그 없음, SESSION_SECRET 필수, NAS 경로 변수화, 비표준 포트 확인
+- 한계: `docker compose config`의 대체 아님(Docker 환경에서 최종 확인 필요)
+
 ## NEXT (다음 세션 권장)
-1. `pnpm dev:api` + `pnpm dev:web` 기동 후 `pnpm test:e2e` 실행(브라우저 흐름 검증)
-2. PostgreSQL/Qdrant/Valkey 기동 환경에서 `docker compose up -d` + 마이그레이션 적용 검증
-3. 법무 확인 후 (a) 첨부 수집 허용 여부(D-001 해제 절차), (b) 외부 BBS(buseo.sen.go.kr) allowlist 검토
-4. 원문 기반 규칙 초안 작성 → REVIEWER 검토 → ADMIN active 승인 플로우 실데이터 운용
-5. 증분 재수집 시 view0010v.do GET 셸 페이지 오염 방지(runCrawl 링크 확장 제외, D-009 주의)
+1. PostgreSQL/Qdrant/Valkey 기동 환경에서 `docker compose up -d` + 마이그레이션 적용 검증
+   (DATABASE_URL 지정 시 PG 리포지토리 경로 활성화 구현이 선행되면 좋음)
+2. 법무 확인: (a) 첨부 수집 허용 여부(D-001), (b) 외부 BBS(buseo.sen.go.kr) allowlist
+3. 원문 기반 규칙 초안 작성(후보 63건 중 계약방법 표 데이터 활용) → REVIEWER 검토 → ADMIN active 승인
+4. FAQ 게시판 인라인 본문의 FAQ 전용 chunk(faq type) 세분화

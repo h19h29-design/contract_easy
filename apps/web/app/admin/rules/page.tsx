@@ -10,6 +10,13 @@ interface RuleRow {
   scope: Record<string, string>;
   output: { method?: string; message?: string };
   source: { title: string; url: string; effectiveFrom?: string | null; checkedAt: string };
+  candidate?: {
+    kindOfValue: string;
+    quotedSentence: string;
+    contextBefore: string;
+    contextAfter: string;
+    sourceChunkId?: string;
+  };
 }
 interface Conflict { ruleVersionIdA: string; ruleVersionIdB: string; reason: string }
 
@@ -81,8 +88,15 @@ export default function AdminRulesPage() {
             <table className="data">
               <tbody>
                 <tr><th style={{ width: 120 }}>출력(후보값)</th><td>{r.output.method ?? '(없음)'}</td></tr>
+                {r.candidate && (
+                  <>
+                    <tr><th>원문 문장</th><td style={{ background: '#fffbe9' }}>{r.candidate.quotedSentence}</td></tr>
+                    <tr><th>앞 문맥</th><td className="muted">…{r.candidate.contextBefore || '(없음)'}</td></tr>
+                    <tr><th>뒤 문맥</th><td className="muted">{r.candidate.contextAfter || '(없음)'}…</td></tr>
+                  </>
+                )}
                 <tr><th>메시지</th><td>{r.output.message}</td></tr>
-                <tr><th>원문 문맥/제목</th><td>{r.source.title}</td></tr>
+                <tr><th>원문 제목</th><td>{r.source.title}</td></tr>
                 <tr><th>원문 URL</th><td><a href={r.source.url} target="_blank" rel="noreferrer noopener">{r.source.url}</a></td></tr>
                 <tr><th>게시일/시행일</th><td>{String(r.source.effectiveFrom ?? '미확인')}</td></tr>
                 <tr><th>마지막 확인일</th><td>{r.source.checkedAt?.slice(0, 10)}</td></tr>

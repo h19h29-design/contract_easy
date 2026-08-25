@@ -314,6 +314,21 @@ export class FileStore {
     return true;
   }
 
+  /**
+   * 자동 추출 후보 draft 정리: 최신 추출 배치에 없는 candidate.* 초안만 제거.
+   * reviewed/active/superseded 상태와 사람이 만든 규칙은 절대 삭제하지 않는다.
+   */
+  purgeStaleCandidateDrafts(currentIds: string[]): number {
+    const keep = new Set(currentIds);
+    const before = this.data.rules.length;
+    this.data.rules = this.data.rules.filter(
+      (r) => !(r.id.startsWith('candidate.') && r.status === 'draft' && !keep.has(r.id))
+    );
+    const removed = before - this.data.rules.length;
+    if (removed > 0) this.flush();
+    return removed;
+  }
+
   /* ---------- chunks 저장소에서 규칙 후보 로딩 보조 ---------- */
   findRulesByIdPrefix(prefix: string): StoredRule[] {
     return this.listRules().filter((r) => r.id.startsWith(prefix));

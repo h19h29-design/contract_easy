@@ -64,6 +64,9 @@ describe('규칙 후보 추출(draft 전용)', () => {
       expect(d.output.method).toBeUndefined(); // 판단값 없음
       expect(d.source.url).toBeTruthy();
       expect(d.output.message).toContain('승인');
+      // 원문 문맥이 후보에 함께 보존되어야 함(관리자 검토 화면용)
+      expect(d.candidate?.quotedSentence).toBeTruthy();
+      expect(['amount', 'ratio', 'duration', 'document']).toContain(d.candidate!.kindOfValue);
     }
   });
 

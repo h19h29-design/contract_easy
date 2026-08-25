@@ -2,6 +2,16 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-25 추가 실행 (2차 세션)
+
+| 명령 | 결과 | 핵심 출력 |
+| --- | --- | --- |
+| `pnpm crawl:incremental` 3회 | PASS | 1회 changedUrls=1(이전 Playwright/HTTP 엔진 전환분), **2·3회 changedUrls=0** — 증분 안정성 확인 |
+| `pnpm crawl:diff` | PASS | 버전 쌍 나란히 출력(v2→v3 등, 엔진 전환 이력 반영) |
+| `pnpm ingest:all` 2회 연속 | PASS | candidates=63 멱등(2회차 staleRemoved=0), active=0 유지. 오래된 candidate 초안 자동 정리(reviewed/active 보존) 확인 |
+| 규칙 후보 문맥 저장 | PASS | 63건 전부 `candidate.quotedSentence/contextBefore/contextAfter` 보유 → `/admin/rules` 화면 표시(단위테스트 포함) |
+| `pnpm compose:validate` | PASS | 7서비스·healthcheck·host/privileged 미사용·latest 없음·SESSION_SECRET 필수·NAS 경로 변수화 확인(Docker config 대체 아님) |
+
 ## 2026-08-25 최종
 
 | 명령 | 결과 | 핵심 출력 |

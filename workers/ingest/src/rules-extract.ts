@@ -62,7 +62,7 @@ function splitSentences(text: string): string[] {
     .filter(Boolean);
 }
 
-/** 후보 → draft 규칙 정의(판단값 없음). 관리자 승인 화면에서 원문과 나란히 검토된다. */
+/** 후보 → draft 규칙 정의(판단값 없음). 원문 문장·앞뒤 문맥을 함께 보관한다. */
 export function candidatesToDraftRules(cands: RuleCandidateDraft[]): RuleDefinition[] {
   return cands.map((c) => ({
     id: `candidate.${c.kindOfValue}.${c.candidateId}`,
@@ -80,6 +80,13 @@ export function candidatesToDraftRules(cands: RuleCandidateDraft[]): RuleDefinit
       publishedAt: null,
       effectiveFrom: null,
       checkedAt: todayIso()
+    },
+    candidate: {
+      kindOfValue: c.kindOfValue,
+      quotedSentence: c.quotedSentence,
+      contextBefore: c.contextBefore,
+      contextAfter: c.contextAfter,
+      sourceChunkId: c.sourceChunkId
     },
     reviewedBy: null,
     supersededBy: null,

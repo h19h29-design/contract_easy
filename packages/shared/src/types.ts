@@ -135,6 +135,14 @@ export interface RuleDefinition {
     nextSteps?: string[];
   };
   source: RuleSourceMeta;
+  /** 자동 추출 후보인 경우 원문 문맥(관리자 검토 화면용) */
+  candidate?: {
+    kindOfValue: 'amount' | 'ratio' | 'duration' | 'document';
+    quotedSentence: string;
+    contextBefore: string;
+    contextAfter: string;
+    sourceChunkId?: string;
+  };
   reviewedBy?: string | null;
   supersededBy?: string | null;
   createdAt: string;

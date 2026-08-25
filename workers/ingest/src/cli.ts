@@ -63,9 +63,11 @@ async function main(): Promise<void> {
     const allChunks = store.getChunks();
     const cands = extractRuleCandidates(allChunks);
     const drafts = candidatesToDraftRules(cands);
+    // 이번 배치에 없는 오래된 candidate 초안만 정리(reviewed/active는 보존)
+    const removed = store.purgeStaleCandidateDrafts(drafts.map((d) => d.id));
     for (const d of drafts) store.upsertRule(d);
     const file = saveCandidates(dataPaths().rulesCandidates, cands);
-    console.log(`[rules] candidates=${cands.length} draftRules=${drafts.length} → ${file}`);
+    console.log(`[rules] candidates=${cands.length} draftRules=${drafts.length} staleRemoved=${removed} → ${file}`);
   }
 
   if (cmd === 'index') {
