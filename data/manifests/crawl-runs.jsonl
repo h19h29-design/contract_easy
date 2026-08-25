@@ -4,3 +4,9 @@
 {"at":"2026-08-25T13:49:26.374Z","event":"end","mode":"full","startedAt":"2026-08-25T13:49:11.911Z","finishedAt":"2026-08-25T13:49:26.374Z","pagesFetched":12,"pagesChanged":11,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
 {"at":"2026-08-25T14:02:49.458Z","event":"start","mode":"full"}
 {"at":"2026-08-25T14:03:15.861Z","event":"end","mode":"full","startedAt":"2026-08-25T14:02:49.456Z","finishedAt":"2026-08-25T14:03:15.861Z","pagesFetched":12,"pagesChanged":12,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
+{"at":"2026-08-25T14:12:20.875Z","event":"start","mode":"full"}
+{"at":"2026-08-25T14:12:47.163Z","event":"end","mode":"full","startedAt":"2026-08-25T14:12:20.874Z","finishedAt":"2026-08-25T14:12:47.162Z","pagesFetched":12,"pagesChanged":0,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
+{"at":"2026-08-25T14:18:43.066Z","event":"start","mode":"full"}
+{"at":"2026-08-25T14:19:09.305Z","event":"end","mode":"full","startedAt":"2026-08-25T14:18:43.065Z","finishedAt":"2026-08-25T14:19:09.304Z","pagesFetched":12,"pagesChanged":0,"attachmentsSeen":22,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}
+{"at":"2026-08-25T14:23:22.039Z","event":"start","mode":"sample"}
+{"at":"2026-08-25T14:23:24.658Z","event":"end","mode":"sample","startedAt":"2026-08-25T14:23:22.037Z","finishedAt":"2026-08-25T14:23:24.658Z","pagesFetched":1,"pagesChanged":0,"attachmentsSeen":2,"attachmentsDownloaded":0,"failures":[],"stopReasons":{}}

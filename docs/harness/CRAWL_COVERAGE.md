@@ -1,10 +1,10 @@
 # CRAWL_COVERAGE.md — 수집 범위 실측 보고
 
-- 생성시각: 2026-08-25T14:03:26.862Z
+- 생성시각: 2026-08-25T14:19:37.997Z
 - 발견 페이지(source) 수: **12**
 - 총 버전 수: 24
 - 첨부파일(메타) 수: 22
-- 마지막 실행(full+board): fetched=12, changed=12, failures=0
+- 마지막 실행(full+board): fetched=12, changed=0, failures=0
 
 | seed/URL | 제목 | 버전 | 첨부 | 상태 |
 | --- | --- | --- | --- | --- |

@@ -1,13 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractFromHtml, isoNow } from '@sen/shared';
+import {
+  extractFromHtml, isoNow, sha256Hex, normalizeUrl,
+  type PageSnapshot
+} from '@sen/shared';
 import { ensureDirs, REPO_ROOT, getConfig } from '@sen/config';
 import { FileStore } from '@sen/db';
 import { BrowserRenderer } from './browser.js';
 import {
   makeContext, ensureRobots, fetchAndStorePage, collectTargets, walkBoard,
   appendManifest, downloadAttachmentIfAllowed, seedList,
-  DETAIL_HINTS
 } from './core.js';
 import type { PreflightReport } from './preflight.js';
 
@@ -153,109 +155,130 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
     failures: [], stopReasons: {}
   };
   const boardSeeds = seedList().filter((s) => s.kind === 'paginated-board');
+
   for (const seed of boardSeeds) {
-    // 첫 페이지를 렌더링하여 동적 링크(fncDetailView/fncSearch) 해석
-    const dynamicDetails = new Set<string>();
-    const paginationUrls = new Set<string>();
-    if (renderer) {
-      try {
-        const first = await fetchAndStorePage(ctx, seed.url, { renderer });
-        summary.pagesFetched++;
-        const upsertFirst = store.upsertSourcePage({
-          url: first.snapshot.finalUrl, seedName: seed.name, kind: 'paginated-board',
-          title: first.snapshot.title || seed.name, contentSha256: first.snapshot.sha256,
-          collectedAt: first.snapshot.fetchedAt, menuPath: [seed.name]
-        });
-        if (upsertFirst.changed) summary.pagesChanged++;
-        appendManifest(dirs.manifests, 'pages.jsonl', {
-          at: first.snapshot.fetchedAt, url: first.snapshot.finalUrl, status: first.snapshot.status,
-          title: first.snapshot.title, sha256: first.snapshot.sha256, versionId: upsertFirst.versionId,
-          changed: upsertFirst.changed, page: 1
-        });
-
-        const detailCalls = [...first.html.matchAll(/fncDetailView\((\d+)|fncDetailView\('(\d+)'/g)]
-          .map((m) => m[1] ?? m[2])
-          .filter((v): v is string => Boolean(v));
-        const pageIdxCalls = [...first.html.matchAll(/fncSearch\((\d+)/g)]
-          .map((m) => m[1]!)
-          .filter((n) => n !== '1');
-
-        // 상세 URL 템플릿 해석: 첫 호출을 실제 클릭해 도착 URL 확인
-        if (detailCalls.length > 0) {
-          const sampleId = detailCalls[0]!;
-          const clicked = await renderer.resolveClickUrl(seed.url, `fncDetailView(${sampleId}`);
-          if (clicked && clicked.includes(sampleId)) {
-            for (const id of detailCalls.slice(0, 49)) {
-              dynamicDetails.add(clicked.split(sampleId).join(id));
-            }
-          }
-        }
-        // pagination URL 템플릿 해석
-        if (pageIdxCalls.length > 0) {
-          const pgId = pageIdxCalls[0]!;
-          const clickedPg = await renderer.resolveClickUrl(seed.url, `fncSearch(${pgId}`);
-          if (clickedPg && clickedPg.includes(pgId)) {
-            for (const n of pageIdxCalls.slice(0, 9)) {
-              paginationUrls.add(clickedPg.split(pgId).join(n));
-            }
-          }
-        }
-      } catch (err) {
-        summary.failures.push({ url: seed.url, category: String((err as { category?: string }).category ?? 'unknown'), message: String((err as Error).message) });
+    try {
+      if (!renderer) {
+        // HTTP 폴백: 정적 링크만 탐색(동적 게시판은 BLOCKED로 기록)
+        const walk = await walkBoard(ctx, seed.url, 30, null);
+        summary.stopReasons[`${seed.name}:${walk.stopReason}`] = walk.pagesVisited;
+        continue;
       }
-    }
 
-    // 목록/pagination 페이지 수집
-    const listPages = new Set<string>([seed.url, ...paginationUrls]);
-    for (const listUrl of listPages) {
-      const walk = await walkBoard(ctx, listUrl, renderer ? 10 : 30, renderer, async (snapshot, idx) => {
-        summary.pagesFetched++;
-        const upsert = store.upsertSourcePage({
-          url: snapshot.finalUrl, seedName: seed.name, kind: 'paginated-board',
-          title: `${snapshot.title || seed.name} (${idx + 1}p)`, contentSha256: snapshot.sha256,
-          collectedAt: snapshot.fetchedAt, menuPath: [seed.name]
-        });
-        if (upsert.changed) summary.pagesChanged++;
-        appendManifest(dirs.manifests, 'pages.jsonl', {
-          at: snapshot.fetchedAt, url: snapshot.finalUrl, status: snapshot.status,
-          title: snapshot.title, sha256: snapshot.sha256, versionId: upsert.versionId,
-          changed: upsert.changed, page: idx + 1
-        });
+      // ---- 페이지 1 렌더 ----
+      let pageIdxCalls: string[] = [];
+      const articleIds: string[] = [];
+      const seenIds = new Set<string>();
+      const maxPagesPerBoard = 8;
+      const detailLimit = 50;
+
+      const collectCalls = (html: string): { ids: string[]; pages: string[] } => ({
+        ids: [...new Set(
+          [...html.matchAll(/fncDetailView\((['"]?\d+)/g)]
+            .map((m) => m[1]!.replace(/['"]/g, ''))
+        )],
+        pages: [...new Set(
+          [...html.matchAll(/fncSearch\((['"]?\d+)/g)]
+            .map((m) => m[1]!.replace(/['"]/g, ''))
+            .filter((n) => n !== '1' && Number(n) > 0 && Number(n) <= 50)
+        )]
       });
-      summary.stopReasons[`${seed.name}:${walk.stopReason}`] = walk.pagesVisited;
-      for (const d of walk.detailUrls) dynamicDetails.add(d);
-    }
 
-    // 상세페이지 수집: 브라우저 엔진이면 더 많이(공지·FAQ 전문 확보), HTTP면 샘플만
-    const detailLimit = renderer ? 50 : 5;
-    let count = 0;
-    for (const detailUrl of dynamicDetails) {
-      if (count >= detailLimit) break;
-      if (!DETAIL_HINTS.test(detailUrl) && !/\d{3,}/.test(detailUrl)) continue;
-      try {
-        const page = await fetchAndStorePage(ctx, detailUrl, { renderer: renderer ?? undefined });
-        summary.pagesFetched++;
-        const upsert = store.upsertSourcePage({
-          url: page.snapshot.finalUrl, seedName: seed.name, kind: 'board-detail',
-          title: page.snapshot.title || '(게시물)', contentSha256: page.snapshot.sha256,
-          collectedAt: page.snapshot.fetchedAt, menuPath: [seed.name]
-        });
-        if (upsert.changed) summary.pagesChanged++;
-        store.markSourceAttachments(upsert.sourceId, page.snapshot.attachments);
-        appendManifest(dirs.manifests, 'pages.jsonl', {
-          at: page.snapshot.fetchedAt, url: page.snapshot.finalUrl, status: page.snapshot.status,
-          title: page.snapshot.title, sha256: page.snapshot.sha256, versionId: upsert.versionId,
-          changed: upsert.changed, attachmentCount: page.snapshot.attachments.length
-        });
-        count++;
-      } catch (err) {
-        summary.failures.push({ url: detailUrl, category: String((err as { category?: string }).category ?? 'unknown'), message: String((err as Error).message) });
+      const first = await fetchAndStorePage(ctx, seed.url, { renderer });
+      summary.pagesFetched++;
+      persistPage(store, dirs, summary, seed.name, 'paginated-board', first.snapshot, first.savedPath, 1);
+
+      const firstCalls = collectCalls(first.html);
+      for (const id of firstCalls.ids) {
+        if (!seenIds.has(id)) { seenIds.add(id); articleIds.push(id); }
       }
+      pageIdxCalls = firstCalls.pages;
+
+      // ---- pagination 페이지들(사이트 함수 실행 방식, 종료조건: 빈 목록/반복/최대) ----
+      const seenListSig = new Set<string>([sha256Hex(extractFromHtml(first.html, seed.url).bodyText.slice(0, 1500))]);
+      let paginated = 0;
+      for (const n of pageIdxCalls.slice(0, maxPagesPerBoard)) {
+        if (paginated >= maxPagesPerBoard) break;
+        const rendered = await renderer.renderViaCall(seed.url, `fncSearch('${n}')`);
+        summary.pagesFetched++;
+        const bodyText = extractFromHtml(rendered.html, rendered.finalUrl).bodyText;
+        const sig = sha256Hex(bodyText.slice(0, 1500));
+        if (bodyText.length < 300 || seenListSig.has(sig)) {
+          const reason = bodyText.length < 300 ? 'empty_list' : 'content_repeat';
+          summary.stopReasons[`${seed.name}:${reason}@page_${n}`] = paginated;
+          break;
+        }
+        seenListSig.add(sig);
+        paginated++;
+        const snap = snapshotFrom(rendered.finalUrl, rendered.html, rendered.status);
+        persistPage(store, dirs, summary, seed.name, 'paginated-board', snap, null, Number(n));
+        const calls = collectCalls(rendered.html);
+        for (const id of calls.ids) {
+          if (!seenIds.has(id)) { seenIds.add(id); articleIds.push(id); }
+        }
+      }
+      summary.stopReasons[`${seed.name}:articles_found`] = articleIds.length;
+
+      // ---- 상세 게시물(POST 렌더) 수집 ----
+      const viewBase = seed.url.replace(/list0010v\.do.*$/, 'view0010v.do');
+      for (const id of articleIds.slice(0, detailLimit)) {
+        const identityUrl = `${viewBase}?board_seq=${id}`;
+        const rendered = await renderer.renderViaCall(seed.url, `fncDetailView('${id}')`);
+        summary.pagesFetched++;
+        const snap = snapshotFrom(identityUrl, rendered.html, rendered.status);
+        persistPage(store, dirs, summary, seed.name, 'board-detail', snap, null, 1);
+      }
+    } catch (err) {
+      summary.failures.push({ url: seed.url, category: String((err as { category?: string }).category ?? 'unknown'), message: String((err as Error).message) });
     }
   }
   await renderer?.close();
   summary.finishedAt = isoNow();
   return summary;
+}
+
+function snapshotFrom(url: string, html: string, status: number | null): PageSnapshot {
+  const extracted = extractFromHtml(html, url);
+  return {
+    url: normalizeUrl(url),
+    finalUrl: normalizeUrl(url),
+    status: status ?? 200,
+    title: extracted.title,
+    htmlLength: html.length,
+    bodyTextLength: extracted.bodyText.length,
+    links: extracted.links,
+    attachments: extracted.attachments,
+    fetchedAt: isoNow(),
+    sha256: sha256Hex(html),
+    headers: {}
+  };
+}
+
+function persistPage(
+  store: FileStore,
+  dirs: { manifests: string },
+  summary: CrawlSummary,
+  seedName: string,
+  kind: string,
+  snap: PageSnapshot,
+  savedPath: string | null,
+  pageIdx: number
+): void {
+  const upsert = store.upsertSourcePage({
+    url: snap.finalUrl, seedName, kind,
+    title: snap.title || `(게시물 ${pageIdx})`,
+    contentSha256: snap.sha256,
+    rawHtmlPath: savedPath ?? undefined,
+    collectedAt: snap.fetchedAt, menuPath: [seedName]
+  });
+  if (upsert.changed) summary.pagesChanged++;
+  store.markSourceAttachments(upsert.sourceId, snap.attachments);
+  summary.attachmentsSeen += snap.attachments.length;
+  appendManifest(dirs.manifests, 'pages.jsonl', {
+    at: snap.fetchedAt, url: snap.finalUrl, status: snap.status,
+    title: snap.title, sha256: snap.sha256, versionId: upsert.versionId,
+    changed: upsert.changed, page: pageIdx, attachmentCount: snap.attachments.length
+  });
 }
 
 export interface DiffEntry {
