@@ -30,7 +30,7 @@ export interface EvalSummary {
   refusalMisses: string[];
 }
 
-export function runEvaluation(chunks: Chunk[], evalSet: EvalSet): EvalSummary {
+export async function runEvaluation(chunks: Chunk[], evalSet: EvalSet): Promise<EvalSummary> {
   const retriever = new HybridRetriever({ chunks, versions: [] });
   const summary: EvalSummary = {
     totalCorpus: evalSet.corpus.length,
@@ -46,7 +46,7 @@ export function runEvaluation(chunks: Chunk[], evalSet: EvalSet): EvalSummary {
     needles.some((n) => haystack.includes(n));
 
   for (const item of evalSet.corpus) {
-    const hits = retriever.search(item.q, 3);
+    const hits = await retriever.search(item.q, 3);
     const texts = hits.map(
       (h) => `${h.chunk.docTitle} ${h.chunk.text} ${h.chunk.url}`
     );
@@ -58,7 +58,7 @@ export function runEvaluation(chunks: Chunk[], evalSet: EvalSet): EvalSummary {
   }
 
   for (const item of evalSet.outOfCorpus) {
-    const hits = retriever.search(item.q, 5).filter((h) => h.score > 0);
+    const hits = (await retriever.search(item.q, 5)).filter((h) => h.score > 0);
     // 비코퍼스 질문은 상위 히트 자체가 없거나 매우 약해야 정상
     const topScore = hits[0]?.score ?? 0;
     const looksRelevant = hits.some((h) => {
@@ -111,7 +111,7 @@ async function main(): Promise<void> {
   }
   const chunks = JSON.parse(fs.readFileSync(chunksFile, 'utf8')) as Chunk[];
   const evalSet = JSON.parse(fs.readFileSync(evalFile, 'utf8')) as EvalSet;
-  const summary = runEvaluation(chunks, evalSet);
+  const summary = await runEvaluation(chunks, evalSet);
   const report = formatReport(summary);
   const outDir = path.resolve('docs', 'harness');
   fs.mkdirSync(outDir, { recursive: true });

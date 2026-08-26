@@ -31,7 +31,8 @@
     "crawl:faq-bbs": "tsx workers/crawler/src/cli.ts faq-bbs",
     "crawl:attachments": "tsx workers/crawler/src/cli.ts attachments",
     "crawl:selector": "tsx workers/crawler/src/cli.ts selector",
-    "crawl:selector-tables": "tsx workers/crawler/src/cli.ts selector-tables"
+    "crawl:selector-tables": "tsx workers/crawler/src/cli.ts selector-tables",
+    "embed:index": "tsx workers/ingest/src/cli.ts embed-index"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

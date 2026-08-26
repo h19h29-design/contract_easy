@@ -20,8 +20,9 @@ function chunk(over: Partial<Chunk>): Chunk {
 
 describe('tokenize', () => {
   it('한글 2gram + 영단어', () => {
-    expect(tokenize('낙찰자 결정방법 notice')).toContain('낙찰');
-    expect(tokenize('낙찰자 결정방법 notice')).toContain('notice');
+    const t = tokenize('낙찰자 결정방법 notice');
+    expect(t).toContain('낙찰');
+    expect(t).toContain('notice');
   });
 });
 
@@ -74,7 +75,7 @@ describe('HybridRetriever 출처 게이트', () => {
     expect(res.hits[0]!.sourceUrl).toContain('contract.sen.go.kr');
   });
 
-  it('구버전(inactive) 청크는 강등', () => {
+  it('구버전(inactive) 청크는 강등', async () => {
     const oldVersions = versions.map((v) => ({ ...v, id: 'sv-old', status: 'inactive' as const }));
     const r2 = new HybridRetriever({
       chunks: [
@@ -83,7 +84,7 @@ describe('HybridRetriever 출처 게이트', () => {
       ],
       versions: [...versions, ...oldVersions]
     });
-    const hits = r2.search('계약금액 확인');
+    const hits = await r2.search('계약금액 확인');
     const newHit = hits.find((h) => h.chunk.id === 'new')!;
     const oldHit = hits.find((h) => h.chunk.id === 'old')!;
     expect(newHit.score).toBeGreaterThan(oldHit.score);

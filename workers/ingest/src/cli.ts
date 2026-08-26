@@ -7,6 +7,8 @@ import { generateWiki } from './wiki.js';
 import { extractRuleCandidates, candidatesToDraftRules, saveCandidates } from './rules-extract.js';
 import { extractContractMethodDrafts } from './rule-tables.js';
 import { syncDatabase } from './sync-db.js';
+import { runEmbedIndex } from '@sen/retrieval';
+import { getConfig } from '@sen/config';
 import { pdfFileToNormalized, listPdfFiles } from './pdf-attach.js';
 import { extractZipAttachments } from './zip-extract.js';
 import { listHwpTextDocs } from './hwp-txt.js';
@@ -106,6 +108,28 @@ async function main(): Promise<void> {
     }
     const { report } = await syncDatabase({ databaseUrl, appStoreDir: dataPaths().appStore });
     console.log(`[sync-db] ${JSON.stringify(report)}`);
+  }
+
+  if (cmd === 'embed-index') {
+    const cfg = getConfig();
+    if (cfg.embeddingProvider === 'none') {
+      console.error('[embed-index] EMBEDDING_PROVIDER 미설정(none). hash/openai/openrouter/ollama 중 지정 필요.');
+      process.exit(1);
+    }
+    const storeKind = process.env.VECTOR_STORE === 'qdrant' ? 'qdrant' : 'local';
+    const r = await runEmbedIndex({
+      chunksFile: path.join(dataPaths().appStore, 'chunks.json'),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      provider: cfg.embeddingProvider as any,
+      apiKey: cfg.embeddingApiKey,
+      model: process.env.EMBEDDING_MODEL || undefined,
+      dim: Number(process.env.EMBEDDING_DIM ?? 256),
+      store: storeKind,
+      qdrantUrl: cfg.qdrantUrl,
+      qdrantCollection: process.env.QDRANT_COLLECTION || 'sen_contract_chunks',
+      localPath: path.join(dataPaths().appStore, 'vectors.json')
+    });
+    console.log(`[embed-index] points=${r.points} batches=${r.batches}`);
   }
 
   if (cmd === 'index') {

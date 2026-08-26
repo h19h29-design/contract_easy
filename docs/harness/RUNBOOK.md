@@ -16,6 +16,13 @@ pnpm dev:web             # http://localhost:3000
 - LLM 키 없이도 검색/위키/마법사(REVIEW_REQUIRED)/프로젝트 관리 동작.
 - 첨부 수집은 기본 비활성(D-001). 해제는 `CRAWL_ALLOW_ATTACHMENTS=true` + 법무 승인 후.
 
+## 1.5 벡터 검색(선택)
+`ash
+# EMBEDDING_PROVIDER=hash(오프라인) 또는 openai/openrouter/ollama 설정 후
+pnpm embed:index        # 청크 임베딩 적재(local json 기본, VECTOR_STORE=qdrant 시 Qdrant)
+`
+- API는 EMBEDDING_PROVIDER≠none이면 키워드+벡터 RRF 융합 검색으로 자동 전환됩니다.
+
 ## 2. 테스트
 ```bash
 pnpm lint && pnpm typecheck && pnpm test && pnpm build

@@ -214,6 +214,9 @@ importers:
       '@sen/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@sen/retrieval':
+        specifier: workspace:*
+        version: link:../../packages/retrieval
       '@sen/shared':
         specifier: workspace:*
         version: link:../../packages/shared

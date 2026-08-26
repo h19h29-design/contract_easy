@@ -36,9 +36,25 @@ function sourcePriority(url: string): number {
   return 1;
 }
 
+function rrfFuse(
+  lists: Array<SearchHit[]>,
+  k = 60,
+): Map<string, { hit: SearchHit; score: number }> {
+  const fused = new Map<string, { hit: SearchHit; score: number }>();
+  for (const list of lists) {
+    list.forEach((hit, rank) => {
+      const contribution = 1 / (k + rank + 1);
+      const cur = fused.get(hit.chunk.id);
+      if (cur) cur.score += contribution;
+      else fused.set(hit.chunk.id, { hit, score: contribution });
+    });
+  }
+  return fused;
+}
+
 /**
- * 하이브리드 검색: 키워드 + (옵션)벡터 + 메타필터 → 병합 → 중복제거 → rerank
- * → 최신 시행일 우선 + 유효 문서 우선
+ * 하이브리드 검색: 키워드 + (옵션)벡터 RRF 융합 + 메타필터 → 다양성 캡
+ * 벡터 경로는 deps.vectorSearch 주입 시에만 활성화(EMBEDDING_PROVIDER 설정 필요).
  */
 export class HybridRetriever {
   private index: KeywordIndex;
@@ -49,19 +65,29 @@ export class HybridRetriever {
     this.versionById = new Map(deps.versions.map((v) => [v.id, v]));
   }
 
-  search(query: string, limit = 10, filters?: SearchFilters): SearchHit[] {
-    const kwHits = this.index.search(query, limit * 4, filters);
-    const byId = new Map<string, SearchHit>();
-    for (const h of kwHits) byId.set(h.chunk.id, h);
-    // 벡터 경로는 옵션(EMBEDDING_PROVIDER=none이면 생략)
-    const merged = [...byId.values()];
-    for (const h of merged) {
+  async search(query: string, limit = 10, filters?: SearchFilters): Promise<SearchHit[]> {
+    // 키워드 경로(스코어 기반)
+    const kwRaw = this.index.search(query, limit * 4, filters);
+    for (const h of kwRaw) {
       h.score += sourcePriority(h.sourceUrl) * 0.3;
       const v = this.versionById.get(h.chunk.sourceVersionId);
       if (v?.status === 'inactive') h.score -= 2; // 구버전 강등(삭제는 안 함)
-      if (h.effectiveAt) h.score += 0.5; // 시행일 명시 문서 가산
+      if (h.effectiveAt) h.score += 0.5;
     }
-    merged.sort((a, b) => b.score - a.score);
+
+    let merged: SearchHit[];
+    if (this.deps.vectorSearch) {
+      // 하이브리드: RRF 융합(키워드 스코어 순위 + 벡터 순위)
+      let vecHits: SearchHit[] = [];
+      try { vecHits = await this.deps.vectorSearch(query, limit * 2); }
+      catch { /* 벡터 실패 시 키워드만 */ }
+      const fusedMap = rrfFuse([kwRaw.slice(0, limit * 2), vecHits]);
+      merged = [...fusedMap.values()]
+        .sort((a, b) => b.score - a.score)
+        .map((x) => x.hit);
+    } else {
+      merged = [...kwRaw].sort((a, b) => b.score - a.score);
+    }
 
     // 소스 다양성 캡: 동일 문서가 상위를 독점하지 않도록 최대 3건
     const perSource = new Map<string, number>();
@@ -76,7 +102,7 @@ export class HybridRetriever {
   }
 
   async ask(question: string, filters?: SearchFilters): Promise<AskResult> {
-    const hits = this.search(question, 8, filters);
+    const hits = await this.search(question, 8, filters);
     const strongEvidence = hits.filter((h) => h.score > 0);
     if (strongEvidence.length === 0) {
       return { answered: false, refusalReason: NO_EVIDENCE_REFUSAL, hits: [] };
