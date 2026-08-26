@@ -18,7 +18,7 @@ pnpm crawl:preflight    # seed 사전검증(robots/상태/본문길이/링크수
 pnpm crawl:sample       # 첫 seed 1페이지 수집 + manifest
 pnpm crawl:full         # 전체 수집(안전조건 충족 시)
 pnpm crawl:board        # 동적 게시판 수집(Playwright 강제)
-pnpm compose:validate   # docker-compose.yml 구조 검증(Docker 없이)
+pnpm compose:validate   # docker-compose.yml 구조 검증(Docker 없이)`npnpm rules:queue        # 규칙 승인 대기열 문서 재생성
 pnpm crawl:incremental  # 변경분만 재수집(hash 비교)
 pnpm crawl:diff         # 버전 diff 리포트
 pnpm crawl:coverage     # CRAWL_COVERAGE.md 재생성

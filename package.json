@@ -26,7 +26,8 @@
     "store:reset": "node scripts/reset-store.mjs",
     "compose:validate": "node scripts/validate-compose.mjs",
     "test:pg": "vitest run -c vitest.pg.config.ts",
-    "eval:retrieval": "tsx packages/retrieval/src/eval.ts"
+    "eval:retrieval": "tsx packages/retrieval/src/eval.ts",
+    "rules:queue": "tsx scripts/gen-review-queue.mts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
