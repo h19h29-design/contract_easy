@@ -251,7 +251,7 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
 }
 
 /** content-addressed 원본 저장(불변, 중복 재기록 없음) → 저장 경로 반환 */
-function saveContentAddressed(rawHtmlDir: string, url: string, html: string): string {
+export function saveContentAddressed(rawHtmlDir: string, url: string, html: string): string {
   const sha = sha256Hex(html);
   const sub = path.join(rawHtmlDir, sha.slice(0, 2));
   fs.mkdirSync(sub, { recursive: true });

@@ -48,8 +48,10 @@ seeds:
 follow_rules:
   allow_domains:
     - contract.sen.go.kr
+    - buseo.sen.go.kr   # 2026-08-26 운영자 지시로 추가(D-013): FAQ 개별 Q&A 수집용. robots 재확인 완료(대상 경로 Allow, 첨부 확장자는 여전히 Disallow)
   allow_path_prefixes:
     - /fus/
+    - /buseo/bu20/user/bbs/   # FAQ BBS 한정(위 도메인과 쌍으로 적용)
   deny_query_keys:
     - session
     - token

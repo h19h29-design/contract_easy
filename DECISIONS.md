@@ -50,6 +50,11 @@
 - **결정**: 재추출로 draft 규칙을 다시 저장할 때 기존 상태가 reviewed/active면 절대 draft로 되돌리지 않는다(FileStore·PgStore 동일 적용). superseded는 그대로 유지.
 - **근거**: ingest가 chunk 재생성 후 동일 ID draft를 재upsert할 때 사람이 승인한 상태를 덮어쓰는 사고 가능. 활성화는 사람 승인으로만 이뤄진다는 절대 원칙의 보존 장치.
 
+## D-013 (2026-08-26) 외부 FAQ BBS(buseo.sen.go.kr) allowlist 확장
+- **결정**: 운영자 지시(세션 내 명시: "2번부터 5번까지 진행해")에 따라 follow_rules에 buseo.sen.go.kr + /buseo/bu20/user/bbs/ 를 추가하고 FAQ 개별 Q&A 글을 수집한다.
+- **조건 확인**: robots.txt 재확인(2026-08-26) — 대상 경로 Allow, 대상 q_bbsSn은 Disallow 목록(1079~1091) 외부, 첨부 확장자는 동일 Disallow → 메타만 수집.
+- **범위**: BD_selectBbsList / BD_selectBbs 두 엔드포인트 한정. 요청 정책(간격 1.2s·동시성 1) 동일 적용.
+
 ## D-012 (2026-08-26) PostgreSQL 모드 실검증: embedded-postgres 채택
 - **결정**: Docker 없는 환경에서도 운영 경로(PgStore+마이그레이션)를 검증하기 위해 `embedded-postgres`(실제 PG 바이너리)를 devDependency로 두고 `pnpm test:pg`로 통합 테스트를 실행한다.
 - **근거**: 테스트 없이 완료 처리 금지 원칙. PgStore는 FileStore(AppStore 계약)와 동일 시나리오(버전관리, RBAC, 규칙 플로우, API 모드)로 13건 검증 통과.

@@ -2,6 +2,18 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-26 4차 세션 (외부 FAQ BBS 수집)
+
+| 항목 | 결과 | 핵심 |
+| --- | --- | --- |
+| buseo.sen.go.kr robots 재확인 | PASS | 대상 경로 Allow(Disallow q_bbsSn 1079~1091 외부), 첨부 확장자는 동일 Disallow → 메타만 |
+| `pnpm crawl:faq-bbs` 신규 수집기 | PASS | **개별 Q&A 137건 수집**(원클릭 게시판 sn=1412 32건 전체 4페이지 소진 + 기타 연동 게시판), 오판 확장분 103건 식별·삭제 정리 |
+| 재인제스트 | PASS | 총 청크 5,388 / faq 2,769 (general 59 · goods 63 · service 58 · construction 62 · 원클릭 통합 2,527) |
+| 평가 재실행 | 동결 | hit@3 84.4% 유지 |
+| law.go.kr 링크 스캔 | 해당 없음 | 코퍼스 내 법령 외부 링크 0건 확인 → 본문 수집 대상 부재 |
+
+명령 게이트: lint PASS / typecheck PASS / test 70·70 / build PASS
+
 ## 2026-08-26 3차 세션 (FAQ 타입·구조화 규칙 초안·PG 동기화·평가셋)
 
 | 항목 | 결과 | 핵심 |

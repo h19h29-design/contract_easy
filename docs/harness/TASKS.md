@@ -102,6 +102,18 @@
 - 증거: `docs/harness/EVAL_RETRIEVAL.md`, `tests/fixtures/retrieval-eval.json`,
   `workers/ingest/src/rule-tables.ts`, `sync-db.ts`, `packages/retrieval/src/keyword.ts`
 
+## T-175 외부 FAQ BBS 수집(#2 해제) — DONE
+- buseo.sen.go.kr robots 재확인 후 allowlist 추가(D-013, 운영자 지시)
+- 신규 수집기 `pnpm crawl:faq-bbs`: 목록 pagination(전체 페이지 수 헤더 파싱) + 상세(BD_selectBbs.do)
+  → **개별 Q&A 137건** 수집. 오판 형제 게시판 확장(103건)은 식별·삭제하고 기본 비활성화(env 게이트).
+- 재인제스트: faq 청크 2,769개. 증거: UNCOLLECTED.md 2번, TEST_RESULTS 4차 세션 표
+
+## T-176 미수집 현황 갱신(#3~#5 판정) — DONE
+- #3 셀렉터: AJAX 확인됨 → UI-walk 다음 세션 착수(NEXT 1번)
+- #4 law.go.kr: 코퍼스 내 링크 0건 스캔 확인 → 대상 부재로 종결(robots는 Allow)
+- #5 OCR: #1 robots 차단에 종속됨을 명시
+- 증거: docs/harness/UNCOLLECTED.md (2차 갱신)
+
 ## NEXT (다음 세션 권장)
 1. 계약방법 셀렉터 UI-walk 개발(탭 클릭→XHR 관찰→엔드포인트 학습) — UNCOLLECTED 3번 해제
 2. Docker 가용 환경에서 `docker compose up -d` + `pnpm db:migrate` 최종 확인

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { REPO_ROOT, ensureDirs } from '@sen/config';
 import { runPreflight } from './preflight.js';
 import { runCrawl, runBoardCrawl, computeDiff, writeCoverageReport } from './crawl.js';
+import { crawlExternalFaq } from './external-faq.js';
 import { FileStore } from '@sen/db';
 
 async function main(): Promise<void> {
@@ -31,6 +32,15 @@ async function main(): Promise<void> {
       writeCoverageReport({ ...summary });
       console.log(`[board] fetched=${summary.pagesFetched} changed=${summary.pagesChanged} failures=${summary.failures.length}`);
       for (const [k, v] of Object.entries(summary.stopReasons)) console.log(`  - ${k}: ${v}`);
+      break;
+    }
+    case 'faq-bbs': {
+      // 외부 FAQ BBS(buseo.sen.go.kr) 수집 — allowlist는 seeds yaml(D-013)
+      const summary = await crawlExternalFaq();
+      for (const b of summary.boards) {
+        console.log(`  - ${b.seedName}: articles=${b.articles} pages=${b.pages} stop=${b.stopReason ?? '-'} list=${b.listUrl}`);
+      }
+      console.log(`[faq-bbs] fetched=${summary.fetched} failures=${summary.failures.length}`);
       break;
     }
     case 'full': {

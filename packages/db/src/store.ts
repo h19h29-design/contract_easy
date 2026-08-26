@@ -234,6 +234,14 @@ export class FileStore implements AppStore {
     if (rec) { rec.status = status; this.flush(); }
   }
 
+  /** 소스와 하위 버전·첨부를 완전히 제거(정리 스크립트 전용) */
+  removeSource(id: string): boolean {
+    if (!this.data.sources[id]) return false;
+    delete this.data.sources[id];
+    this.flush();
+    return true;
+  }
+
   currentVersions(): SourceVersion[] {
     return Object.values(this.data.sources)
       .map((s) => s.versions[s.versions.length - 1])
