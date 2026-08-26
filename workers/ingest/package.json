@@ -13,10 +13,12 @@
     "@sen/config": "workspace:*",
     "@sen/db": "workspace:*",
     "@sen/shared": "workspace:*",
-    "cheerio": "^1.0.0"
+    "cheerio": "^1.0.0",
+    "pdf-parse": "^2.4.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/pdf-parse": "^1.1.5",
     "typescript": "^5.6.0"
   }
 }

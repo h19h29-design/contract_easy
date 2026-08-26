@@ -1,0 +1,4 @@
+{"at":"2026-08-26T05:04:58.725Z","url":"https://contract.sen.go.kr/common/img/front/sub_viaul1.png","method":"GET","data":null}
+{"at":"2026-08-26T05:05:01.247Z","url":"https://contract.sen.go.kr/fus/main/precedence/gycdSelect.do","method":"POST","data":"param=A3"}
+{"at":"2026-08-26T05:05:06.875Z","url":"https://contract.sen.go.kr/fus/main/precedence/gycdSelect.do","method":"POST","data":"param=A2"}
+{"at":"2026-08-26T05:05:24.639Z","url":"https://contract.sen.go.kr/fus/main/precedence/gycdSelect.do","method":"POST","data":"param=A1"}

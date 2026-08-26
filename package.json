@@ -28,7 +28,9 @@
     "test:pg": "vitest run -c vitest.pg.config.ts",
     "eval:retrieval": "tsx packages/retrieval/src/eval.ts",
     "rules:queue": "tsx scripts/gen-review-queue.mts",
-    "crawl:faq-bbs": "tsx workers/crawler/src/cli.ts faq-bbs"
+    "crawl:faq-bbs": "tsx workers/crawler/src/cli.ts faq-bbs",
+    "crawl:attachments": "tsx workers/crawler/src/cli.ts attachments",
+    "crawl:selector": "tsx workers/crawler/src/cli.ts selector"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

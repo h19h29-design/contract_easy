@@ -217,6 +217,20 @@ export class FileStore implements AppStore {
     this.flush();
   }
 
+  /** 다운로드 결과 메타 부착(sha·경로 등). 대상이 없으면 무시. */
+  setAttachmentMeta(
+    sourceId: string,
+    url: string,
+    patch: Partial<Pick<AttachmentRef, 'sha256' | 'sizeBytes' | 'mimeType' | 'savedPath'>>
+  ): void {
+    const rec = this.data.sources[sourceId];
+    if (!rec) return;
+    const att = rec.attachments.find((a) => a.url === url);
+    if (!att) return;
+    Object.assign(att, patch);
+    this.flush();
+  }
+
   listSources(): SourceRecord[] {
     return Object.values(this.data.sources);
   }

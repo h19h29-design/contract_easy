@@ -4,6 +4,8 @@ import { REPO_ROOT, ensureDirs } from '@sen/config';
 import { runPreflight } from './preflight.js';
 import { runCrawl, runBoardCrawl, computeDiff, writeCoverageReport } from './crawl.js';
 import { crawlExternalFaq } from './external-faq.js';
+import { collectAttachments } from './attachments.js';
+import { walkSelector } from './selector-walk.js';
 import { FileStore } from '@sen/db';
 
 async function main(): Promise<void> {
@@ -32,6 +34,22 @@ async function main(): Promise<void> {
       writeCoverageReport({ ...summary });
       console.log(`[board] fetched=${summary.pagesFetched} changed=${summary.pagesChanged} failures=${summary.failures.length}`);
       for (const [k, v] of Object.entries(summary.stopReasons)) console.log(`  - ${k}: ${v}`);
+      break;
+    }
+    case 'attachments': {
+      const results = await collectAttachments();
+      const ok = results.filter((r) => r.status === 200);
+      const byKind: Record<string, number> = {};
+      for (const r of ok) byKind[r.kind!] = (byKind[r.kind!] ?? 0) + 1;
+      console.log(`[attachments] downloaded=${ok.length} kinds=${JSON.stringify(byKind)} skipped=${results.length - ok.length}`);
+      for (const r of results.filter((x) => x.status !== 200).slice(0, 10)) {
+        console.log(`  - skip [${r.reason}] ${r.url}`);
+      }
+      break;
+    }
+    case 'selector': {
+      process.env.CRAWLER_ENGINE = 'playwright';
+      await walkSelector();
       break;
     }
     case 'faq-bbs': {

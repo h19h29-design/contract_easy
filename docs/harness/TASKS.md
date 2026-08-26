@@ -102,6 +102,16 @@
 - 증거: `docs/harness/EVAL_RETRIEVAL.md`, `tests/fixtures/retrieval-eval.json`,
   `workers/ingest/src/rule-tables.ts`, `sync-db.ts`, `packages/retrieval/src/keyword.ts`
 
+## T-180 첨부 수집(D-014 승인) + PDF 인제스트 — DONE
+- 운영자 승인(D-014) + robots 재해석(차단 패턴은 직접 확장자 URL 대상, .do 엔드포인트는 외부)에 따라 실행.
+- pnpm crawl:attachments: 135/141 성공(zip65 hwp45 pdf19 xls5 png1), 매직바이트 검증·크기 상한·미실행.
+- PDF 어댑터(pdf-parse v2): 15문서 → 256 청 추가, 스캔 1건 스킵. HWP 파서는 미구현(문서화).
+- 증거: data/raw/attachments/, data/manifests/attachments.jsonl, TEST_RESULTS 5차 세션 표.
+
+## T-181 셀렉터 UI-walk v3 — PARTIAL
+- 캐스케이딩 드롭다운 구동 성공(gb→gy 동적 로딩: 공사2/용역10/물품8). 적용 클릭 20회.
+- 결과 표 미렌더 → fncSubView 응답 캡처가 다음 착수점. XHR 로그 보존(selector-xhr.jsonl).
+- 증거: workers/crawler/src/selector-walk.ts, UNCOLLECTED.md 3번(부분 진행).
 ## T-175 외부 FAQ BBS 수집(#2 해제) — DONE
 - buseo.sen.go.kr robots 재확인 후 allowlist 추가(D-013, 운영자 지시)
 - 신규 수집기 `pnpm crawl:faq-bbs`: 목록 pagination(전체 페이지 수 헤더 파싱) + 상세(BD_selectBbs.do)

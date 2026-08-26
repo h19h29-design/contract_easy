@@ -7,37 +7,52 @@ import { generateWiki } from './wiki.js';
 import { extractRuleCandidates, candidatesToDraftRules, saveCandidates } from './rules-extract.js';
 import { extractContractMethodDrafts } from './rule-tables.js';
 import { syncDatabase } from './sync-db.js';
+import { pdfFileToNormalized, listPdfFiles } from './pdf-attach.js';
+import type { NormalizedDoc } from '@sen/shared';
+
+interface DocEntry {
+  doc: NormalizedDoc;
+  versionId: string;
+}
 
 async function main(): Promise<void> {
   const cmd = process.argv[2] ?? 'all';
   const dirs = ensureDirs();
   const store = new FileStore(dirs.appStore);
 
-  if (cmd === 'normalize' || cmd === 'all') {
-    let n = 0;
-    const docs = [];
+  const needsDocs = ['normalize', 'chunk', 'wiki', 'rules', 'all'].includes(cmd);
+  const docs: DocEntry[] = [];
+
+  if (needsDocs) {
+    // 1) HTML 원문
     for (const src of store.listSources()) {
       const latest = src.versions[src.versions.length - 1];
       if (!latest?.rawHtmlPath || !fs.existsSync(latest.rawHtmlPath)) continue;
       const raw = fs.readFileSync(latest.rawHtmlPath, 'utf8');
-      const doc = htmlToNormalized(latest.id, src.url, latest.title, latest.menuPath ?? [], latest.collectedAt, raw);
-      saveNormalizedMarkdown(dirs.normalizedMarkdown, doc);
-      docs.push({ doc, version: latest });
-      n++;
+      docs.push({
+        doc: htmlToNormalized(latest.id, src.url, latest.title, latest.menuPath ?? [], latest.collectedAt, raw),
+        versionId: latest.id
+      });
     }
-    console.log(`[normalize] normalized=${n}`);
-    (store as unknown as { __docs?: unknown }).__docs = docs;
+    // 2) PDF 첨부(텍스트 계열만; 실패/스캔은 경고 후 건너뜀)
+    let pdfOk = 0;
+    let pdfSkip = 0;
+    for (const pdfPath of listPdfFiles(dirs.rawAttachments)) {
+      const attDoc = await pdfFileToNormalized(pdfPath, { title: path.basename(pdfPath) });
+      if (!attDoc) { pdfSkip++; continue; }
+      docs.push({ doc: attDoc, versionId: attDoc.sourceVersionId });
+      pdfOk++;
+    }
+    console.log(`[docs] html=${docs.length - pdfOk} pdfAttached=${pdfOk} pdfSkipped=${pdfSkip}`);
+  }
+
+  if (cmd === 'normalize' || cmd === 'all') {
+    for (const { doc } of docs) saveNormalizedMarkdown(dirs.normalizedMarkdown, doc);
+    console.log(`[normalize] normalized=${docs.length}`);
   }
 
   if (cmd === 'chunk' || cmd === 'all') {
-    const chunks = [];
-    for (const src of store.listSources()) {
-      const latest = src.versions[src.versions.length - 1];
-      if (!latest?.rawHtmlPath || !fs.existsSync(latest.rawHtmlPath)) continue;
-      const raw = fs.readFileSync(latest.rawHtmlPath, 'utf8');
-      const doc = htmlToNormalized(latest.id, src.url, latest.title, latest.menuPath ?? [], latest.collectedAt, raw);
-      chunks.push(...docToChunks(doc));
-    }
+    const chunks = docs.flatMap(({ doc }) => docToChunks(doc));
     store.replaceChunks(chunks);
     fs.writeFileSync(
       path.join(dataPaths().appStore, 'chunks.json'),
@@ -47,17 +62,13 @@ async function main(): Promise<void> {
   }
 
   if (cmd === 'wiki' || cmd === 'all') {
-    const docs = [];
-    for (const src of store.listSources()) {
-      const latest = src.versions[src.versions.length - 1];
-      if (!latest?.rawHtmlPath || !fs.existsSync(latest.rawHtmlPath)) continue;
-      const raw = fs.readFileSync(latest.rawHtmlPath, 'utf8');
-      docs.push({
-        doc: htmlToNormalized(latest.id, src.url, latest.title, latest.menuPath ?? [], latest.collectedAt, raw),
-        version: latest
-      });
-    }
-    const files = generateWiki(docs);
+    const wikiEntries = docs
+      .filter(({ versionId }) => !versionId.startsWith('attdoc'))
+      .map(({ doc, versionId }) => ({
+        doc,
+        version: store.getSource(versionId)?.versions.find((v) => v.id === versionId) ?? null
+      }));
+    const files = generateWiki(wikiEntries);
     console.log(`[wiki] generated=${files.length} → wiki/generated/`);
   }
 
@@ -66,22 +77,14 @@ async function main(): Promise<void> {
     const cands = extractRuleCandidates(allChunks);
     const candidateDrafts = candidatesToDraftRules(cands);
 
-    // 계약방법 표 → 구조화 초안(원문 인용값, 항상 draft)
-    const docs = [];
-    for (const src of store.listSources()) {
-      const latest = src.versions[src.versions.length - 1];
-      if (!latest?.rawHtmlPath || !fs.existsSync(latest.rawHtmlPath)) continue;
-      const raw = fs.readFileSync(latest.rawHtmlPath, 'utf8');
-      docs.push(htmlToNormalized(latest.id, src.url, latest.title, latest.menuPath ?? [], latest.collectedAt, raw));
-    }
-    const { drafts: tableDrafts } = extractContractMethodDrafts(docs);
-    const allDrafts = [...candidateDrafts, ...tableDrafts];
+    // 계약방법 표 → 구조화 초안(HTML 문서 대상)
+    const tableDraftResult = extractContractMethodDrafts(docs.map((d) => d.doc));
+    const allDrafts = [...candidateDrafts, ...tableDraftResult.drafts];
 
-    // 이번 배치에 없는 오래된 candidate 초안만 정리(reviewed/active는 보존)
     const removed = store.purgeStaleCandidateDrafts(candidateDrafts.map((d) => d.id));
     for (const d of allDrafts) store.upsertRule(d);
     const file = saveCandidates(dataPaths().rulesCandidates, cands);
-    console.log(`[rules] candidates=${cands.length} tableBands=${tableDrafts.length} total=${allDrafts.length} staleRemoved=${removed} → ${file}`);
+    console.log(`[rules] candidates=${cands.length} tableBands=${tableDraftResult.drafts.length} total=${allDrafts.length} staleRemoved=${removed} → ${file}`);
   }
 
   if (cmd === 'sync-db') {
@@ -95,7 +98,6 @@ async function main(): Promise<void> {
   }
 
   if (cmd === 'index') {
-    // 키워드 인덱스는 retrieval가 chunks.json에서 즉석 구성(외부 인프라 불필요).
     const p = `${dataPaths().appStore}/chunks.json`;
     const ok = fs.existsSync(p);
     console.log(`[index] chunks.json ${ok ? 'ready' : 'MISSING'} (keyword index built on demand)`);
