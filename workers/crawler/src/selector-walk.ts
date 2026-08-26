@@ -2,13 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDirs } from '@sen/config';
 import { FileStore, contentPath } from '@sen/db';
-import { sha256Hex, isoNow } from '@sen/shared';
+import { sha256Hex } from '@sen/shared';
 
 /**
- * 怨꾩빟諛⑸쾿 ??됲꽣 UI-walk v3(#3).
- * - ?꾩뿭 罹먯뒪耳?대뵫 ?쒕∼?ㅼ슫(#gb_cd_top ??#gy_cd_top)???ㅼ젣濡?議곗옉?섍퀬
- *   [?곸슜] ?대┃ 寃곌낵(??留???ν븳?? ?뚮씪誘명꽣 異붿륫 ?놁쓬.
- * - ?붿껌? selector-xhr.jsonl??湲곕줉(?붾뱶?ъ씤???숈뒿 ?먮즺).
+ * 계약방법 셀렉터 UI-walk v3(#3).
+ * - 전역 캐스케이딩 드롭다운(#gb_cd_top → #gy_cd_top)을 실제로 조작하고
+ *   [적용] 클릭 결과(표)만 저장한다. 파라미터 추측 없음.
+ * - fncSubView 응답 프래그먼트는 selector-fragments/에 보존(엔드포인트 학습 자료).
  */
 
 const SEED_URL = 'https://contract.sen.go.kr/fus/MI000000000000000097/contract/list0010v.do';
@@ -33,11 +33,10 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
   page.on('response', async (res) => {
     try {
       if (!/Sub/i.test(res.url())) return;
-      const req = res.request();
       let body = '';
       try { body = await res.text(); } catch { return; }
-      const key = sha256Hex(res.url() + '|' + (req.postData() ?? '')).slice(0, 16);
-      subResponses.push({ key, url: res.url(), data: req.postData(), body });
+      const key = sha256Hex(res.url() + '|' + (res.request().postData() ?? '')).slice(0, 16);
+      subResponses.push({ key, url: res.url(), data: res.request().postData(), body });
     } catch { /* 무시 */ }
   });
 
@@ -52,9 +51,23 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
   )) as Array<{ value: string; text: string }>;
   console.log(`[selector-walk] gb options=${gbOptions.length}`);
 
+  if (gbOptions.length === 0) {
+    const diag = (await page.evaluate(
+      `(() => {
+        const sel = document.querySelector('#gb_cd_top');
+        return {
+          title: document.title,
+          selCount: document.querySelectorAll('select').length,
+          selHtml: sel ? sel.outerHTML.slice(0, 400) : 'NOT_FOUND'
+        };
+      })()`
+    )) as { title: string; selCount: number; selHtml: string };
+    console.log(`[selector-walk][diag] title=${diag.title} selCount=${diag.selCount} sel=${diag.selHtml.slice(0, 200)}`);
+    await page.screenshot({ path: path.join('artifacts', 'selector-diag.png'), fullPage: false }).catch(() => undefined);
+  }
+
   let savedVariants = 0;
   let applied = 0;
-  let lastSubCount = 0;
 
   for (const gb of gbOptions) {
     if (!gb.value) continue;
@@ -68,11 +81,11 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
     );
     await page.waitForTimeout(2600);
 
-    // ?섏쐞(gy) ?듭뀡 ?쎄린
+    // 하위(gy) 옵션 읽기
     const gyOptions = (await page.evaluate(
       `(() => {
         const s = document.querySelector('#gy_cd_top');
-        return s ? Array.from(s.options).map(o => ({ value: o.value, text: o.text.trim })).filter(o => o.value) : [];
+        return s ? Array.from(s.options).map(o => ({ value: o.value, text: o.text.trim() })).filter(o => o.value) : [];
       })()`
     )) as Array<{ value: string; text: string }>;
     console.log(`  [gb=${gb.text || gb.value}] gy options=${gyOptions.length}`);
@@ -89,6 +102,7 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
           })(${JSON.stringify(gb.value)}, ${JSON.stringify(gy.value)})`
         );
 
+        // [적용] 클릭(재시도 포함)
         let clicked = false;
         for (let attempt = 0; attempt < 3 && !clicked; attempt++) {
           await page.waitForTimeout(attempt === 0 ? 200 : 900);
@@ -105,23 +119,22 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
           );
         }
         if (!clicked) {
-          console.log(`  ! [적용] 미발견(재시도 포함) — gb 순회 중단`);
+          console.log(`  ! [적용] 미발견 — gb 순회 중단`);
           break;
         }
         applied++;
-        const subBefore = subResponses.length;
         await page.waitForLoadState('domcontentloaded').catch(() => undefined);
         await page.waitForTimeout(1500);
 
         // fncSubView AJAX 프래그먼트 저장(표 포함 여부 무관, 학습 자료)
-        for (const r of subResponses.slice(lastSubCount)) {
-          fs.mkdirSync(path.join(dirs.manifests, 'selector-fragments'), { recursive: true });
-          const fragFile = path.join(dirs.manifests, 'selector-fragments', `${r.key}.html`);
+        for (const r of subResponses) {
+          const fragDir = path.join(dirs.manifests, 'selector-fragments');
+          fs.mkdirSync(fragDir, { recursive: true });
+          const fragFile = path.join(fragDir, `${r.key}.html`);
           if (!fs.existsSync(fragFile)) {
             fs.writeFileSync(fragFile, `<!-- url: ${r.url}\n     data: ${r.data ?? ''} -->\n` + r.body, 'utf8');
           }
         }
-        lastSubCount = subResponses.length;
 
         const html = await page.content();
         const tables = (html.match(/<table/g) ?? []).length;
@@ -136,17 +149,16 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
           fs.mkdirSync(path.dirname(savedPath), { recursive: true });
           fs.writeFileSync(savedPath, html, 'utf8');
         }
-        const upsert = store.upsertSourcePage({
+        store.upsertSourcePage({
           url: identity,
-          seedName: '怨꾩빟諛⑸쾿 硫붿씤',
+          seedName: '계약방법 메인',
           kind: 'contract-category',
-          title: `怨꾩빟諛⑸쾿 ??됲꽣 [${label}]`,
+          title: `계약방법 셀렉터 [${label}]`,
           contentSha256: sha,
           rawHtmlPath: savedPath,
-          collectedAt: isoNow(),
-          menuPath: ['怨꾩빟諛⑸쾿 硫붿씤', label]
+          collectedAt: new Date().toISOString(),
+          menuPath: ['계약방법 메인', label]
         });
-        void upsert;
         savedVariants++;
         console.log(`  + saved [${label}] tables=${tables}`);
       } catch (err) {
@@ -157,13 +169,13 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
 
   fs.writeFileSync(path.join(dirs.manifests, 'selector-xhr.jsonl'), xhrLog.join('\n') + '\n', 'utf8');
   console.log(`[selector-walk] done applied=${applied} savedVariants=${savedVariants} xhrLogged=${xhrLog.length} subResponses=${subResponses.length}`);
-  // 프래그먼트 요약: 표 포함 프래그먼트 나열
   const withTables = subResponses.filter((r) => /<table/i.test(r.body));
   console.log(`[selector-walk] fragmentsWithTable=${withTables.length}`);
   for (const r of withTables.slice(0, 20)) {
     const data = (r.data ?? '').replace(/\s+/g, ' ').slice(0, 120);
     console.log(`  * ${r.key} body=${r.body.length}B data=${data}`);
   }
+
   await context.close();
   await browser.close();
 }
