@@ -45,3 +45,13 @@
 ## D-010 (2026-08-25) 위키 파일 하나 추가: 13-공지사항-모음.md
 - **결정**: 프롬프트 지정 14개 위키 파일 외에 `13-공지사항-모음.md`를 추가 생성한다.
 - **근거**: 공지사항 상세 38건은 어느 지정 파일과도 주제가 맞지 않음. 원문 인용+출처 메타 유지 원칙은 동일.
+
+## D-011 (2026-08-26) 규칙 upsert 상태 에스컬레이션 가드
+- **결정**: 재추출로 draft 규칙을 다시 저장할 때 기존 상태가 reviewed/active면 절대 draft로 되돌리지 않는다(FileStore·PgStore 동일 적용). superseded는 그대로 유지.
+- **근거**: ingest가 chunk 재생성 후 동일 ID draft를 재upsert할 때 사람이 승인한 상태를 덮어쓰는 사고 가능. 활성화는 사람 승인으로만 이뤄진다는 절대 원칙의 보존 장치.
+
+## D-012 (2026-08-26) PostgreSQL 모드 실검증: embedded-postgres 채택
+- **결정**: Docker 없는 환경에서도 운영 경로(PgStore+마이그레이션)를 검증하기 위해 `embedded-postgres`(실제 PG 바이너리)를 devDependency로 두고 `pnpm test:pg`로 통합 테스트를 실행한다.
+- **근거**: 테스트 없이 완료 처리 금지 원칙. PgStore는 FileStore(AppStore 계약)와 동일 시나리오(버전관리, RBAC, 규칙 플로우, API 모드)로 13건 검증 통과.
+- **범위 주의**: 크롤러/인제스트 산출물(manifests, chunks.json)은 파일 기반 유지 — API는 두 모드 모두 chunks.json을 검색 인덱스로 사용. 운영 배포 시 정기 `ingest:all` + API 재시작(또는 추후 sync 작업)으로 동기화.
+

@@ -5,8 +5,9 @@ import {
   type Chunk, type RuleDefinition, type SourceVersion,
   type AttachmentRef, type WizardInput
 } from '@sen/shared';
+import type { AppStore } from './app-store.js';
 
-/* 파일 기반 리포지토리(개발/MVP용). 운영은 Drizzle PostgreSQL 사용(D-003). */
+/* 파일 기반 리포지토리(개발/MVP용). 운영은 PgStore(PostgreSQL) 사용(D-003). */
 
 interface SourceRecord {
   id: string;
@@ -136,7 +137,7 @@ export function emptyDb(): DbData {
   };
 }
 
-export class FileStore {
+export class FileStore implements AppStore {
   private file: string;
   private data: DbData;
 
@@ -257,7 +258,16 @@ export class FileStore {
     const now = isoNow();
     if (idx >= 0) {
       const prev = this.data.rules[idx]!;
-      this.data.rules[idx] = { ...prev, ...def, createdAt: prev.createdAt, updatedAt: now };
+      // 상태 에스컬레이션 가드(D-011): 기존 reviewed/active를 draft로 되돌리지 않음
+      let effectiveStatus = def.status;
+      if (prev.status !== 'superseded') {
+        const rank: Record<string, number> = { draft: 0, reviewed: 1, active: 2 };
+        if ((rank[prev.status] ?? 0) > (rank[def.status] ?? 0)) effectiveStatus = prev.status;
+      }
+      this.data.rules[idx] = {
+        ...prev, ...def, status: effectiveStatus,
+        createdAt: prev.createdAt, updatedAt: now
+      };
     } else {
       this.data.rules.push({ ...def, createdAt: def.createdAt ?? now, updatedAt: now });
     }

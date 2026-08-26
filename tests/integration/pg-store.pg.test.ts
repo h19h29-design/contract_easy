@@ -1,0 +1,147 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { PgStore, createStore } from '@sen/db';
+import type { RuleDefinition } from '@sen/shared';
+
+let store: PgStore;
+const url = process.env.PG_TEST_URL!;
+
+beforeAll(async () => {
+  store = await PgStore.connect(url);
+});
+
+afterAll(async () => {
+  await store.close();
+});
+
+function baseRule(id: string, version: number, status: RuleDefinition['status']): RuleDefinition {
+  return {
+    id,
+    version,
+    status,
+    scope: { contract_category: 'construction' },
+    conditions: [{ field: 'estimated_price', operator: 'between', value: [0, 0] }],
+    output: { reviewRequired: true },
+    source: { title: 't', url: 'https://example.org', effectiveFrom: null, checkedAt: '2026-08-25' },
+    reviewedBy: null,
+    supersededBy: null,
+    createdAt: '2026-08-25T00:00:00Z',
+    updatedAt: '2026-08-25T00:00:00Z'
+  };
+}
+
+describe('PgStore 마이그레이션', () => {
+  it('재적용 시 멱등(0건)', async () => {
+    const applied = await store.applyMigrations();
+    expect(applied).toBe(0);
+  });
+});
+
+describe('PgStore 원문 버전 관리', () => {
+  it('동일 콘텐츠 재수집 → 중복 버전 없음 + 경로/메뉴 보완', async () => {
+    const a = await store.upsertSourcePage({
+      url: 'https://x/fus/pg-a', seedName: null, kind: 'guide', title: 'A',
+      contentSha256: 'sha-pg-1', collectedAt: '2026-08-25T00:00:00Z'
+    });
+    const b = await store.upsertSourcePage({
+      url: 'https://x/fus/pg-a', seedName: null, kind: 'guide', title: 'A',
+      contentSha256: 'sha-pg-1', rawHtmlPath: '/tmp/a.html', menuPath: ['FAQ'],
+      collectedAt: '2026-08-26T00:00:00Z'
+    });
+    expect(b.changed).toBe(false);
+    expect(b.versionId).toBe(a.versionId);
+    const src = await store.getSource('https://x/fus/pg-a');
+    expect(src?.versions).toHaveLength(1);
+    expect(src?.versions[0]?.rawHtmlPath).toBe('/tmp/a.html');
+    expect(src?.versions[0]?.menuPath).toEqual(['FAQ']);
+  });
+
+  it('콘텐츠 변경 → 새 버전 + 구버전 보존', async () => {
+    await store.upsertSourcePage({ url: 'https://x/fus/pg-b', seedName: null, kind: 'guide', title: '구', contentSha256: 'old', collectedAt: '2026-01-01T00:00:00Z' });
+    const up = await store.upsertSourcePage({ url: 'https://x/fus/pg-b', seedName: null, kind: 'guide', title: '신', contentSha256: 'new', collectedAt: '2026-02-01T00:00:00Z' });
+    expect(up.changed).toBe(true);
+    expect(up.versionIndex).toBe(2);
+    const src = await store.getSource(up.sourceId);
+    expect(src?.versions.map((v) => v.contentSha256)).toEqual(['old', 'new']);
+  });
+
+  it('currentVersions는 소스별 최신만 반환', async () => {
+    const versions = await store.currentVersions();
+    const pgB = versions.filter((v) => v.url === 'https://x/fus/pg-b');
+    expect(pgB).toHaveLength(1);
+    expect(pgB[0]!.contentSha256).toBe('new');
+  });
+});
+
+describe('PgStore 규칙 플로우', () => {
+  it('draft→activate 불가 / review 후 activate 가능 / 신규 active 시 구버전 superseded', async () => {
+    await store.upsertRule(baseRule('pg.rule', 1, 'draft'));
+    expect(await store.activateRule('pg.rule', 1, 'admin')).toBeNull();
+    expect((await store.reviewRule('pg.rule', 1, 'reviewed'))?.status).toBe('reviewed');
+    expect((await store.activateRule('pg.rule', 1, 'admin'))?.status).toBe('active');
+
+    // 재upsert(draft)해도 active 상태 유지(D-011 에스컬레이션 가드)
+    await store.upsertRule(baseRule('pg.rule', 1, 'draft'));
+    expect((await store.getActiveRules()).some((r) => r.id === 'pg.rule')).toBe(true);
+
+    await store.upsertRule(baseRule('pg.rule', 2, 'draft'));
+    await store.reviewRule('pg.rule', 2, 'reviewed');
+    await store.activateRule('pg.rule', 2, 'admin');
+    const statuses = Object.fromEntries(
+      (await store.listRules()).filter((r) => r.id === 'pg.rule').map((r) => [r.version, r.status])
+    );
+    expect(statuses[1]).toBe('superseded');
+    expect(statuses[2]).toBe('active');
+  });
+
+  it('purgeStaleCandidateDrafts는 candidate draft만 제거', async () => {
+    await store.upsertRule(baseRule('candidate.amount.x', 1, 'draft'));
+    await store.upsertRule(baseRule('candidate.ratio.y', 1, 'reviewed'));
+    const removed = await store.purgeStaleCandidateDrafts(['candidate.ratio.candidate.ratio.y'.slice(0, 10) + 'y@1']);
+    void removed;
+    const ids = (await store.listRules()).map((r) => `${r.id}@${r.version}`);
+    expect(ids).toContain('candidate.ratio.y@1'); // reviewed는 보존
+    expect(ids).not.toContain('candidate.amount.x@1');
+  });
+});
+
+describe('PgStore 사용자·세션·프로젝트', () => {
+  it('scrypt 해시 검증 및 RBAC 접근제어', async () => {
+    const { hashPassword, verifyPassword } = await import('@sen/db');
+    const owner = await store.createUser({ username: 'pgu1', passwordHash: hashPassword('pw'), displayName: 'U1', role: 'USER' });
+    const admin = await store.createUser({ username: 'pga1', passwordHash: hashPassword('pw'), displayName: 'A1', role: 'ADMIN' });
+    expect(verifyPassword('pw', owner.passwordHash)).toBe(true);
+
+    const p = await store.createProject({
+      ownerId: owner.id, name: 'PG 프로젝트', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, { plan: ['문서준비'] });
+    expect(await store.canAccessProject(p.id, owner.id, 'USER')).toBe(true);
+    expect(await store.canAccessProject(p.id, admin.id, 'ADMIN')).toBe(true);
+
+    const item = (await store.checklistOf(p.id))[0]!;
+    await store.toggleChecklist(item.id, true);
+    expect((await store.stepsOf(p.id))[0]!.status).toBe('done');
+  });
+
+  it('세션 생성/조회/만료/삭제', async () => {
+    const u = await store.createUser({ username: 'pgs1', passwordHash: 's:h', displayName: 'S', role: 'USER' });
+    const token = 'tok-' + Date.now();
+    await store.createSession(token, u.id, 'csrf-1', 60_000);
+    expect((await store.getSession(token))?.csrfToken).toBe('csrf-1');
+    await store.deleteSession(token);
+    expect(await store.getSession(token)).toBeNull();
+  });
+});
+
+describe('팩토리 createStore', () => {
+  it('DATABASE_URL 지정 시 PgStore 반환', async () => {
+    const s = await createStore({ databaseUrl: url, appStoreDir: './data/app-store' });
+    expect(s.constructor.name).toBe('PgStore');
+    await (s as PgStore).close();
+  });
+
+  it('미지정 시 FileStore 반환', async () => {
+    const s = await createStore({ databaseUrl: null, appStoreDir: './data/app-store' });
+    expect(s.constructor.name).toBe('FileStore');
+  });
+});

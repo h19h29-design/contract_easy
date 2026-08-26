@@ -7,6 +7,8 @@ pnpm lint               # ESLint (전 워크스페이스)
 pnpm typecheck          # tsc --noEmit
 pnpm test               # Vitest unit+integration
 pnpm test:e2e           # Playwright E2E (브라우저 필요)
+pnpm test:pg            # PostgreSQL 통합테스트(embedded-postgres, 실제 PG 바이너리)
+pnpm db:migrate         # DATABASE_URL 대상 drizzle/*.sql 적용(멱등)
 pnpm build              # 전체 빌드
 ```
 

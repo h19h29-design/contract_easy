@@ -78,9 +78,17 @@
   latest 태그 없음, SESSION_SECRET 필수, NAS 경로 변수화, 비표준 포트 확인
 - 한계: `docker compose config`의 대체 아님(Docker 환경에서 최종 확인 필요)
 
+## T-150~153 PostgreSQL 운영 경로 — DONE
+- AppStore 계약 추출(FileStore/PgStore 동형), PgStore 전 메서드 구현,
+  마이그레이션 러너(멱등, _migrations 관리), createStore 팩토리(DATABASE_URL 분기),
+  API 완전 async 전환, embedded-postgres 기반 통합테스트 **13/13 PASS**
+- 규칙 upsert 상태 에스컬레이션 가드 추가(D-011)
+- 증거: `packages/db/src/pg-store.ts`, `packages/db/src/migrate.ts`,
+  `tests/integration/*.pg.test.ts`, `docs/harness/TEST_RESULTS.md` 2026-08-26 절
+
 ## NEXT (다음 세션 권장)
-1. PostgreSQL/Qdrant/Valkey 기동 환경에서 `docker compose up -d` + 마이그레이션 적용 검증
-   (DATABASE_URL 지정 시 PG 리포지토리 경로 활성화 구현이 선행되면 좋음)
+1. Docker 가용 환경에서 `docker compose up -d` + `pnpm db:migrate` 최종 확인(로컬은 embedded-postgres로 검증 완료)
 2. 법무 확인: (a) 첨부 수집 허용 여부(D-001), (b) 외부 BBS(buseo.sen.go.kr) allowlist
-3. 원문 기반 규칙 초안 작성(후보 63건 중 계약방법 표 데이터 활용) → REVIEWER 검토 → ADMIN active 승인
-4. FAQ 게시판 인라인 본문의 FAQ 전용 chunk(faq type) 세분화
+3. 원문 기반 규칙 초안 작성(후보 63건) → REVIEWER 검토 → ADMIN active 승인
+4. 운영 동기화: 정기 `ingest:all` 후 API 재시작 대신 PG 직접 적재 작업(sync) 구현
+5. FAQ 게시판 인라인 본문의 FAQ 전용 chunk(faq type) 세분화

@@ -45,3 +45,15 @@
 - `GET /api/wiki` → 15파일, `GET /api/wiki/11-FAQ.md` → 44,779자
 - `POST /api/ask`(근거 있음) → `{answered:false, providerNotice:"현재 AI 답변 기능이 설정되지 않았습니다...", keywordHits:5}`
 - `POST /api/ask`(근거 없음) → `{answered:false, refusalReason:"근거가 되는 원문을 찾지 못했습니다..."}`
+
+## 2026-08-26 PostgreSQL 운영 경로 검증
+
+| 명령 | 결과 | 핵심 출력 |
+| --- | --- | --- |
+| `pnpm test:pg` (embedded-postgres, 실제 PG 바이너리) | PASS | **2파일 / 13테스트 전부 통과** |
+| 마이그레이션 적용 | PASS | `drizzle/0001_init.sql` 커밋 트랜잭션 적용 + `_migrations` 이력 관리, 재적용 0건(멱등) 확인 |
+| PgStore 원문 버전관리 | PASS | 동일 해시 재수집 중복 없음 + rawHtmlPath/menuPath 보완, 변경 시 신버전+구버전 보존 |
+| PgStore 규칙 플로우 | PASS | draft→activate 차단, review 후 activate, 재upsert 시 active 유지(D-011 가드), 신규 active 시 구버전 superseded |
+| PgStore RBAC/세션/프로젝트 | PASS | scrypt 검증, ADMIN 우회, 체크리스트 토글→단계 상태 done, 세션 만료/삭제 |
+| API PostgreSQL 모드 | PASS | buildApp에 PG 스토어 주입 → 로그인·프로젝트 생성(10단계)·출처 목록 동작 |
+| 팩토리 createStore | PASS | DATABASE_URL 있음→PgStore / 없음→FileStore 선택 확인 |

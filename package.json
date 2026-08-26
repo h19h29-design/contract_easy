@@ -24,12 +24,19 @@
     "dev:web": "pnpm --filter web dev",
     "db:generate": "drizzle-kit generate --config=packages/db/drizzle.config.ts",
     "store:reset": "node scripts/reset-store.mjs",
-    "compose:validate": "node scripts/validate-compose.mjs"
+    "compose:validate": "node scripts/validate-compose.mjs",
+    "test:pg": "vitest run -c vitest.pg.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.49.0",
+    "@sen/config": "workspace:*",
+    "@sen/db": "workspace:*",
+    "@sen/retrieval": "workspace:*",
+    "@sen/rules": "workspace:*",
+    "@sen/shared": "workspace:*",
     "@types/node": "^22.10.0",
+    "embedded-postgres": "18.4.0-beta.17",
     "eslint": "^9.16.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
