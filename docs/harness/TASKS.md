@@ -78,6 +78,14 @@
   latest 태그 없음, SESSION_SECRET 필수, NAS 경로 변수화, 비표준 포트 확인
 - 한계: `docker compose config`의 대체 아님(Docker 환경에서 최종 확인 필요)
 
+## T-171 공지사항 pagination 완전 탐색 — DONE
+- 페이지 번호 동적 큐 방식으로 개선(첫 화면 번호에 한정하지 않음)
+- 실측: 8페이지 방문 후 9·10페이지 빈 셸 확인 → 상세 38건 전수 수집 확정
+- 증거: workers/crawler/src/crawl.ts, docs/harness/UNCOLLECTED.md 4번 항목
+
+## T-172 미수집 정보 목록 — DONE
+- docs/harness/UNCOLLECTED.md 신설: 첨부 원문·FAQ 개별 글·셀렉터 표·외부 법령·OCR 등 사유/영향/해제조건 정리
+
 ## T-150~153 PostgreSQL 운영 경로 — DONE
 - AppStore 계약 추출(FileStore/PgStore 동형), PgStore 전 메서드 구현,
   마이그레이션 러너(멱등, _migrations 관리), createStore 팩토리(DATABASE_URL 분기),
@@ -95,7 +103,8 @@
   `workers/ingest/src/rule-tables.ts`, `sync-db.ts`, `packages/retrieval/src/keyword.ts`
 
 ## NEXT (다음 세션 권장)
-1. Docker 가용 환경에서 `docker compose up -d` + `pnpm db:migrate` 최종 확인
+1. 계약방법 셀렉터 UI-walk 개발(탭 클릭→XHR 관찰→엔드포인트 학습) — UNCOLLECTED 3번 해제
+2. Docker 가용 환경에서 `docker compose up -d` + `pnpm db:migrate` 최종 확인
 2. 법무 확인: (a) 첨부 수집 허용 여부(D-001), (b) 외부 BBS allowlist, (c) 규칙 초안 3건의 원문 대조·승인(/admin/rules)
 3. 동적 셀렉터 페이지(계약방법 메인) 탭별 렌더 수집으로 표 데이터 확장
 4. 상세 미수집 공지(컴퓨터교실·일부위탁급식 등) 대상 공지 전체 크롤 확대 → 평가 hit@3 추가 향상 여지

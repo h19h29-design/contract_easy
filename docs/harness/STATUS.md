@@ -1,8 +1,8 @@
 # STATUS.md — 현재 진행상태
 
-- 최종 갱신: 2026-08-25
-- 현재 위치: **MVP 1차 완성** (전 단계 DONE 또는 문서 한정 DONE, 아래 TASKS 참조)
-- 다음 액션: `docs/harness/TASKS.md`의 NEXT 항목 확인
+- 최종 갱신: 2026-08-26
+- 현재 위치: **MVP + 운영경로(PG) + 지식품질 고도화 완료**. 미수집 항목은 `UNCOLLECTED.md` 참조.
+- 다음 액션: `docs/harness/TASKS.md` NEXT(셀렉터 UI-walk, Docker 검증, 법무 확인)
 
 ## 스냅셧
 | 영역 | 상태 |

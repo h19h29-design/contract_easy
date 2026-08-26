@@ -1,10 +1,10 @@
 # CRAWL_COVERAGE.md — 수집 범위 실측 보고
 
-- 생성시각: 2026-08-26T01:24:06.417Z
+- 생성시각: 2026-08-26T02:08:01.535Z
 - 발견 페이지(source) 수: **50**
-- 총 버전 수: 185
+- 총 버전 수: 200
 - 첨부파일(메타) 수: 72
-- 마지막 실행(full+board): fetched=12, changed=12, failures=0
+- 마지막 실행(board): fetched=55, changed=15, failures=0
 
 | seed/URL | 제목 | 버전 | 첨부 | 상태 |
 | --- | --- | --- | --- | --- |
@@ -13,11 +13,11 @@
 | https://contract.sen.go.kr/fus/MI000000000000000327/html/cont0010v.do | 서울특별시교육청 계약길잡이 | 4 | 2 | active |
 | https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do | 서울특별시교육청 계약길잡이 | 4 | 2 | active |
 | https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do | 서울특별시교육청 계약길잡이 | 4 | 2 | active |
-| https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0 | 서울특별시교육청 계약길잡이 | 37 | 2 | active |
+| https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0 | 서울특별시교육청 계약길잡이 | 42 | 2 | active |
 | https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0 | 서울특별시교육청 계약길잡이 | 4 | 2 | active |
-| https://contract.sen.go.kr/fus/MI000000000000000388/board/BO00000122/CD030/list0 | 서울특별시교육청 계약길잡이 | 16 | 2 | active |
+| https://contract.sen.go.kr/fus/MI000000000000000388/board/BO00000122/CD030/list0 | 서울특별시교육청 계약길잡이 | 18 | 2 | active |
 | https://contract.sen.go.kr/fus/MI000000000000000389/board/BO00000122/CD040/list0 | 서울특별시교육청 계약길잡이 | 4 | 2 | active |
-| https://contract.sen.go.kr/fus/MI000000000000000104/board/BO00000061/ctgynone/li | 서울특별시교육청 계약길잡이 | 58 | 2 | active |
+| https://contract.sen.go.kr/fus/MI000000000000000104/board/BO00000061/ctgynone/li | 서울특별시교육청 계약길잡이 | 66 | 2 | active |
 | https://contract.sen.go.kr/fus/MI000000000000000426/html/cont0010v.do | 서울특별시교육청 계약길잡이 | 4 | 2 | active |
 | https://contract.sen.go.kr/fus/MI000000000000000365/html/cont0010v.do | 서울특별시교육청 계약길잡이 | 4 | 2 | active |
 | https://contract.sen.go.kr/fus/MI000000000000000104/board/BO00000061/ctgynone/vi | 서울특별시교육청 계약길잡이 | 1 | 2 | active |

@@ -170,10 +170,9 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
       }
 
       // ---- 페이지 1 렌더 ----
-      let pageIdxCalls: string[] = [];
       const articleIds: string[] = [];
       const seenIds = new Set<string>();
-      const maxPagesPerBoard = 8;
+      const maxPagesPerBoard = Number(process.env.CRAWL_MAX_PAGES ?? 30);
 
       const collectCalls = (html: string): { ids: string[]; pages: string[] } => ({
         ids: [...new Set(
@@ -183,7 +182,7 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
         pages: [...new Set(
           [...html.matchAll(/fncSearch\((['"]?\d+)/g)]
             .map((m) => m[1]!.replace(/['"]/g, ''))
-            .filter((n) => n !== '1' && Number(n) > 0 && Number(n) <= 50)
+            .filter((n) => n !== '1' && Number(n) > 0 && Number(n) <= 200)
         )]
       });
 
@@ -195,13 +194,18 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
       for (const id of firstCalls.ids) {
         if (!seenIds.has(id)) { seenIds.add(id); articleIds.push(id); }
       }
-      pageIdxCalls = firstCalls.pages;
 
-      // ---- pagination 페이지들(사이트 함수 실행 방식, 종료조건: 빈 목록/반복/최대) ----
+      // ---- pagination 동적 순회: 페이지마다 새 번호를 큐에 추가해 끝까지 탐색 ----
+      const seenPageNums = new Set<string>(['1']);
+      const pageQueue: string[] = [];
+      for (const p of firstCalls.pages) {
+        if (!seenPageNums.has(p)) { seenPageNums.add(p); pageQueue.push(p); }
+      }
       const seenListSig = new Set<string>([sha256Hex(extractFromHtml(first.html, seed.url).bodyText.slice(0, 1500))]);
       let paginated = 0;
-      for (const n of pageIdxCalls.slice(0, maxPagesPerBoard)) {
-        if (paginated >= maxPagesPerBoard) break;
+      while (pageQueue.length > 0 && paginated < maxPagesPerBoard) {
+        const n = pageQueue.shift()!;
+        if (seenPageNums.has(n) === false) continue; // 안전장치(중복 방지)
         const rendered = await renderer.renderViaCall(seed.url, `fncSearch('${n}')`);
         summary.pagesFetched++;
         const bodyText = extractFromHtml(rendered.html, rendered.finalUrl).bodyText;
@@ -220,8 +224,11 @@ export async function runBoardCrawl(): Promise<CrawlSummary> {
         for (const id of calls.ids) {
           if (!seenIds.has(id)) { seenIds.add(id); articleIds.push(id); }
         }
+        for (const p of calls.pages) {
+          if (!seenPageNums.has(p)) { seenPageNums.add(p); pageQueue.push(p); }
+        }
       }
-      summary.stopReasons[`${seed.name}:articles_found`] = articleIds.length;
+      summary.stopReasons[`${seed.name}:pages_visited`] = paginated + 1;
 
       // ---- 상세 게시물(POST 렌더) 수집 ----
       const viewBase = seed.url.replace(/list0010v\.do.*$/, 'view0010v.do');
