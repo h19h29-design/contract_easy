@@ -1,62 +1,65 @@
-# DECISIONS.md — 결정 기록
+# DECISIONS.md ??寃곗젙 湲곕줉
 
-형식: 날짜 / 결정 / 근거 / 대안
+?뺤떇: ?좎쭨 / 寃곗젙 / 洹쇨굅 / ???
+## D-001 (2026-08-25) 泥⑤??뚯씪 ?섏쭛 湲곕낯 鍮꾪솢??- **寃곗젙**: ?щ·?ъ쓽 泥⑤??뚯씪(pdf/hwp/xls/zip/png ?? 吏곸젒 ?ㅼ슫濡쒕뱶瑜?`CRAWL_ALLOW_ATTACHMENTS=false` 湲곕낯媛믪쑝濡?鍮꾪솢?깊솕. 泥⑤???URL쨌硫뷀??곗씠?곕쭔 manifest??湲곕줉.
+- **洹쇨굅**: contract.sen.go.kr robots.txt(2026-08-25 ?뺤씤)媛 `*.pdf`, `*.hwp`, `*.xls`, `*.zip` ??紐⑤뱺 泥⑤? ?뺤옣?먯뿉 ???Disallow. `02_CRAWL_SEEDS.yaml`??`obey_robots: true`? ?덈? ?먯튃(robots ?고쉶 湲덉?)???곕쫫.
+- **???湲곌컖)**: robots 臾댁떆?섍퀬 1嫄대쭔 ?섑뵆 ?ㅼ슫濡쒕뱶 ???먯튃 ?꾨컲. 踰뺣Т ?뺤씤 ??紐낆떆???뱀씤?쇰줈留??댁젣.
+- **?곹뼢**: "?섑뵆 泥⑤??뚯씪 寃利?? ?먯껜 ?앹꽦 fixture ?뚯씪濡?MIME/?뺤옣??SHA-256/寃⑸━ 濡쒖쭅??寃利앺븿.
 
-## D-001 (2026-08-25) 첨부파일 수집 기본 비활성
-- **결정**: 크롤러의 첨부파일(pdf/hwp/xls/zip/png 등) 직접 다운로드를 `CRAWL_ALLOW_ATTACHMENTS=false` 기본값으로 비활성화. 첨부는 URL·메타데이터만 manifest에 기록.
-- **근거**: contract.sen.go.kr robots.txt(2026-08-25 확인)가 `*.pdf`, `*.hwp`, `*.xls`, `*.zip` 등 모든 첨부 확장자에 대해 Disallow. `02_CRAWL_SEEDS.yaml`의 `obey_robots: true`와 절대 원칙(robots 우회 금지)에 따름.
-- **대안(기각)**: robots 무시하고 1건만 샘플 다운로드 → 원칙 위반. 법무 확인 후 명시적 승인으로만 해제.
-- **영향**: "샘플 첨부파일 검증"은 자체 생성 fixture 파일로 MIME/확장자/SHA-256/격리 로직을 검증함.
+## D-002 (2026-08-25) Playwright ?섏〈?깆쓣 ?꾩닔?먯꽌 ?좏깮?쇰줈 蹂寃?- **寃곗젙**: ?щ·??湲곕낯 ?붿쭊? Node ?댁옣 fetch 湲곕컲 HTTP ?섏쭛. Playwright???듭뀡(`CRAWLER_ENGINE=playwright`)濡??듯빀 吏?먮쭔 ?쒓났.
+- **洹쇨굅**: (1) 蹂??섍꼍 Docker 遺??+ 釉뚮씪?곗? 諛붿씠?덈━ ?ㅼ슫濡쒕뱶 遺?? (2) preflight ?ㅼ륫 寃곌낵 二쇱슂 ?섏씠吏媛 plain HTTP 200 + ?쒕쾭?ъ씠???뚮뜑 HTML(26KB)濡??묐떟?섏뿬 JS ?뚮뜑留?遺덊븘?? (3) blueprint??Playwright "沅뚯옣"?대굹 ?덉쟾쨌?ы쁽???붽뎄??HTTP濡?異⑹”.
+- **????좎?)**: Playwright媛 ?꾩슂???숈쟻 ?섏씠吏 諛쒓껄 ??preflight媛 `JS_RENDERING_REQUIRED`濡?遺꾨쪟?섍퀬 ?대떦 寃쎈줈??BLOCKED 泥섎━.
 
-## D-002 (2026-08-25) Playwright 의존성을 필수에서 선택으로 변경
-- **결정**: 크롤러 기본 엔진은 Node 내장 fetch 기반 HTTP 수집. Playwright는 옵션(`CRAWLER_ENGINE=playwright`)로 통합 지점만 제공.
-- **근거**: (1) 본 환경 Docker 부재 + 브라우저 바이너리 다운로드 부담, (2) preflight 실측 결과 주요 페이지가 plain HTTP 200 + 서버사이드 렌더 HTML(26KB)로 응답하여 JS 렌더링 불필요, (3) blueprint는 Playwright "권장"이나 안전·재현성 요구는 HTTP로 충족.
-- **대안(유지)**: Playwright가 필요한 동적 페이지 발견 시 preflight가 `JS_RENDERING_REQUIRED`로 분류하고 해당 경로는 BLOCKED 처리.
+## D-003 (2026-08-25) 媛쒕컻 ?고?????μ냼: JSON ?뚯씪 ?ㅽ넗??+ PostgreSQL(Drizzle) ?댁쨷 援ъ“
+- **寃곗젙**: `packages/db`??Drizzle PostgreSQL ?ㅽ궎留?留덉씠洹몃젅?댁뀡(?댁쁺??怨? `DATABASE_URL` 誘몄꽕?????ъ슜?섎뒗 ?뚯씪 湲곕컲 由ы룷吏?좊━(`packages/db/src/store`, `data/app-store/*.json`)瑜??④퍡 ?쒓났.
+- **洹쇨굅**: 蹂??ㅽ뻾 ?섍꼍??Docker/PostgreSQL ?놁쓬. ?꾨즺 湲곗???"留덉씠洹몃젅?댁뀡 議댁옱"? "?ㅼ썙??寃?됀룻봽濡쒖젥??愿由ш? ?몃? ?쒕퉬???놁씠 ?숈옉"???숈떆 異⑹”?섍린 ?꾪븳 ?대뙌???⑦꽩.
+- **二쇱쓽**: ?뚯씪 ?ㅽ넗?대뒗 ?⑥씪 ?꾨줈?몄뒪 MVP?? ?댁쁺(NAS) 諛고룷 ??諛섎뱶??PostgreSQL 紐⑤뱶 ?ъ슜.
 
-## D-003 (2026-08-25) 개발 런타임 저장소: JSON 파일 스토어 + PostgreSQL(Drizzle) 이중 구조
-- **결정**: `packages/db`에 Drizzle PostgreSQL 스키마+마이그레이션(운영용)과, `DATABASE_URL` 미설정 시 사용하는 파일 기반 리포지토리(`packages/db/src/store`, `data/app-store/*.json`)를 함께 제공.
-- **근거**: 본 실행 환경에 Docker/PostgreSQL 없음. 완료 기준의 "마이그레이션 존재"와 "키워드 검색·프로젝트 관리가 외부 서비스 없이 동작"을 동시 충족하기 위한 어댑터 패턴.
-- **주의**: 파일 스토어는 단일 프로세스 MVP용. 운영(NAS) 배포 시 반드시 PostgreSQL 모드 사용.
+## D-004 (2026-08-25) 洹쒖튃 珥덇린 ?곗씠?? ?レ옄 ?녿뒗 ?ㅼ펷?덊넠 洹쒖튃
+- **寃곗젙**: 怨꾩빟諛⑸쾿 ???먮떒 洹쒖튃? ?먮Ц ?뺤씤 ?꾧퉴吏 `output.method=REVIEW_REQUIRED`??draft ?ㅼ펷?덊넠留??쒓났. ?대뼚??湲덉븸/鍮꾩쑉???섎뱶肄붾뵫?섏? ?딆쓬.
+- **洹쇨굅**: ?꾨＼?꾪듃 짠2 ?덈? ?먯튃. ?쒖꽦 洹쒖튃 遺????留덈쾿?щ뒗 REVIEW_REQUIRED 諛섑솚.
 
-## D-004 (2026-08-25) 규칙 초기 데이터: 숫자 없는 스켈레톤 규칙
-- **결정**: 계약방법 등 판단 규칙은 원문 확인 전까지 `output.method=REVIEW_REQUIRED`인 draft 스켈레톤만 제공. 어떠한 금액/비율도 하드코딩하지 않음.
-- **근거**: 프롬프트 §2 절대 원칙. 활성 규칙 부재 시 마법사는 REVIEW_REQUIRED 반환.
+## D-005 (2026-08-25) API ?꾨젅?꾩썙??Fastify, ?몄쬆? scrypt ?몄뀡
+- **寃곗젙**: Fastify + @fastify/cookie + ?먯껜 scrypt 鍮꾨?踰덊샇 ?댁떆 + HttpOnly ?몄뀡 荑좏궎 + CSRF ?붾툝?쒕컠 ?좏겙.
+- **洹쇨굅**: ?ㅼ씠?곕툕 ?섏〈??bcrypt/argon2) 而댄뙆???뚰뵾(Windows ?섍꼍), 寃쎈웾?? 蹂댁븞 ?붽뎄(?댁떆, ?몄뀡荑좏궎, CSRF) 紐⑤몢 異⑹”.
 
-## D-005 (2026-08-25) API 프레임워크 Fastify, 인증은 scrypt 세션
-- **결정**: Fastify + @fastify/cookie + 자체 scrypt 비밀번호 해시 + HttpOnly 세션 쿠키 + CSRF 더블서밋 토큰.
-- **근거**: 네이티브 의존성(bcrypt/argon2) 컴파일 회피(Windows 환경), 경량성. 보안 요구(해시, 세션쿠키, CSRF) 모두 충족.
+## D-006 (2026-08-25) 踰≫꽣 寃??湲곕낯 none
+- **寃곗젙**: `EMBEDDING_PROVIDER=none` 湲곕낯. Qdrant ?대씪?댁뼵???곕룞 吏?먭낵 docker-compose ?뺤쓽???쒓났?섎릺, ?ㅺ? ?놁쑝硫??ㅼ썙??PostgreSQL FTS ?먮뒗 ?뚯씪 ?몃뜳??+硫뷀??곗씠???꾪꽣留뚯쑝濡?寃???쒓났.
+- **洹쇨굅**: ?꾨＼?꾪듃 짠6 "API ?ㅺ? ?놁뼱???ㅼ썙??寃?됱? ?묐룞?댁빞 ?쒕떎".
 
-## D-006 (2026-08-25) 벡터 검색 기본 none
-- **결정**: `EMBEDDING_PROVIDER=none` 기본. Qdrant 클라이언트 연동 지점과 docker-compose 정의는 제공하되, 키가 없으면 키워드(PostgreSQL FTS 또는 파일 인덱스)+메타데이터 필터만으로 검색 제공.
-- **근거**: 프롬프트 §6 "API 키가 없어도 키워드 검색은 작동해야 한다".
+## D-007 (2026-08-25) UI ?꾨젅?꾩썙??Next.js App Router, CSS???쒖닔 CSS
+- **寃곗젙**: Next.js 14 App Router + CSS Modules ?섏????섏〈??理쒖냼 ?ㅽ??쇰쭅. 而댄룷?뚰듃 ?쇱씠釉뚮윭由??꾩엯 蹂대쪟.
+- **洹쇨굅**: 紐⑤컮??諛섏쓳?빧룹젒洹쇱꽦 以묒떖??李⑤텇??怨듦났 UI ?붽뎄??遺덊븘?뷀븳 ?섏〈???뚰뵾.
 
-## D-007 (2026-08-25) UI 프레임워크 Next.js App Router, CSS는 순수 CSS
-- **결정**: Next.js 14 App Router + CSS Modules 수준의 의존성 최소 스타일링. 컴포넌트 라이브러리 도입 보류.
-- **근거**: 모바일 반응형·접근성 중심의 차분한 공공 UI 요구에 불필요한 의존성 회피.
+## D-008 (2026-08-25) Docker Compose 寃利?遺덇? 湲곕줉
+- **寃곗젙**: `docker-compose.yml`/Dockerfile/healthcheck瑜??묒꽦?섎릺, 蹂??섍꼍 Docker 遺?щ줈 `docker compose config` ?ㅽ뻾 遺덇? ??TEST_RESULTS.md???ㅽ뻾 遺덇? ?ъ쑀 湲곕줉. NAS 諛고룷??`DEPLOY_TO_NAS=true` ?뺤씤 ?꾧퉴吏留?臾몄꽌 以鍮?
 
-## D-008 (2026-08-25) Docker Compose 검증 불가 기록
-- **결정**: `docker-compose.yml`/Dockerfile/healthcheck를 작성하되, 본 환경 Docker 부재로 `docker compose config` 실행 불가 → TEST_RESULTS.md에 실행 불가 사유 기록. NAS 배포는 `DEPLOY_TO_NAS=true` 확인 전까지만 문서 준비.
+## D-009 (2026-08-25) ?숈쟻 寃뚯떆???섏쭛: Playwright in-page JS ?ㅽ뻾 諛⑹떇
+- **寃곗젙**: 怨듭??ы빆 ?곸꽭(POST ??+ `fncDetailView('822')` ?몄텧????釉뚮씪?곗?濡?紐⑸줉???????ъ씠???먯껜 JS ?⑥닔瑜?`page.evaluate`濡??ㅽ뻾?섏뿬 ?꾩갑 ?섏씠吏???뚮뜑 HTML???섏쭛?쒕떎(`renderViaCall`). ????앸퀎?먮뒗 愿痢〓맂 ?꾨젅?꾩썙??洹쒖튃???곕Ⅸ 寃곗젙??URL(view0010v.do?board_seq=N)???ъ슜?쒕떎.
+- **洹쇨굅**: GET 荑쇰━留뚯쑝濡쒕뒗 鍮??몃쭔 諛섑솚?섎뒗 寃껋쓣 ?ㅼ륫. URL ?쒗뵆由?異붿륫 湲덉? ?먯튃???곕씪 ?ㅼ젣 ?⑥닔 ?ㅽ뻾 寃곌낵留??ъ슜.
+- **?쒓퀎/二쇱쓽**: 利앸텇 ?ъ닔吏??쒖뿉???숈씪 諛⑹떇 ?꾩슂. HTTP ?붿쭊?쇰줈 view0010v.do瑜?吏곸젒 GET?섎㈃ 鍮??몄씠 ?섏쭛?????덉쑝誘濡?runCrawl 留곹겕 ?뺤옣? ?대? seed ?먯뿉???쒖쇅?댁빞 ???꾩냽 媛쒖꽑).
 
-## D-009 (2026-08-25) 동적 게시판 수집: Playwright in-page JS 실행 방식
-- **결정**: 공지사항 상세(POST 폼 + `fncDetailView('822')` 호출형)는 브라우저로 목록을 연 뒤 사이트 자체 JS 함수를 `page.evaluate`로 실행하여 도착 페이지의 렌더 HTML을 수집한다(`renderViaCall`). 저장 식별자는 관측된 프레임워크 규칙에 따른 결정적 URL(view0010v.do?board_seq=N)을 사용한다.
-- **근거**: GET 쿼리만으로는 빈 셸만 반환하는 것을 실측. URL 템플릿 추측 금지 원칙에 따라 실제 함수 실행 결과만 사용.
-- **한계/주의**: 증분 재수집 시에도 동일 방식 필요. HTTP 엔진으로 view0010v.do를 직접 GET하면 빈 셸이 수집될 수 있으므로 runCrawl 링크 확장은 이를 seed 큐에서 제외해야 함(후속 개선).
+## D-010 (2026-08-25) ?꾪궎 ?뚯씪 ?섎굹 異붽?: 13-怨듭??ы빆-紐⑥쓬.md
+- **寃곗젙**: ?꾨＼?꾪듃 吏??14媛??꾪궎 ?뚯씪 ?몄뿉 `13-怨듭??ы빆-紐⑥쓬.md`瑜?異붽? ?앹꽦?쒕떎.
+- **洹쇨굅**: 怨듭??ы빆 ?곸꽭 38嫄댁? ?대뒓 吏???뚯씪怨쇰룄 二쇱젣媛 留욎? ?딆쓬. ?먮Ц ?몄슜+異쒖쿂 硫뷀? ?좎? ?먯튃? ?숈씪.
 
-## D-010 (2026-08-25) 위키 파일 하나 추가: 13-공지사항-모음.md
-- **결정**: 프롬프트 지정 14개 위키 파일 외에 `13-공지사항-모음.md`를 추가 생성한다.
-- **근거**: 공지사항 상세 38건은 어느 지정 파일과도 주제가 맞지 않음. 원문 인용+출처 메타 유지 원칙은 동일.
+## D-011 (2026-08-26) 洹쒖튃 upsert ?곹깭 ?먯뒪而щ젅?댁뀡 媛??- **寃곗젙**: ?ъ텛異쒕줈 draft 洹쒖튃???ㅼ떆 ??ν븷 ??湲곗〈 ?곹깭媛 reviewed/active硫??덈? draft濡??섎룎由ъ? ?딅뒗??FileStore쨌PgStore ?숈씪 ?곸슜). superseded??洹몃?濡??좎?.
+- **洹쇨굅**: ingest媛 chunk ?ъ깮?????숈씪 ID draft瑜??촸psert?????щ엺???뱀씤???곹깭瑜???뼱?곕뒗 ?ш퀬 媛?? ?쒖꽦?붾뒗 ?щ엺 ?뱀씤?쇰줈留??대쨪吏꾨떎???덈? ?먯튃??蹂댁〈 ?μ튂.
 
-## D-011 (2026-08-26) 규칙 upsert 상태 에스컬레이션 가드
-- **결정**: 재추출로 draft 규칙을 다시 저장할 때 기존 상태가 reviewed/active면 절대 draft로 되돌리지 않는다(FileStore·PgStore 동일 적용). superseded는 그대로 유지.
-- **근거**: ingest가 chunk 재생성 후 동일 ID draft를 재upsert할 때 사람이 승인한 상태를 덮어쓰는 사고 가능. 활성화는 사람 승인으로만 이뤄진다는 절대 원칙의 보존 장치.
+## D-015 (2026-08-26) 벡터 검색 파이프라인 구조
 
-## D-013 (2026-08-26) 외부 FAQ BBS(buseo.sen.go.kr) allowlist 확장
-- **결정**: 운영자 지시(세션 내 명시: "2번부터 5번까지 진행해")에 따라 follow_rules에 buseo.sen.go.kr + /buseo/bu20/user/bbs/ 를 추가하고 FAQ 개별 Q&A 글을 수집한다.
-- **조건 확인**: robots.txt 재확인(2026-08-26) — 대상 경로 Allow, 대상 q_bbsSn은 Disallow 목록(1079~1091) 외부, 첨부 확장자는 동일 Disallow → 메타만 수집.
-- **범위**: BD_selectBbsList / BD_selectBbs 두 엔드포인트 한정. 요청 정책(간격 1.2s·동시성 1) 동일 적용.
+- **결정**: EmbeddingProvider(openai-compat/openrouter/ollama/hash-test) + VectorStore(qdrant REST / local-json)
+  추상화로 청크 임베딩 적재(`pnpm embed:index`)와 하이브리드 RRF 융합 검색을 구현한다.
+- **검증**: hash+local 조합으로 오프라인 end-to-end 실측 완료(11,259 포인트, 쿼리 융합 결과 확인).
+  운영 권장: openai(text-embedding-3-small) 또는 ollama(nomic-embed-text) + qdrant.
+- **전환 규칙**: EMBEDDING_PROVIDER≠none이면 API가 키워드+벡터 융합으로 자동 전환. none이면 기존 키워드 전용.
+## D-013 (2026-08-26) ?몃? FAQ BBS(buseo.sen.go.kr) allowlist ?뺤옣
+- **寃곗젙**: ?댁쁺??吏???몄뀡 ??紐낆떆: "2踰덈???5踰덇퉴吏 吏꾪뻾??)???곕씪 follow_rules??buseo.sen.go.kr + /buseo/bu20/user/bbs/ 瑜?異붽??섍퀬 FAQ 媛쒕퀎 Q&A 湲???섏쭛?쒕떎.
+- **議곌굔 ?뺤씤**: robots.txt ?ы솗??2026-08-26) ?????寃쎈줈 Allow, ???q_bbsSn? Disallow 紐⑸줉(1079~1091) ?몃?, 泥⑤? ?뺤옣?먮뒗 ?숈씪 Disallow ??硫뷀?留??섏쭛.
+- **踰붿쐞**: BD_selectBbsList / BD_selectBbs ???붾뱶?ъ씤???쒖젙. ?붿껌 ?뺤콉(媛꾧꺽 1.2s쨌?숈떆??1) ?숈씪 ?곸슜.
 
-## D-012 (2026-08-26) PostgreSQL 모드 실검증: embedded-postgres 채택
-- **결정**: Docker 없는 환경에서도 운영 경로(PgStore+마이그레이션)를 검증하기 위해 `embedded-postgres`(실제 PG 바이너리)를 devDependency로 두고 `pnpm test:pg`로 통합 테스트를 실행한다.
-- **근거**: 테스트 없이 완료 처리 금지 원칙. PgStore는 FileStore(AppStore 계약)와 동일 시나리오(버전관리, RBAC, 규칙 플로우, API 모드)로 13건 검증 통과.
-- **범위 주의**: 크롤러/인제스트 산출물(manifests, chunks.json)은 파일 기반 유지 — API는 두 모드 모두 chunks.json을 검색 인덱스로 사용. 운영 배포 시 정기 `ingest:all` + API 재시작(또는 추후 sync 작업)으로 동기화.
+## D-012 (2026-08-26) PostgreSQL 紐⑤뱶 ?ㅺ?利? embedded-postgres 梨꾪깮
+- **寃곗젙**: Docker ?녿뒗 ?섍꼍?먯꽌???댁쁺 寃쎈줈(PgStore+留덉씠洹몃젅?댁뀡)瑜?寃利앺븯湲??꾪빐 `embedded-postgres`(?ㅼ젣 PG 諛붿씠?덈━)瑜?devDependency濡??먭퀬 `pnpm test:pg`濡??듯빀 ?뚯뒪?몃? ?ㅽ뻾?쒕떎.
+- **洹쇨굅**: ?뚯뒪???놁씠 ?꾨즺 泥섎━ 湲덉? ?먯튃. PgStore??FileStore(AppStore 怨꾩빟)? ?숈씪 ?쒕굹由ъ삤(踰꾩쟾愿由? RBAC, 洹쒖튃 ?뚮줈?? API 紐⑤뱶)濡?13嫄?寃利??듦낵.
+- **踰붿쐞 二쇱쓽**: ?щ·???몄젣?ㅽ듃 ?곗텧臾?manifests, chunks.json)? ?뚯씪 湲곕컲 ?좎? ??API????紐⑤뱶 紐⑤몢 chunks.json??寃???몃뜳?ㅻ줈 ?ъ슜. ?댁쁺 諛고룷 ???뺢린 `ingest:all` + API ?ъ떆???먮뒗 異뷀썑 sync ?묒뾽)?쇰줈 ?숆린??
 
