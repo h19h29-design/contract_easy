@@ -6,6 +6,7 @@ import { runCrawl, runBoardCrawl, computeDiff, writeCoverageReport } from './cra
 import { crawlExternalFaq } from './external-faq.js';
 import { collectAttachments } from './attachments.js';
 import { walkSelector } from './selector-walk.js';
+import { crawlSelectorTables } from './selector-tables.js';
 import { FileStore } from '@sen/db';
 
 async function main(): Promise<void> {
@@ -45,6 +46,12 @@ async function main(): Promise<void> {
       for (const r of results.filter((x) => x.status !== 200).slice(0, 10)) {
         console.log(`  - skip [${r.reason}] ${r.url}`);
       }
+      break;
+    }
+    case 'selector-tables': {
+      const s = await crawlSelectorTables();
+      for (const c of s.categories) console.log(`  - ${c.label}: steps=${c.steps}`);
+      console.log(`[selector-tables] fetched=${s.fetched} saved=${s.savedVariants} failures=${s.failures.length}`);
       break;
     }
     case 'selector': {

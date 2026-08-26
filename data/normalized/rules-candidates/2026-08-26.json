@@ -600,6 +600,196 @@
     "sourceTitle": "서울특별시교육청 계약길잡이"
   },
   {
+    "candidateId": "cand-1ec690159cd2b-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "3 계약 방법 결정 | • 추정가격 2천만원 이하 : 1인 수기 견적 가능(전자견적 또는 입찰 권장) • 추정가격 2천만원 초과 ~ 1억원 이하 : 2인이상 전자견적 또는 입찰 • 추정가격 1억원 초과 : 입찰(일반, 제한, 2단계, 협상)",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "1ec690159cd2b",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-5f752454fec55-2",
+    "kindOfValue": "duration",
+    "quotedSentence": "- 공개대상: 추정가격 5천만 원 이상 용역(수의계약 대상 제외) - 공개기간: 5일, 긴급인 경우 3일 - 공개장소: 전자조달시스템(G2B)",
+    "contextBefore": "4 사전규격공개 | • 계약담당자는 입찰공고에 앞서 일정기간 구매규격을 사전 공개해야 함.",
+    "contextAfter": "",
+    "sourceChunkId": "5f752454fec55",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-256bbd6868079-1",
+    "kindOfValue": "duration",
+    "quotedSentence": "5 공고 | 구분 공고기간 수의계약 안내공고 (2인이상 전자견적제출) 3일 이상(토요일, 공휴일 제외) 일반입찰(제한입찰) 입찰서 제출 마감일의 전날부터 7일 전(긴급？재공고: 5일 전) | 구분 | 공고기간 | 수의계약 안내공고 (2인이상 전자견적제출) | 3일 이상(토요일, 공휴일 제외) | 일반입찰(제한입찰) | 입찰서 제출 마감일의 전날부터 | 7일 전(긴급？재공고: 5일 전)",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "256bbd6868079",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-574e137c67011-1",
+    "kindOfValue": "duration",
+    "quotedSentence": "수의계약 안내공고 (2인이상 전자견적제출) | 3일 이상(토요일, 공휴일 제외)",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "574e137c67011",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-d66551c667597-1",
+    "kindOfValue": "duration",
+    "quotedSentence": "일반입찰(제한입찰) | 입찰서 제출 마감일의 전날부터 | 7일 전(긴급？재공고: 5일 전)",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "d66551c667597",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-15bdb45f06c063-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "6 개찰, 적격심사 및 낙찰자 결정 | • 수의계약안내공고(2인이상 전자견적제출) - 추정가격 2천만원 이하 : 낙찰하한율 90% - 추정가격 1억원 이하 2천만원 초과 : 낙찰하한율 88% • 일반입찰(제한입찰): 예정가격 이하로서 최저가격으로 입찰한 자부터 순서대로 해당 계약이행 능력 심사",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "15bdb45f06c063",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-f1560d603b2a9-1",
+    "kindOfValue": "ratio",
+    "quotedSentence": "7 계약 체결 | • 계약보증금(10% 이상), 인지세, 낙찰자 통지 후 10일 이내",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "f1560d603b2a9",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-153be32b77b2a3-1",
+    "kindOfValue": "ratio",
+    "quotedSentence": "9 선금지급 | • 계약금액의 최대 70%까지 지급 가능, 채권 확보[선금 보증서] ※ 계약상대자로부터 선금지급 요청이 없는 경우 → 선금 미지급",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "153be32b77b2a3",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-48abbd8f42737-1",
+    "kindOfValue": "ratio",
+    "quotedSentence": "11 계약이행 지체 | • 지연배상금(용역 0.13%, 운송 0.25%)",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "48abbd8f42737",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-190bf75343ef6c-1",
+    "kindOfValue": "duration",
+    "quotedSentence": "12 용역완성의 검사 | • 완료검사원, 검사(완료 통지 받은 날부터 14일 이내)",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "190bf75343ef6c",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-d6445e15746d6-1",
+    "kindOfValue": "duration",
+    "quotedSentence": "13 대가 지급 | • 청구 받은 날로부터 5일 이내 • 국세, 지방세 납세증명(G2B 확인 가능) • 4대보험(국민연금, 건강보험, 고용보험, 산재보험) 완납 증명서",
+    "contextBefore": "업계획 수립 | • 전체학년 및 교직원 배식 - 식탁 및 식당 바닥 청소, 분배 등 - 근무시간 내에 영양(교)사가 제시하는 기타 업무 분야 계획 수립 - 1년간 급식일수 산정 및 배식도우미 인원, 근무시간 등 수립",
+    "contextAfter": "",
+    "sourceChunkId": "d6445e15746d6",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-1b8188e008dcb4-1",
+    "kindOfValue": "duration",
+    "quotedSentence": "수의계약 안내공고 (2인이상 전자견적제출) | 3일 이상(토요일, 공휴일 제외)",
+    "contextBefore": "구분 | 공고기간",
+    "contextAfter": "",
+    "sourceChunkId": "1b8188e008dcb4",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-13b142a4723959-1",
+    "kindOfValue": "duration",
+    "quotedSentence": "일반입찰(제한입찰) | 입찰서 제출 마감일의 전날부터 | 7일 전(긴급？재공고: 5일 전)",
+    "contextBefore": "구분 | 공고기간",
+    "contextAfter": "",
+    "sourceChunkId": "13b142a4723959",
+    "sourceUrl": "/fus/MI000000000000000495/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A2&gy_cd=B39",
+    "sourceTitle": "계약방법 [배식도우미] 01단계"
+  },
+  {
+    "candidateId": "cand-1eccdab07cb516-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "물품선정위원회를 통한 나라장터 쇼핑몰 구매 (추정가격 2천만원 초과 ~ 금액 상관없음) | 다수공급자계약 2단계 경쟁 ( 납품요구 1억원 이상 ~) | 다수공급자계약 2단계 경쟁 (납품요구 5천만원 이상~ )",
+    "contextBefore": "계약방법 추정가격· 납품요구 금액 | 제3자 단가계약 | 다수공급자계약",
+    "contextAfter": "",
+    "sourceChunkId": "1eccdab07cb516",
+    "sourceUrl": "/fus/MI000000000000000503/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A1&gy_cd=B03",
+    "sourceTitle": "계약방법 [조달구매] 01단계"
+  },
+  {
+    "candidateId": "cand-bedbf006a5a05-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "1억 원",
+    "contextBefore": "계약방법 추정가격· 납품요구 금액 | 제3자 단가계약 | 다수공급자계약",
+    "contextAfter": "",
+    "sourceChunkId": "bedbf006a5a05",
+    "sourceUrl": "/fus/MI000000000000000503/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A1&gy_cd=B03",
+    "sourceTitle": "계약방법 [조달구매] 01단계"
+  },
+  {
+    "candidateId": "cand-19e9edd5cabf18-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "물품선정위원회를 통한 쇼핑몰 구매 (추정가격 2천만원 초과 ~ 납품요구 1억원 미만)",
+    "contextBefore": "계약방법 추정가격· 납품요구 금액 | 제3자 단가계약 | 다수공급자계약",
+    "contextAfter": "",
+    "sourceChunkId": "19e9edd5cabf18",
+    "sourceUrl": "/fus/MI000000000000000503/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A1&gy_cd=B03",
+    "sourceTitle": "계약방법 [조달구매] 01단계"
+  },
+  {
+    "candidateId": "cand-16c53d2ffa45-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "물품선정위원회를 통한 쇼핑몰 구매 (추정가격 2천만원 초과 ~ 납품요구 1억 원 미만)",
+    "contextBefore": "계약방법 추정가격· 납품요구 금액 | 제3자 단가계약 | 다수공급자계약",
+    "contextAfter": "",
+    "sourceChunkId": "16c53d2ffa45",
+    "sourceUrl": "/fus/MI000000000000000503/contract/list0010v.do/contract/list0030v.do?scg_step=01&gb_cd=A1&gy_cd=B03",
+    "sourceTitle": "계약방법 [조달구매] 01단계"
+  },
+  {
+    "candidateId": "cand-339bd31a4f98b-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "입찰 | ① 1억원 초과 | 경쟁 입찰, 협상에 의한 계약",
+    "contextBefore": "계약형태 | 추정가격 범위 | 구매방법",
+    "contextAfter": "",
+    "sourceChunkId": "339bd31a4f98b",
+    "sourceUrl": "/fus/MI000000000000000504/contract/list0010v.do/contract/list0030v.do?scg_step=02&gb_cd=A1&gy_cd=B18",
+    "sourceTitle": "계약방법 [급식식재료] 02단계"
+  },
+  {
+    "candidateId": "cand-103d60c6a0e5dd-1",
+    "kindOfValue": "amount",
+    "quotedSentence": "수의 계약 | ② 1억원 이하 | 2인 이상 견적서 제출(소액수의), 전자조달 구매",
+    "contextBefore": "계약형태 | 추정가격 범위 | 구매방법",
+    "contextAfter": "",
+    "sourceChunkId": "103d60c6a0e5dd",
+    "sourceUrl": "/fus/MI000000000000000504/contract/list0010v.do/contract/list0030v.do?scg_step=02&gb_cd=A1&gy_cd=B18",
+    "sourceTitle": "계약방법 [급식식재료] 02단계"
+  },
+  {
     "candidateId": "cand-633dc06c42f7-17",
     "kindOfValue": "ratio",
     "quotedSentence": "* (입찰보증금)5%→2.5%, (계약보증금)10%→5%, (계약이행보증금)40%→20%",

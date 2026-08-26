@@ -30,7 +30,8 @@
     "rules:queue": "tsx scripts/gen-review-queue.mts",
     "crawl:faq-bbs": "tsx workers/crawler/src/cli.ts faq-bbs",
     "crawl:attachments": "tsx workers/crawler/src/cli.ts attachments",
-    "crawl:selector": "tsx workers/crawler/src/cli.ts selector"
+    "crawl:selector": "tsx workers/crawler/src/cli.ts selector",
+    "crawl:selector-tables": "tsx workers/crawler/src/cli.ts selector-tables"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

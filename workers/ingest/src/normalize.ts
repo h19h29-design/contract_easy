@@ -74,7 +74,9 @@ export function docToChunks(doc: NormalizedDoc): Chunk[] {
   let order = 0;
   const seedName = doc.menuPath[0] ?? '';
   const isFaqSeed = /^FAQ/i.test(seedName);
-  const faqCategory = mapFaqCategory(seedName);
+  const fixedFaqCategory = mapFaqCategory(seedName);
+  // 통합형 FAQ 게시판(카테고리 미구분)은 본문 키워드로 추정
+  const needsTextGuess = isFaqSeed && fixedFaqCategory === null;
 
   const push = (type: ChunkType, text: string, path: string[]) => {
     chunks.push({
@@ -89,7 +91,7 @@ export function docToChunks(doc: NormalizedDoc): Chunk[] {
       meta: {
         publishedAt: doc.publishedAt ?? null,
         collectedAt: doc.collectedAt,
-        faqCategory
+        faqCategory: fixedFaqCategory ?? (needsTextGuess ? guessFaqCategory(text) : null)
       }
     });
   };
@@ -147,7 +149,16 @@ function mapFaqCategory(seedName: string): string | null {
   if (seedName.includes('물품')) return 'goods';
   if (seedName.includes('용역')) return 'service';
   if (seedName.includes('공사')) return 'construction';
+  if (seedName.includes('원클릭')) return null; // 통합형 → 본문 추정
   return null;
+}
+
+/** 본문 키워드 기반 FAQ 카테고리 추정(통합형 게시판용) */
+function guessFaqCategory(text: string): string {
+  if (/공사|건설|시설|착공|감리|준공/.test(text)) return 'construction';
+  if (/용역|임차|청소|버스|설계|감리용역/.test(text)) return 'service';
+  if (/물품|구매|교복|급식|도서|조달|제조/.test(text)) return 'goods';
+  return 'general';
 }
 
 export function saveNormalizedMarkdown(normalizedMarkdownDir: string, doc: NormalizedDoc): string {
