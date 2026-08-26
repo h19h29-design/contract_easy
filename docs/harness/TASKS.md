@@ -102,6 +102,12 @@
 - 증거: `docs/harness/EVAL_RETRIEVAL.md`, `tests/fixtures/retrieval-eval.json`,
   `workers/ingest/src/rule-tables.ts`, `sync-db.ts`, `packages/retrieval/src/keyword.ts`
 
+## T-195 평가셋 v2 + OCR 검증 + 잔여 정리 — DONE
+- 평가셋 v2: 확장 코퍼스 반영 60문항(신규 주제: 한시특례/노임단가/매뉴얼/합의약정서/단계표 등).
+  실측 hit@1 69.5% / hit@3 78.0% / 거부 5·5. 잔여 미스는 미제공 업종 항목과 일치.
+- OCR 파이프라인 구현·검증(pdf-parse getImage→tesseract.js kor): 스캔 PDF 1건 저품질로 수동검토 격리, 모듈 유지(env INGEST_OCR).
+- 첨부 재시도: buseo ND_fileDownload 5건은 서버 미제공으로 영구 불수집 확정.
+- 증거: tests/fixtures/retrieval-eval.json(v2), docs/harness/EVAL_RETRIEVAL.md, workers/ingest/src/ocr-pdf.ts
 ## T-190 HWP 본문 인제스트(#1 완전 해제) — DONE
 - pyhwp hwp5txt.exe 일괄 변환 70/72 성공(실패 2건 빈 문서), HWP-TXT 문서 인제스트 통합.
 - 청크 5,689→11,259. 평가: 코퍼스 확장에 따른 경합으로 hit@3 68.9% 실측 기록(평가셋 재조정은 후속).
@@ -135,9 +141,7 @@
 - 증거: docs/harness/UNCOLLECTED.md (2차 갱신)
 
 ## NEXT (다음 세션 권장)
-1. 평가셋 45문항 재조정(확장 코퍼스 반영) + 스캔 PDF OCR(tesseract.js) 도입 검토
-2. Docker 가용 환경에서 `docker compose up -d` + `pnpm db:migrate` 최종 확인
-2. 법무 확인: (a) 첨부 수집 허용 여부(D-001), (b) 외부 BBS allowlist, (c) 규칙 초안 3건의 원문 대조·승인(/admin/rules)
-3. 동적 셀렉터 페이지(계약방법 메인) 탭별 렌더 수집으로 표 데이터 확장
-4. 상세 미수집 공지(컴퓨터교실·일부위탁급식 등) 대상 공지 전체 크롤 확대 → 평가 hit@3 추가 향상 여지
-5. FAQ 질의응답 구조 파악 후 faq chunk Q/A 분할(현재는 원문 왜곡 방지 위해 분류만 적용)
+1. 평가셋 지속 보강(현재 78% → 목표 85%+: 신규 문서 편입 시 누적 갱신)
+2. 규칙 승인 실운용(/admin/rules에서 밴드 초안 3건 원문 대조 후 사람이 승인 — 자동화 금지)
+3. Docker 가용 환경 최종 검증(compose up + db:migrate)
+4. HWP 품질 개선(표/서식 구조 보존 고도화), OCR 후처리 옵션
