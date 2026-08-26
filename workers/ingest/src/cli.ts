@@ -6,6 +6,7 @@ import { htmlToNormalized, docToChunks, saveNormalizedMarkdown } from './normali
 import { generateWiki } from './wiki.js';
 import { extractRuleCandidates, candidatesToDraftRules, saveCandidates } from './rules-extract.js';
 import { extractContractMethodDrafts } from './rule-tables.js';
+import { syncDatabase } from './sync-db.js';
 
 async function main(): Promise<void> {
   const cmd = process.argv[2] ?? 'all';
@@ -81,6 +82,16 @@ async function main(): Promise<void> {
     for (const d of allDrafts) store.upsertRule(d);
     const file = saveCandidates(dataPaths().rulesCandidates, cands);
     console.log(`[rules] candidates=${cands.length} tableBands=${tableDrafts.length} total=${allDrafts.length} staleRemoved=${removed} → ${file}`);
+  }
+
+  if (cmd === 'sync-db') {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      console.error('[sync-db] DATABASE_URL 환경변수가 필요합니다.');
+      process.exit(1);
+    }
+    const { report } = await syncDatabase({ databaseUrl, appStoreDir: dataPaths().appStore });
+    console.log(`[sync-db] ${JSON.stringify(report)}`);
   }
 
   if (cmd === 'index') {

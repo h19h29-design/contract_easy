@@ -68,7 +68,7 @@ export function htmlToNormalized(
   };
 }
 
-/** 정규화 문서 → 타입별 청크 */
+/** 정규화 문서 → 타입별 청크 (표는 행 단위 분할, 긴 문단은 분할) */
 export function docToChunks(doc: NormalizedDoc): Chunk[] {
   const chunks: Chunk[] = [];
   let order = 0;
@@ -76,27 +76,69 @@ export function docToChunks(doc: NormalizedDoc): Chunk[] {
   const isFaqSeed = /^FAQ/i.test(seedName);
   const faqCategory = mapFaqCategory(seedName);
 
-  for (const block of doc.blocks) {
-    const type: ChunkType = block.kind === 'heading'
-      ? 'heading'
-      : isFaqSeed ? 'faq' : block.kind;
+  const push = (type: ChunkType, text: string, path: string[]) => {
     chunks.push({
       id: stableId('chunk', doc.sourceVersionId, order),
       sourceVersionId: doc.sourceVersionId,
       url: doc.url,
       docTitle: doc.title,
-      sectionPath: block.path,
+      sectionPath: path,
       order: order++,
       type,
-      text: block.text,
+      text,
       meta: {
         publishedAt: doc.publishedAt ?? null,
         collectedAt: doc.collectedAt,
         faqCategory
       }
     });
+  };
+
+  for (const block of doc.blocks) {
+    // 표: 행 단위 청크(헤더 행은 각 행 앞에 맥락으로 부착하지 않고 별도 1행 유지)
+    if (block.kind === ('table-row' as ChunkType) && block.tableRows && block.tableRows.length > 1) {
+      const header = block.tableRows[0]!.filter(Boolean).join(' | ');
+      push('table-row', header, block.path); // 헤더 자체도 검색 가능
+      for (let i = 1; i < block.tableRows.length; i++) {
+        const cells = block.tableRows[i]!.filter(Boolean);
+        if (cells.length === 0) continue;
+        const rowText = cells.join(' | ');
+        const text = `${header}\n${rowText}`; // 열 의미 보존을 위해 헤더를 함께 저장
+        push('table-row', text.length > 1200 ? rowText : text, block.path);
+      }
+      continue;
+    }
+
+    // 문단: 과대 청크 방지를 위한 길이 분할
+    if (block.text.length > 1500) {
+      for (const piece of splitLong(block.text)) {
+        push(block.kind, piece, block.path);
+      }
+      continue;
+    }
+
+    const type: ChunkType = block.kind === 'heading'
+      ? 'heading'
+      : isFaqSeed ? 'faq' : block.kind;
+    push(type, block.text, block.path);
   }
   return chunks;
+}
+
+/** 문장 경계 우선으로 ~900자 단위 분할 */
+function splitLong(text: string): string[] {
+  const out: string[] = [];
+  let buf = '';
+  for (const sent of text.split(/(?<=[.!?다])\s+/)) {
+    if ((buf + ' ' + sent).length > 900 && buf) {
+      out.push(buf.trim());
+      buf = sent;
+    } else {
+      buf += (buf ? ' ' : '') + sent;
+    }
+  }
+  if (buf.trim()) out.push(buf.trim());
+  return out;
 }
 
 /** FAQ 시드명 → 검색 필터용 카테고리 */

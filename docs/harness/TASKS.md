@@ -86,9 +86,17 @@
 - 증거: `packages/db/src/pg-store.ts`, `packages/db/src/migrate.ts`,
   `tests/integration/*.pg.test.ts`, `docs/harness/TEST_RESULTS.md` 2026-08-26 절
 
+## T-160~163 지식 품질 고도화 — DONE
+- FAQ 청크 타입·카테고리(247개), 계약방법 표→구조화 규칙 초안(3건, draft 전용·경계 warning),
+  `ingest:sync-db`(파일→PG 멱등 적재, pg테스트 16/16),
+  리트리벌 평가셋 45+5문항(`pnpm eval:retrieval`) — hit@3 **84.4%**, 거부판정 5/5 실측
+- 검색 스코어링 개선: 전체 단어 일치 가중 + 조사 제거 매칭 + 커버리지 보너스
+- 증거: `docs/harness/EVAL_RETRIEVAL.md`, `tests/fixtures/retrieval-eval.json`,
+  `workers/ingest/src/rule-tables.ts`, `sync-db.ts`, `packages/retrieval/src/keyword.ts`
+
 ## NEXT (다음 세션 권장)
-1. Docker 가용 환경에서 `docker compose up -d` + `pnpm db:migrate` 최종 확인(로컬은 embedded-postgres로 검증 완료)
-2. 법무 확인: (a) 첨부 수집 허용 여부(D-001), (b) 외부 BBS(buseo.sen.go.kr) allowlist
-3. 원문 기반 규칙 초안 작성(후보 63건) → REVIEWER 검토 → ADMIN active 승인
-4. 운영 동기화: 정기 `ingest:all` 후 API 재시작 대신 PG 직접 적재 작업(sync) 구현
-5. FAQ 게시판 인라인 본문의 FAQ 전용 chunk(faq type) 세분화
+1. Docker 가용 환경에서 `docker compose up -d` + `pnpm db:migrate` 최종 확인
+2. 법무 확인: (a) 첨부 수집 허용 여부(D-001), (b) 외부 BBS allowlist, (c) 규칙 초안 3건의 원문 대조·승인(/admin/rules)
+3. 동적 셀렉터 페이지(계약방법 메인) 탭별 렌더 수집으로 표 데이터 확장
+4. 상세 미수집 공지(컴퓨터교실·일부위탁급식 등) 대상 공지 전체 크롤 확대 → 평가 hit@3 추가 향상 여지
+5. FAQ 질의응답 구조 파악 후 faq chunk Q/A 분할(현재는 원문 왜곡 방지 위해 분류만 적용)
