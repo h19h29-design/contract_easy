@@ -24,10 +24,21 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
   const page = await context.newPage();
 
   const xhrLog: string[] = [];
+  const subResponses: Array<{ key: string; url: string; data: string | null; body: string }> = [];
   page.on('request', (req) => {
     if (/Sub/i.test(req.url()) || (/\.do/.test(req.url()) && req.method() === 'POST')) {
       xhrLog.push(JSON.stringify({ at: new Date().toISOString(), url: req.url(), method: req.method(), data: req.postData() }));
     }
+  });
+  page.on('response', async (res) => {
+    try {
+      if (!/Sub/i.test(res.url())) return;
+      const req = res.request();
+      let body = '';
+      try { body = await res.text(); } catch { return; }
+      const key = sha256Hex(res.url() + '|' + (req.postData() ?? '')).slice(0, 16);
+      subResponses.push({ key, url: res.url(), data: req.postData(), body });
+    } catch { /* 무시 */ }
   });
 
   await page.goto(SEED_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
@@ -43,6 +54,7 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
 
   let savedVariants = 0;
   let applied = 0;
+  let lastSubCount = 0;
 
   for (const gb of gbOptions) {
     if (!gb.value) continue;
@@ -77,24 +89,39 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
           })(${JSON.stringify(gb.value)}, ${JSON.stringify(gy.value)})`
         );
 
-        const clicked = await page.evaluate(
-          `(() => {
-            const el =
-              Array.from(document.querySelectorAll('#wrap a, #wrap button'))
-                .find(a => (a.textContent || '').trim() === '?곸슜')
-              || Array.from(document.querySelectorAll('a, button'))
-                .find(a => (a.textContent || '').trim() === '?곸슜');
-            if (el instanceof HTMLElement) { el.click(); return true; }
-            return false;
-          })()`
-        );
+        let clicked = false;
+        for (let attempt = 0; attempt < 3 && !clicked; attempt++) {
+          await page.waitForTimeout(attempt === 0 ? 200 : 900);
+          clicked = await page.evaluate(
+            `(() => {
+              const el =
+                Array.from(document.querySelectorAll('#wrap a, #wrap button'))
+                  .find(a => (a.textContent || '').trim() === '적용')
+                || Array.from(document.querySelectorAll('a, button'))
+                  .find(a => (a.textContent || '').trim() === '적용');
+              if (el instanceof HTMLElement) { el.click(); return true; }
+              return false;
+            })()`
+          );
+        }
         if (!clicked) {
-          console.log(`  ! [?곸슜] 誘몃컻寃???gb ?쒗쉶 以묐떒`);
+          console.log(`  ! [적용] 미발견(재시도 포함) — gb 순회 중단`);
           break;
         }
         applied++;
+        const subBefore = subResponses.length;
         await page.waitForLoadState('domcontentloaded').catch(() => undefined);
         await page.waitForTimeout(1500);
+
+        // fncSubView AJAX 프래그먼트 저장(표 포함 여부 무관, 학습 자료)
+        for (const r of subResponses.slice(lastSubCount)) {
+          fs.mkdirSync(path.join(dirs.manifests, 'selector-fragments'), { recursive: true });
+          const fragFile = path.join(dirs.manifests, 'selector-fragments', `${r.key}.html`);
+          if (!fs.existsSync(fragFile)) {
+            fs.writeFileSync(fragFile, `<!-- url: ${r.url}\n     data: ${r.data ?? ''} -->\n` + r.body, 'utf8');
+          }
+        }
+        lastSubCount = subResponses.length;
 
         const html = await page.content();
         const tables = (html.match(/<table/g) ?? []).length;
@@ -129,7 +156,14 @@ export async function walkSelector(opts?: { maxCombos?: number }): Promise<void>
   }
 
   fs.writeFileSync(path.join(dirs.manifests, 'selector-xhr.jsonl'), xhrLog.join('\n') + '\n', 'utf8');
-  console.log(`[selector-walk] done applied=${applied} savedVariants=${savedVariants} xhrLogged=${xhrLog.length}`);
+  console.log(`[selector-walk] done applied=${applied} savedVariants=${savedVariants} xhrLogged=${xhrLog.length} subResponses=${subResponses.length}`);
+  // 프래그먼트 요약: 표 포함 프래그먼트 나열
+  const withTables = subResponses.filter((r) => /<table/i.test(r.body));
+  console.log(`[selector-walk] fragmentsWithTable=${withTables.length}`);
+  for (const r of withTables.slice(0, 20)) {
+    const data = (r.data ?? '').replace(/\s+/g, ' ').slice(0, 120);
+    console.log(`  * ${r.key} body=${r.body.length}B data=${data}`);
+  }
   await context.close();
   await browser.close();
 }
