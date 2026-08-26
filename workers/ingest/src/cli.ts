@@ -15,6 +15,7 @@ import type { NormalizedDoc } from '@sen/shared';
 interface DocEntry {
   doc: NormalizedDoc;
   versionId: string;
+  version?: import('@sen/shared').SourceVersion;
 }
 
 async function main(): Promise<void> {
@@ -37,7 +38,8 @@ async function main(): Promise<void> {
       const raw = fs.readFileSync(latest.rawHtmlPath, 'utf8');
       docs.push({
         doc: htmlToNormalized(latest.id, src.url, latest.title, latest.menuPath ?? [], latest.collectedAt, raw),
-        versionId: latest.id
+        versionId: latest.id,
+        version: latest
       });
     }
     // 2) PDF 첨부(텍스트 계열만; 실패/스캔은 경고 후 건너뜀)
@@ -76,10 +78,7 @@ async function main(): Promise<void> {
   if (cmd === 'wiki' || cmd === 'all') {
     const wikiEntries = docs
       .filter(({ versionId }) => !versionId.startsWith('attdoc'))
-      .map(({ doc, versionId }) => ({
-        doc,
-        version: store.getSource(versionId)?.versions.find((v) => v.id === versionId) ?? null
-      }));
+      .map(({ doc, version }) => ({ doc, version: version ?? null }));
     const files = generateWiki(wikiEntries);
     console.log(`[wiki] generated=${files.length} → wiki/generated/`);
   }
