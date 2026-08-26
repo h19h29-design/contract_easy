@@ -72,7 +72,14 @@ export function htmlToNormalized(
 export function docToChunks(doc: NormalizedDoc): Chunk[] {
   const chunks: Chunk[] = [];
   let order = 0;
+  const seedName = doc.menuPath[0] ?? '';
+  const isFaqSeed = /^FAQ/i.test(seedName);
+  const faqCategory = mapFaqCategory(seedName);
+
   for (const block of doc.blocks) {
+    const type: ChunkType = block.kind === 'heading'
+      ? 'heading'
+      : isFaqSeed ? 'faq' : block.kind;
     chunks.push({
       id: stableId('chunk', doc.sourceVersionId, order),
       sourceVersionId: doc.sourceVersionId,
@@ -80,15 +87,25 @@ export function docToChunks(doc: NormalizedDoc): Chunk[] {
       docTitle: doc.title,
       sectionPath: block.path,
       order: order++,
-      type: block.kind,
+      type,
       text: block.text,
       meta: {
         publishedAt: doc.publishedAt ?? null,
-        collectedAt: doc.collectedAt
+        collectedAt: doc.collectedAt,
+        faqCategory
       }
     });
   }
   return chunks;
+}
+
+/** FAQ 시드명 → 검색 필터용 카테고리 */
+function mapFaqCategory(seedName: string): string | null {
+  if (seedName.includes('계약일반')) return 'general';
+  if (seedName.includes('물품')) return 'goods';
+  if (seedName.includes('용역')) return 'service';
+  if (seedName.includes('공사')) return 'construction';
+  return null;
 }
 
 export function saveNormalizedMarkdown(normalizedMarkdownDir: string, doc: NormalizedDoc): string {

@@ -5,6 +5,7 @@ import { FileStore } from '@sen/db';
 import { htmlToNormalized, docToChunks, saveNormalizedMarkdown } from './normalize.js';
 import { generateWiki } from './wiki.js';
 import { extractRuleCandidates, candidatesToDraftRules, saveCandidates } from './rules-extract.js';
+import { extractContractMethodDrafts } from './rule-tables.js';
 
 async function main(): Promise<void> {
   const cmd = process.argv[2] ?? 'all';
@@ -62,12 +63,24 @@ async function main(): Promise<void> {
   if (cmd === 'rules' || cmd === 'all') {
     const allChunks = store.getChunks();
     const cands = extractRuleCandidates(allChunks);
-    const drafts = candidatesToDraftRules(cands);
+    const candidateDrafts = candidatesToDraftRules(cands);
+
+    // 계약방법 표 → 구조화 초안(원문 인용값, 항상 draft)
+    const docs = [];
+    for (const src of store.listSources()) {
+      const latest = src.versions[src.versions.length - 1];
+      if (!latest?.rawHtmlPath || !fs.existsSync(latest.rawHtmlPath)) continue;
+      const raw = fs.readFileSync(latest.rawHtmlPath, 'utf8');
+      docs.push(htmlToNormalized(latest.id, src.url, latest.title, latest.menuPath ?? [], latest.collectedAt, raw));
+    }
+    const { drafts: tableDrafts } = extractContractMethodDrafts(docs);
+    const allDrafts = [...candidateDrafts, ...tableDrafts];
+
     // 이번 배치에 없는 오래된 candidate 초안만 정리(reviewed/active는 보존)
-    const removed = store.purgeStaleCandidateDrafts(drafts.map((d) => d.id));
-    for (const d of drafts) store.upsertRule(d);
+    const removed = store.purgeStaleCandidateDrafts(candidateDrafts.map((d) => d.id));
+    for (const d of allDrafts) store.upsertRule(d);
     const file = saveCandidates(dataPaths().rulesCandidates, cands);
-    console.log(`[rules] candidates=${cands.length} draftRules=${drafts.length} staleRemoved=${removed} → ${file}`);
+    console.log(`[rules] candidates=${cands.length} tableBands=${tableDrafts.length} total=${allDrafts.length} staleRemoved=${removed} → ${file}`);
   }
 
   if (cmd === 'index') {

@@ -1,77 +1,77 @@
 {
-  "generatedAt": "2026-08-25T15:29:23.134Z",
+  "generatedAt": "2026-08-26T01:24:06.418Z",
   "sources": [
     {
       "id": "13c1279ed09e5c",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000419/html/cont0010v.do",
-      "versions": 3,
-      "latestSha": "00452b4eb41bae0198de304e04dc76982a2949879243316ab1c99fb1bed8e762"
+      "versions": 4,
+      "latestSha": "f89fd6ff1da126c89618aa914f54713ec3f7b8ba3af661a5a650a7264b91f84b"
     },
     {
       "id": "6b48127d5a35b",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000097/contract/list0010v.do",
-      "versions": 3,
-      "latestSha": "4a5c2f302654f77ea3b0a2bedc76b949f519d5d8f3b018ab0dc9d1352f8d2c57"
+      "versions": 4,
+      "latestSha": "523fc1264582d8653c91178c9c597fd378c7d47fc80d9474ee09f0e3141e0947"
     },
     {
       "id": "cede70096b0ea",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000327/html/cont0010v.do",
-      "versions": 3,
-      "latestSha": "12ce9a3b688b77b875cb344cd8243ecd955481f5860ff8bdfee2eabeec39d6fe"
+      "versions": 4,
+      "latestSha": "70384b627fc05f065192e76433a668887cfbd8c1f52970b4fdad8fe7ff8e4276"
     },
     {
       "id": "5af902dd1f49",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do",
-      "versions": 3,
-      "latestSha": "0157db4bd17120f3018c55b49ce4d7f8d49221dea8dd2d570502db8c40fc6ce9"
+      "versions": 4,
+      "latestSha": "db196204c190a4e6a407e093639e7df672e42efeb24f91ba2163cfd856f4ef3f"
     },
     {
       "id": "18e367a7d95b79",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do",
-      "versions": 3,
-      "latestSha": "ad3d843e25e7ef6b3f5f31ace8940e07fccbb4df29926b87c603071a84aaa8f4"
+      "versions": 4,
+      "latestSha": "3d585ade961f48d1ad63858617d68e72d7f93b55e6d5f73f02de6ad2a03989e9"
     },
     {
       "id": "4b2a2dc1dcdeb",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000386/board/BO00000122/CD010/list0010v.do",
-      "versions": 32,
-      "latestSha": "b9e118d383a02c845f97529173556a2e6bce913a20ab43222cbd3a8cea0953ce"
+      "versions": 37,
+      "latestSha": "78d6737c46156f538e5b6ab07a3882ebccfef1dd5364774f1df11e8a3c9b8269"
     },
     {
       "id": "16fcb5d3aaed6",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do",
-      "versions": 3,
-      "latestSha": "53fc5defde39695d37c5dc7a2635ebbdc3c0592a0c25f8e136b5da321299c39c"
+      "versions": 4,
+      "latestSha": "2e16230f54d2ff06d281ddde2ec6b62450134da0e1da271d85e2cab9a44705e1"
     },
     {
       "id": "1304a1f307353c",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000388/board/BO00000122/CD030/list0010v.do",
-      "versions": 14,
-      "latestSha": "dd2fc8359dd1f46966188078d521f273c549031bf300dd570491c60a804e24c5"
+      "versions": 16,
+      "latestSha": "7b23d8851d10d24a7eaae8598b980157d56f261a113f685618f19879126a9f53"
     },
     {
       "id": "1b1122e09f108f",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000389/board/BO00000122/CD040/list0010v.do",
-      "versions": 3,
-      "latestSha": "59badd6de40f86abe24abe6ced8f8f87cabec0f4a6569ff3a201cd581142c1c5"
+      "versions": 4,
+      "latestSha": "f3c35ee7f940591119f7a3f0db4818ad4b6c82ca11730668c093b546f5d57d32"
     },
     {
       "id": "4cda239731e80",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000104/board/BO00000061/ctgynone/list0010v.do",
-      "versions": 49,
-      "latestSha": "88a0f14948131cc02b8ddc5206f61ff74d29d94b506c02727d4452f952f84f6e"
+      "versions": 58,
+      "latestSha": "c878f0e615abf7767276e5dca10d3f7fb2870c019f1675866c12c56edd575811"
     },
     {
       "id": "d410369599a83",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000426/html/cont0010v.do",
-      "versions": 3,
-      "latestSha": "aafc387045f500c07b1bc77cf01b1f337e985e0c4c90d97552868467e48f7818"
+      "versions": 4,
+      "latestSha": "37474ae79647ad4292bc77a12b59c8de02e3d8d7dd62cc55d2a73996ea420ec7"
     },
     {
       "id": "2e2b9ff534476",
       "url": "https://contract.sen.go.kr/fus/MI000000000000000365/html/cont0010v.do",
-      "versions": 3,
-      "latestSha": "650c99cbccc2cab086fe24e4f449d759e98690abb187bab2bf51bd9d05a596af"
+      "versions": 4,
+      "latestSha": "8b779956c5c2a288c3e3ddc6a4a3e458c414bfc134f38eeed1a346650716d55d"
     },
     {
       "id": "16ee33253867ed",
