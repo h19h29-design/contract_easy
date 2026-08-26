@@ -9,6 +9,7 @@ import { extractContractMethodDrafts } from './rule-tables.js';
 import { syncDatabase } from './sync-db.js';
 import { pdfFileToNormalized, listPdfFiles } from './pdf-attach.js';
 import { extractZipAttachments } from './zip-extract.js';
+import { listHwpTextDocs } from './hwp-txt.js';
 import type { NormalizedDoc } from '@sen/shared';
 
 interface DocEntry {
@@ -48,7 +49,13 @@ async function main(): Promise<void> {
       docs.push({ doc: attDoc, versionId: attDoc.sourceVersionId });
       pdfOk++;
     }
-    console.log(`[docs] html=${docs.length - pdfOk} pdfAttached=${pdfOk} pdfSkipped=${pdfSkip}`);
+    // 3) HWP(hwp5txt 변환본)
+    let hwpOk = 0;
+    for (const doc of listHwpTextDocs(path.join(dirs.rawAttachments, 'hwp-txt'))) {
+      docs.push({ doc, versionId: doc.sourceVersionId });
+      hwpOk++;
+    }
+    console.log(`[docs] html=${docs.length - pdfOk - hwpOk} pdfAttached=${pdfOk} pdfSkipped=${pdfSkip} hwpTxt=${hwpOk}`);
   }
 
   if (cmd === 'normalize' || cmd === 'all') {

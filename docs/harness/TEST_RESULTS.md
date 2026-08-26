@@ -79,6 +79,16 @@
 | API PostgreSQL 紐⑤뱶 | PASS | buildApp??PG ?ㅽ넗??二쇱엯 ??濡쒓렇?맞룻봽濡쒖젥???앹꽦(10?④퀎)쨌異쒖쿂 紐⑸줉 ?숈옉 |
 | ?⑺넗由?createStore | PASS | DATABASE_URL ?덉쓬?뭁gStore / ?놁쓬?묯ileStore ?좏깮 ?뺤씤 |
 
+## 2026-08-26 6차 세션 (HWP 본문 인제스트 완료)
+
+| 항목 | 결과 | 핵심 |
+| --- | --- | --- |
+| hwp5txt(pyhwp) 일괄 변환 | PASS | **70/72 성공**(실패 2건은 빈 문서), UTF-8 저장 → `data/raw/attachments/hwp-txt/` |
+| HWP-TXT 인제스트 통합 | PASS | HWP 문서 70건 추가 → 청크 5,689→**11,259** |
+| 평가 재실행(확장 코퍼스) | 실측 기록 | hit@1 55.6% / hit@3 68.9% / 거부 5·5 — 코퍼스 2배 확장에 따른 경합 변화. 평가셋 재조정은 후속 과제로 명시 |
+
+명령 게이트: lint PASS / typecheck PASS / test 70·70 / build PASS
+
 ## 2026-08-26 5차 세션 (#1 첨부 수집 승인 실행 + #3 UI-walk 부분 완료)
 
 | 항목 | 결과 | 핵심 |

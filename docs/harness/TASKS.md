@@ -102,6 +102,10 @@
 - 증거: `docs/harness/EVAL_RETRIEVAL.md`, `tests/fixtures/retrieval-eval.json`,
   `workers/ingest/src/rule-tables.ts`, `sync-db.ts`, `packages/retrieval/src/keyword.ts`
 
+## T-190 HWP 본문 인제스트(#1 완전 해제) — DONE
+- pyhwp hwp5txt.exe 일괄 변환 70/72 성공(실패 2건 빈 문서), HWP-TXT 문서 인제스트 통합.
+- 청크 5,689→11,259. 평가: 코퍼스 확장에 따른 경합으로 hit@3 68.9% 실측 기록(평가셋 재조정은 후속).
+- 증거: scripts/hwp-batch.py, workers/ingest/src/hwp-txt.ts, data/raw/attachments/hwp-txt/
 ## T-185~188 확장 마무리 — DONE
 - ZIP 추출(adm-zip): 62개 스캔 → 멤버 52개 추출, 내부 PDF 자동 인제스트(PDF 문서 15→22)
 - #3-나 종결: 빈 카테고리 gm(C00~05)×step(01~06) 전수 조회 무콘텐츠 실측
@@ -131,7 +135,7 @@
 - 증거: docs/harness/UNCOLLECTED.md (2차 갱신)
 
 ## NEXT (다음 세션 권장)
-1. 계약방법 셀렉터 UI-walk 개발(탭 클릭→XHR 관찰→엔드포인트 학습) — UNCOLLECTED 3번 해제
+1. 평가셋 45문항 재조정(확장 코퍼스 반영) + 스캔 PDF OCR(tesseract.js) 도입 검토
 2. Docker 가용 환경에서 `docker compose up -d` + `pnpm db:migrate` 최종 확인
 2. 법무 확인: (a) 첨부 수집 허용 여부(D-001), (b) 외부 BBS allowlist, (c) 규칙 초안 3건의 원문 대조·승인(/admin/rules)
 3. 동적 셀렉터 페이지(계약방법 메인) 탭별 렌더 수집으로 표 데이터 확장
