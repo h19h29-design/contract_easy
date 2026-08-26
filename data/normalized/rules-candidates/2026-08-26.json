@@ -1658,5 +1658,1275 @@
     "sourceChunkId": "d8ab70b9e8765",
     "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\cb\\cb0552b8a56032d2-4._특수학교_계획_설계_지침서.pdf",
     "sourceTitle": "cb0552b8a56032d2-4._특수학교_계획_설계_지침서.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-30",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "맹암거 상세도(개선)",
+    "contextAfter": "SLOPE 1%",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-31",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "SLOPE 1%",
+    "contextAfter": "SLOPE 1%",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-32",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "SLOPE 1%",
+    "contextAfter": "SLOPE 1%",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-33",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "SLOPE 1%",
+    "contextAfter": "SLOPE 0.5% SLOPE 0.5% SLOPE 0.5%",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-34",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 0.5% SLOPE 0.5% SLOPE 0.5%",
+    "contextBefore": "SLOPE 1%",
+    "contextAfter": "SLOPE 0.5% SLOPE 0.5% SLOPE 0.5% SLOPE",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-35",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 0.5% SLOPE 0.5% SLOPE 0.5% SLOPE",
+    "contextBefore": "SLOPE 0.5% SLOPE 0.5% SLOPE 0.5%",
+    "contextAfter": "SLOPE",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-38",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "Center Line",
+    "contextAfter": "SLOPE 1%",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-39",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "SLOPE 1%",
+    "contextAfter": "SLOPE 1%",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-40",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "SLOPE 1%",
+    "contextAfter": "SLOPE 1%",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-41",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "SLOPE 1%",
+    "contextAfter": "SLOPE 1%",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-42",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "SLOPE 1%",
+    "contextAfter": "SLOPE 1%",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-16f7ba094412d1-43",
+    "kindOfValue": "ratio",
+    "quotedSentence": "SLOPE 1%",
+    "contextBefore": "SLOPE 1%",
+    "contextAfter": "60000",
+    "sourceChunkId": "16f7ba094412d1",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-184d47cbadba73-146",
+    "kindOfValue": "amount",
+    "quotedSentence": "1 원형1호 맨홀 상세도 1 1",
+    "contextBefore": "(단위 : 개소당)",
+    "contextAfter": "축척 : NONE",
+    "sourceChunkId": "184d47cbadba73",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-b55081e7c9708-144",
+    "kindOfValue": "amount",
+    "quotedSentence": "1 원형3호맨홀상세도 1",
+    "contextBefore": "(단위 : 개소당)",
+    "contextAfter": "C-029",
+    "sourceChunkId": "b55081e7c9708",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-e5fe7acdf4f5a-92",
+    "kindOfValue": "ratio",
+    "quotedSentence": "0.5% 0.5%",
+    "contextBefore": "Center Line",
+    "contextAfter": "부직포 설치",
+    "sourceChunkId": "e5fe7acdf4f5a",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1251a92654fc14-11",
+    "kindOfValue": "ratio",
+    "quotedSentence": "20% 이하",
+    "contextBefore": "입 도",
+    "contextAfter": "2.0% 이하",
+    "sourceChunkId": "1251a92654fc14",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1251a92654fc14-12",
+    "kindOfValue": "ratio",
+    "quotedSentence": "2.0% 이하",
+    "contextBefore": "20% 이하",
+    "contextAfter": "NO.4 (4.76mm)",
+    "sourceChunkId": "1251a92654fc14",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1251a92654fc14-14",
+    "kindOfValue": "ratio",
+    "quotedSentence": "통과 90~`100%",
+    "contextBefore": "NO.4 (4.76mm)",
+    "contextAfter": "NO.7 (2.83mm)",
+    "sourceChunkId": "1251a92654fc14",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1251a92654fc14-16",
+    "kindOfValue": "ratio",
+    "quotedSentence": "잔류 90~100%",
+    "contextBefore": "NO.7 (2.83mm)",
+    "contextAfter": "자 재 명 단 위",
+    "sourceChunkId": "1251a92654fc14",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1251a92654fc14-60",
+    "kindOfValue": "ratio",
+    "quotedSentence": "4%",
+    "contextBefore": "435",
+    "contextAfter": "180",
+    "sourceChunkId": "1251a92654fc14",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\7c845ca773b9d624\\005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf",
+    "sourceTitle": "005-(����6)2017��ݱ� ǥ�������밡 ���� ����.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1fabdb712e865d-23",
+    "kindOfValue": "ratio",
+    "quotedSentence": "계 최대 유량의 10 ～ 20 % 정도 여유를 두어 단면을 결정한다",
+    "contextBefore": "또한 설",
+    "contextAfter": "2.3.4.3.",
+    "sourceChunkId": "1fabdb712e865d",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\017-��ġ��+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "017-��ġ��+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2af48e0c4814f-3",
+    "kindOfValue": "ratio",
+    "quotedSentence": "교사동 주변의 포장계획은 교사 건물에서 부지경계로 포장 기울기를 2%",
+    "contextBefore": "2.5.1.7.",
+    "contextAfter": "이하 계획하여 우천 시 건물 주변에 물이 고이지 않도록 설계해야 한다",
+    "sourceChunkId": "2af48e0c4814f",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\017-��ġ��+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "017-��ġ��+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1007bdd2745bf4-7",
+    "kindOfValue": "ratio",
+    "quotedSentence": "2%이상의 기울기를 유지하고, 빗물이 모이는 부분에 잔디도랑 등 빗물침",
+    "contextBefore": "배수가 원활하지 못한 식재기반의 잔디면에 표면배수를 적용할 경우에는",
+    "contextAfter": "투시설과 배수시설을 연계시켜 설계한다",
+    "sourceChunkId": "1007bdd2745bf4",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\017-��ġ��+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "017-��ġ��+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-a7f905e1ba848-41",
+    "kindOfValue": "ratio",
+    "quotedSentence": "통해 차단되는 콘센트 개수가 전체 콘센트 개수의 30 % 이상이 되어야",
+    "contextBefore": "위치를 설치하며 대기전력 자동차단콘센트 또는 대기전력 차단스위치를",
+    "contextAfter": "한다",
+    "sourceChunkId": "a7f905e1ba848",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\017-��ġ��+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "017-��ġ��+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2d463c79a40c2-27",
+    "kindOfValue": "ratio",
+    "quotedSentence": "계 최대 유량의 10 ～ 20 % 정도 여유를 두어 단면을 결정한다",
+    "contextBefore": "또한 설",
+    "contextAfter": "2.3.4.3.",
+    "sourceChunkId": "2d463c79a40c2",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\018-�߰����б�+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "018-�߰����б�+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-c7b2ce3f4d503-4",
+    "kindOfValue": "ratio",
+    "quotedSentence": "교사동 주변의 포장계획은 교사 건물에서 부지경계로 포장 기울기를 2%",
+    "contextBefore": "2.5.1.7.",
+    "contextAfter": "이하 계획하여 우천시 건물 주변에 물이 고이지 않도록 설계해야 한다",
+    "sourceChunkId": "c7b2ce3f4d503",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\018-�߰����б�+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "018-�߰����б�+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-22cc433b0b3bc-10",
+    "kindOfValue": "ratio",
+    "quotedSentence": "2%이상의 기울기를 유지하고, 빗물이 모이는 부분에 잔디도랑 등 빗물침",
+    "contextBefore": "배수가 원할하지 못한 식재기반의 잔디면에 표면배수를 적용할 경우에는",
+    "contextAfter": "투시설과 배수시설을 연계시켜 설계한다",
+    "sourceChunkId": "22cc433b0b3bc",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\018-�߰����б�+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "018-�߰����б�+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-9d3b0411e45cc-14",
+    "kindOfValue": "ratio",
+    "quotedSentence": "통해 차단되는 콘센트 개수가 전체 콘센트 개수의 30 % 이상이 되어야",
+    "contextBefore": "위치를 설치하며 대기전력 자동차단콘센트 또는 대기전력 차단스위치를",
+    "contextAfter": "한다",
+    "sourceChunkId": "9d3b0411e45cc",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\018-�߰����б�+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "018-�߰����б�+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-112d201b420f4c-27",
+    "kindOfValue": "ratio",
+    "quotedSentence": "계 최대 유량의 10 ～ 20 % 정도 여유를 두어 단면을 결정한다",
+    "contextBefore": "또한 설",
+    "contextAfter": "2.3.4.3.",
+    "sourceChunkId": "112d201b420f4c",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\019-�ʵ��б�+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "019-�ʵ��б�+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1819eca5ac7c05-4",
+    "kindOfValue": "ratio",
+    "quotedSentence": "교사동 주변의 포장계획은 교사 건물에서 부지경계로 포장 기울기를 2%",
+    "contextBefore": "2.5.1.7.",
+    "contextAfter": "이하 계획하여 우천시 건물 주변에 물이 고이지 않도록 설계해야 한다",
+    "sourceChunkId": "1819eca5ac7c05",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\019-�ʵ��б�+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "019-�ʵ��б�+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-267bef090f091-7",
+    "kindOfValue": "ratio",
+    "quotedSentence": "2%이상의 기울기를 유지하고, 빗물이 모이는 부분에 잔디도랑 등 빗물침",
+    "contextBefore": "배수가 원활 하지 못한 식재기반의 잔디면에 표면배수를 적용할 경우에는",
+    "contextAfter": "투시설과 배수시설을 연계시켜 설계한다",
+    "sourceChunkId": "267bef090f091",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\019-�ʵ��б�+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "019-�ʵ��б�+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1257c35005073-14",
+    "kindOfValue": "ratio",
+    "quotedSentence": "통해 차단되는 콘센트 개수가 전체 콘센트 개수의 30 % 이상이 되어야",
+    "contextBefore": "위치를 설치하며 대기전력 자동차단콘센트 또는 대기전력 차단스위치를",
+    "contextAfter": "한다",
+    "sourceChunkId": "1257c35005073",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\019-�ʵ��б�+��ȹ.����+��ħ��.pdf",
+    "sourceTitle": "019-�ʵ��б�+��ȹ.����+��ħ��.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1efd5ae5668ae6-30",
+    "kindOfValue": "ratio",
+    "quotedSentence": "(단, 증감된 순계약금액이 10%이내인 경우는 예외)",
+    "contextBefore": "하여야 함.",
+    "contextAfter": "※ 의무가입대상 엔지니어링활동",
+    "sourceChunkId": "1efd5ae5668ae6",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-34",
+    "kindOfValue": "ratio",
+    "quotedSentence": "○ 2단계 공제료 = 순계약금액 × 0.16%",
+    "contextBefore": "* 엔지니어링 손해배상공제 요율표(별첨)",
+    "contextAfter": "● 산정 예시",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-37",
+    "kindOfValue": "amount",
+    "quotedSentence": "● 가입금액(순계약금액) : 48억원 ● 계약기간 : 36개월(1,095일)",
+    "contextBefore": "● 엔지니어링사업 내용 : 일반산업기계에 대한 유지보수 용역",
+    "contextAfter": "산업별",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-43",
+    "kindOfValue": "amount",
+    "quotedSentence": "5억원이하 5억원초과",
+    "contextBefore": "(년)",
+    "contextAfter": "10억이하",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-45",
+    "kindOfValue": "amount",
+    "quotedSentence": "10억원초과",
+    "contextBefore": "10억이하",
+    "contextAfter": "20억원이하",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-46",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원이하",
+    "contextBefore": "10억원초과",
+    "contextAfter": "20억원초과",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-47",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원초과",
+    "contextBefore": "20억원이하",
+    "contextAfter": "30억원이하",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-48",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원이하",
+    "contextBefore": "20억원초과",
+    "contextAfter": "30억원초과",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-49",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원초과",
+    "contextBefore": "30억원이하",
+    "contextAfter": "50억원이하",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-50",
+    "kindOfValue": "amount",
+    "quotedSentence": "50억원이하",
+    "contextBefore": "30억원초과",
+    "contextAfter": "기본",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-80",
+    "kindOfValue": "amount",
+    "quotedSentence": "(1단계 공제료) 5,875,000 + 5,680,000 + 11,040,000 + 10,670,000 + 18,612,000 = 51,877,000원",
+    "contextBefore": "(단위 : %)",
+    "contextAfter": "5억 × [1.012%+{0.163%×365/365}] = 5,875,000원",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-81",
+    "kindOfValue": "amount",
+    "quotedSentence": "5억 × [1.012%+{0.163%×365/365}] = 5,875,000원",
+    "contextBefore": "(1단계 공제료) 5,875,000 + 5,680,000 + 11,040,000 + 10,670,000 + 18,612,000 = 51,877,000원",
+    "contextAfter": "5억 × [0.981%+{0.155%×365/365}] = 5,680,000원",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-82",
+    "kindOfValue": "amount",
+    "quotedSentence": "5억 × [0.981%+{0.155%×365/365}] = 5,680,000원",
+    "contextBefore": "5억 × [1.012%+{0.163%×365/365}] = 5,875,000원",
+    "contextAfter": "10억 × [0.952%+{0.152%×365/365}] = 11,040,000원",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-83",
+    "kindOfValue": "amount",
+    "quotedSentence": "10억 × [0.952%+{0.152%×365/365}] = 11,040,000원",
+    "contextBefore": "5억 × [0.981%+{0.155%×365/365}] = 5,680,000원",
+    "contextAfter": "10억 × [0.921%+{0.146%×365/365}] = 10,670,000원",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-84",
+    "kindOfValue": "amount",
+    "quotedSentence": "10억 × [0.921%+{0.146%×365/365}] = 10,670,000원",
+    "contextBefore": "10억 × [0.952%+{0.152%×365/365}] = 11,040,000원",
+    "contextAfter": "18억 × [0.891%+{0.143%×365/365}] = 18,612,000원",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-85",
+    "kindOfValue": "amount",
+    "quotedSentence": "18억 × [0.891%+{0.143%×365/365}] = 18,612,000원",
+    "contextBefore": "10억 × [0.921%+{0.146%×365/365}] = 10,670,000원",
+    "contextAfter": "(2단계 공제료) 4,800,000,000 × 0.16% = 7,680,000원",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-86",
+    "kindOfValue": "amount",
+    "quotedSentence": "(2단계 공제료) 4,800,000,000 × 0.16% = 7,680,000원",
+    "contextBefore": "18억 × [0.891%+{0.143%×365/365}] = 18,612,000원",
+    "contextAfter": "☞ 총공제료 = 51,877,000 + 7,680,000 = 59,557,000원",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-2a1460fe407ce-87",
+    "kindOfValue": "amount",
+    "quotedSentence": "☞ 총공제료 = 51,877,000 + 7,680,000 = 59,557,000원",
+    "contextBefore": "(2단계 공제료) 4,800,000,000 × 0.16% = 7,680,000원",
+    "contextAfter": "",
+    "sourceChunkId": "2a1460fe407ce",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1cab97e9b6d46d-4",
+    "kindOfValue": "amount",
+    "quotedSentence": "지분금액 100,000원 … 374,885원 403,450원 427,366원",
+    "contextBefore": "출자좌수 87,132좌 … 570,795좌 577,905좌 -",
+    "contextAfter": "지분증가율 - … 7.5% 7.6% 5.9%",
+    "sourceChunkId": "1cab97e9b6d46d",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1cab97e9b6d46d-5",
+    "kindOfValue": "ratio",
+    "quotedSentence": "지분증가율 - … 7.5% 7.6% 5.9%",
+    "contextBefore": "지분금액 100,000원 … 374,885원 403,450원 427,366원",
+    "contextAfter": "좌당 배당금 - … 15,000원 15,000원 10,000원",
+    "sourceChunkId": "1cab97e9b6d46d",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1cab97e9b6d46d-6",
+    "kindOfValue": "amount",
+    "quotedSentence": "좌당 배당금 - … 15,000원 15,000원 10,000원",
+    "contextBefore": "지분증가율 - … 7.5% 7.6% 5.9%",
+    "contextAfter": "구 분 2008년 2009년 2010년",
+    "sourceChunkId": "1cab97e9b6d46d",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-2",
+    "kindOfValue": "amount",
+    "quotedSentence": "’11년 1좌당 지분액 : 427,366원",
+    "contextBefore": "조합출자(20좌 이상)",
+    "contextAfter": "ê",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-24",
+    "kindOfValue": "ratio",
+    "quotedSentence": "계약보증 연 0.10% (도급연대보증 有)",
+    "contextBefore": "출자금액의 40배",
+    "contextAfter": "연 0.25% (도급연대보증 無)",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-25",
+    "kindOfValue": "ratio",
+    "quotedSentence": "연 0.25% (도급연대보증 無)",
+    "contextBefore": "계약보증 연 0.10% (도급연대보증 有)",
+    "contextAfter": "기술용역 이행보증 연 0.12%",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-26",
+    "kindOfValue": "ratio",
+    "quotedSentence": "기술용역 이행보증 연 0.12%",
+    "contextBefore": "연 0.25% (도급연대보증 無)",
+    "contextAfter": "하자(용역하자)보증 연 0.20%",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-27",
+    "kindOfValue": "ratio",
+    "quotedSentence": "하자(용역하자)보증 연 0.20%",
+    "contextBefore": "기술용역 이행보증 연 0.12%",
+    "contextAfter": "차액보증 연 0.30%",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-28",
+    "kindOfValue": "ratio",
+    "quotedSentence": "차액보증 연 0.30%",
+    "contextBefore": "하자(용역하자)보증 연 0.20%",
+    "contextAfter": "선금급보증 연 0.27%",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-29",
+    "kindOfValue": "ratio",
+    "quotedSentence": "선금급보증 연 0.27%",
+    "contextBefore": "차액보증 연 0.30%",
+    "contextAfter": "출자금액의 20배",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-31",
+    "kindOfValue": "ratio",
+    "quotedSentence": "지급보증의 보증 연 0.30%",
+    "contextBefore": "출자금액의 20배",
+    "contextAfter": "대출보증 연 0.30%",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-32",
+    "kindOfValue": "ratio",
+    "quotedSentence": "대출보증 연 0.30%",
+    "contextBefore": "지급보증의 보증 연 0.30%",
+    "contextAfter": "수출보증 연 0.15% (일반기업)",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-33",
+    "kindOfValue": "ratio",
+    "quotedSentence": "수출보증 연 0.15% (일반기업)",
+    "contextBefore": "대출보증 연 0.30%",
+    "contextAfter": "연 0.10% (특급우량, 공공기관)",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-34",
+    "kindOfValue": "ratio",
+    "quotedSentence": "연 0.10% (특급우량, 공공기관)",
+    "contextBefore": "수출보증 연 0.15% (일반기업)",
+    "contextAfter": "보증금액 할인율 보증금액 할인율",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-36",
+    "kindOfValue": "amount",
+    "quotedSentence": "1억원 초과 5억원 까지 5% 20억원 초과 30억원 까지 30%",
+    "contextBefore": "보증금액 할인율 보증금액 할인율",
+    "contextAfter": "5억원 초과 10억원 까지 10% 30억원 초과 50억원 까지 40%",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-37",
+    "kindOfValue": "amount",
+    "quotedSentence": "5억원 초과 10억원 까지 10% 30억원 초과 50억원 까지 40%",
+    "contextBefore": "1억원 초과 5억원 까지 5% 20억원 초과 30억원 까지 30%",
+    "contextAfter": "10억원 초과 20억원 까지 20% 50억원 초과분 50%",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-38",
+    "kindOfValue": "amount",
+    "quotedSentence": "10억원 초과 20억원 까지 20% 50억원 초과분 50%",
+    "contextBefore": "5억원 초과 10억원 까지 10% 30억원 초과 50억원 까지 40%",
+    "contextAfter": "3 보증업무",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-43",
+    "kindOfValue": "amount",
+    "quotedSentence": "* 수수료 계산 후 1,000원 미만은 절사",
+    "contextBefore": "= 보증금액 × 보증종류별 요율 × (보증일수/365) × (100 - 고액할인율)%",
+    "contextAfter": "(예시) 보증금액 15억원, 보증기간 2년(730일)인 계약보증(도급연대보증 有)",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-44",
+    "kindOfValue": "amount",
+    "quotedSentence": "(예시) 보증금액 15억원, 보증기간 2년(730일)인 계약보증(도급연대보증 有)",
+    "contextBefore": "* 수수료 계산 후 1,000원 미만은 절사",
+    "contextAfter": "⇒ 15억원 × 0.10% × (730/365) × 80% = 2,400,000원",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ba3ca474ee75e-45",
+    "kindOfValue": "amount",
+    "quotedSentence": "⇒ 15억원 × 0.10% × (730/365) × 80% = 2,400,000원",
+    "contextBefore": "(예시) 보증금액 15억원, 보증기간 2년(730일)인 계약보증(도급연대보증 有)",
+    "contextAfter": "",
+    "sourceChunkId": "ba3ca474ee75e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-63f3bbab993c6-18",
+    "kindOfValue": "ratio",
+    "quotedSentence": "연 3.0% 출자지분액의",
+    "contextBefore": "(단, 1년 이내)",
+    "contextAfter": "80% 이내",
+    "sourceChunkId": "63f3bbab993c6",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-63f3bbab993c6-19",
+    "kindOfValue": "ratio",
+    "quotedSentence": "80% 이내",
+    "contextBefore": "연 3.0% 출자지분액의",
+    "contextAfter": "운영자금",
+    "sourceChunkId": "63f3bbab993c6",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-60871d911cbfe-2",
+    "kindOfValue": "duration",
+    "quotedSentence": "지식경제부고시 제2011-59호(2011년 4월 11일)",
+    "contextBefore": "● 엔지니어링손해배상보험 또는 공제 업무처리요령",
+    "contextAfter": "제1조(목적) 이 업무처리 요령은 「엔지니어링산업 진흥법시행령(이하 “영”이라",
+    "sourceChunkId": "60871d911cbfe",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-ed057e7b8f275-8",
+    "kindOfValue": "amount",
+    "quotedSentence": "의 자기부담금은 보험 또는 공제가입금액의 100분의1로 하되 1000만원을 초",
+    "contextBefore": "제7조(자기부담금) 제6조에 따른 보험 또는 공제 가입금액 중 엔지니어링사업자",
+    "contextAfter": "과하지 아니한다",
+    "sourceChunkId": "ed057e7b8f275",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-19d30b03c9566e-25",
+    "kindOfValue": "duration",
+    "quotedSentence": "이 고시의 폐지, 개정 등의 조치를 하여야 하는 기한은 2013년 12월 31일까지",
+    "contextBefore": "제248호)에 따라 이 고시 발령 후의 법령이나 현실여건의 변화 등을 검토하여",
+    "contextAfter": "로 한다",
+    "sourceChunkId": "19d30b03c9566e",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-76b1edb2a8450-7",
+    "kindOfValue": "duration",
+    "quotedSentence": "경우)(이하 ‘제1회 공제료 등’이라 합니다)를 받은 경우에는 청약일 부터 30일 이내에 승낙",
+    "contextBefore": "②조합은 계약의 청약을 받고 공제료 전액 또는 제1회 공제료(공제료를 분납하기로 약정한",
+    "contextAfter": "또는 거절의 통지를 하며 통지가 없으면 승낙한 것으로 봅니다",
+    "sourceChunkId": "76b1edb2a8450",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-f5cccd4c7626a-17",
+    "kindOfValue": "duration",
+    "quotedSentence": "②조합은 제1항의 공제기간 중에 발생한 사고에 한해 공제책임기간 종료 후 60일 이내에 제",
+    "contextBefore": "후 1년이 되는 날까지",
+    "contextAfter": "기된 손해배상청구에 대해서는 이를 보상하여 드립니다",
+    "sourceChunkId": "f5cccd4c7626a",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-1892a20bcddaa5-3",
+    "kindOfValue": "document",
+    "quotedSentence": "요구가 있으면 계약자 및 피공제자는 필요한 서류증거의 제출, 증언 또는 증인출석에 협조하",
+    "contextBefore": "②조합이 제1항의 청구를 받았을 때에는 지체 없이 피공제자에게 통지하여야 하며, 조합의",
+    "contextAfter": "여야 합니다",
+    "sourceChunkId": "1892a20bcddaa5",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-12e3d890a93f6b-17",
+    "kindOfValue": "duration",
+    "quotedSentence": "공제금이 결정되면 7일 이내에 이를 지급하여 드립니다",
+    "contextBefore": "②조합은 제1항에 따른 공제금 청구를 받은 후 지체 없이 지급할 공제금을 결정하고 지급할",
+    "contextAfter": "그러나 지급할 공제금이 결정되기",
+    "sourceChunkId": "12e3d890a93f6b",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-12e3d890a93f6b-19",
+    "kindOfValue": "ratio",
+    "quotedSentence": "전이라도 피공제자의 청구가 있을 때에는 조합이 추정한 공제금의 50% 상당액을 가지급공제",
+    "contextBefore": "그러나 지급할 공제금이 결정되기",
+    "contextAfter": "금으로 지급합니다",
+    "sourceChunkId": "12e3d890a93f6b",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-12e3d890a93f6b-21",
+    "kindOfValue": "duration",
+    "quotedSentence": "③조합이 제2항의 지급공제금이 결정된 후 7일이 지나도록 공제금을 지급하지 아니하였을 때",
+    "contextBefore": "금으로 지급합니다",
+    "contextAfter": "에는 지체된 날부터 지급일까지 보험개발원이 매월 공시하는 1년 만기 정기예금이율을 연",
+    "sourceChunkId": "12e3d890a93f6b",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-197cb1538b7543-2",
+    "kindOfValue": "amount",
+    "quotedSentence": "제료가 100만 원 이상인 경우 공제료를 ( )회에 분할하여 조합에 냅니다",
+    "contextBefore": "제1조 (공제료의 분납) 계약자는 이 공제계약(이하「계약」이라 합니다)의 증권당 최종 적용공",
+    "contextAfter": "제2조 (제2회 이후 분할공제료의 납입) ①계약자는 제2회 이후의 공제료를 계약 체결시 납입",
+    "sourceChunkId": "197cb1538b7543",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-197cb1538b7543-10",
+    "kindOfValue": "duration",
+    "quotedSentence": "료를 납입기일까지 납입하지 아니하여 공제료 납입이 연체 중인 경우에 조합은 14일(공제기",
+    "contextBefore": "제3조 [공제료의 납입연체시 납입최고(독촉)와 계약의 해지] ①계약자가 제2회 이후의 공제",
+    "contextAfter": "간이 1년 미만인 경우에는 7일) 이상의 기간을 납입최고(독촉)기간으로 정하여 계약자(타인을",
+    "sourceChunkId": "197cb1538b7543",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-197cb1538b7543-11",
+    "kindOfValue": "duration",
+    "quotedSentence": "간이 1년 미만인 경우에는 7일) 이상의 기간을 납입최고(독촉)기간으로 정하여 계약자(타인을",
+    "contextBefore": "료를 납입기일까지 납입하지 아니하여 공제료 납입이 연체 중인 경우에 조합은 14일(공제기",
+    "contextAfter": "위한 계약의 경우 그 특정된 타인을 포함합니다)에게 다음 각 호의 내용을 서면(등기우편",
+    "sourceChunkId": "197cb1538b7543",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-14e9fd9a1fddea-8",
+    "kindOfValue": "ratio",
+    "quotedSentence": "공제료에 보험개발원이 공시하는 정기예금이율 + 1% 범위 내에서 각 상품별로 조합이 정하",
+    "contextBefore": "경우 조합이 그 청약을 승낙한 때에는 계약자는 부활(효력회복)을 청약한 날까지의 연체된",
+    "contextAfter": "는 이율로 계산한 금액을 더하여 납입하여야 합니다",
+    "sourceChunkId": "14e9fd9a1fddea",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-14e9fd9a1fddea-20",
+    "kindOfValue": "duration",
+    "quotedSentence": "③조합은 제1항의 통지를 계약이 해지된 날부터 7일 이내에 하여야 합니다",
+    "contextBefore": "며, 계약은 청약한 때부터 특별부활(효력회복) 됩니다",
+    "contextAfter": "다만, 조합의 통",
+    "sourceChunkId": "14e9fd9a1fddea",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-14e9fd9a1fddea-22",
+    "kindOfValue": "duration",
+    "quotedSentence": "지가 7일을 경과하여 도달하고 이후 피공제자가 제1항에 의한 계약자 명의변경 신청 및 계",
+    "contextBefore": "다만, 조합의 통",
+    "contextAfter": "약의 특별부활(효력회복)을 청약한 경우에는 계약이 해지된 날부터 7일이 되는 날에 특별부",
+    "sourceChunkId": "14e9fd9a1fddea",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-14e9fd9a1fddea-23",
+    "kindOfValue": "duration",
+    "quotedSentence": "약의 특별부활(효력회복)을 청약한 경우에는 계약이 해지된 날부터 7일이 되는 날에 특별부",
+    "contextBefore": "지가 7일을 경과하여 도달하고 이후 피공제자가 제1항에 의한 계약자 명의변경 신청 및 계",
+    "contextAfter": "활(효력회복) 됩니다",
+    "sourceChunkId": "14e9fd9a1fddea",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-14e9fd9a1fddea-25",
+    "kindOfValue": "duration",
+    "quotedSentence": "④피공제자는 통지를 받은 날부터 15일 이내에 제1항의 절차를 이행할 수 있습니다",
+    "contextBefore": "활(효력회복) 됩니다",
+    "contextAfter": "제6조 (미납입공제료 공제) 조합이 계약에 정한 바에 따라 공제금을 지급하는 경우 지급될 공제",
+    "sourceChunkId": "14e9fd9a1fddea",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-14e9fd9a1fddea-42",
+    "kindOfValue": "ratio",
+    "quotedSentence": "2단계 공제료 = 순계약금액 × 0.16%",
+    "contextBefore": "= 순계약금액 × [기본요율 + {가산요율 × (표준사업기간초과일수/365)}]",
+    "contextAfter": "",
+    "sourceChunkId": "14e9fd9a1fddea",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-6",
+    "kindOfValue": "amount",
+    "quotedSentence": "5억원이하 5억원초과",
+    "contextBefore": "(년)",
+    "contextAfter": "10억이하",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-8",
+    "kindOfValue": "amount",
+    "quotedSentence": "10억원초과",
+    "contextBefore": "10억이하",
+    "contextAfter": "20억원이하",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-9",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원이하",
+    "contextBefore": "10억원초과",
+    "contextAfter": "20억원초과",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-10",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원초과",
+    "contextBefore": "20억원이하",
+    "contextAfter": "30억원이하",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-11",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원이하",
+    "contextBefore": "20억원초과",
+    "contextAfter": "30억원초과",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-12",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원초과",
+    "contextBefore": "30억원이하",
+    "contextAfter": "50억원이하",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-13",
+    "kindOfValue": "amount",
+    "quotedSentence": "50억원이하",
+    "contextBefore": "30억원초과",
+    "contextAfter": "기본",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-65",
+    "kindOfValue": "ratio",
+    "quotedSentence": "※ 기본설계는 위 요율의 50% 적용",
+    "contextBefore": "● 설계, 사업관리 (단위 : %)",
+    "contextAfter": "- 37 -",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-72",
+    "kindOfValue": "amount",
+    "quotedSentence": "5억원이하 5억원초과",
+    "contextBefore": "(년)",
+    "contextAfter": "10억이하",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-74",
+    "kindOfValue": "amount",
+    "quotedSentence": "10억원초과",
+    "contextBefore": "10억이하",
+    "contextAfter": "20억원이하",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-75",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원이하",
+    "contextBefore": "10억원초과",
+    "contextAfter": "20억원초과",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-76",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원초과",
+    "contextBefore": "20억원이하",
+    "contextAfter": "30억원이하",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-77",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원이하",
+    "contextBefore": "20억원초과",
+    "contextAfter": "30억원초과",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-78",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원초과",
+    "contextBefore": "30억원이하",
+    "contextAfter": "50억원이하",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-79",
+    "kindOfValue": "amount",
+    "quotedSentence": "50억원이하",
+    "contextBefore": "30억원초과",
+    "contextAfter": "기본",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-77475041c0345-132",
+    "kindOfValue": "ratio",
+    "quotedSentence": "※ 검측감리는 위 요율의 60%, 시공감리는 위 요율의 80% 적용",
+    "contextBefore": "(단위 : %)",
+    "contextAfter": "",
+    "sourceChunkId": "77475041c0345",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-25f3823b111bc-6",
+    "kindOfValue": "amount",
+    "quotedSentence": "5억원이하 5억원초과",
+    "contextBefore": "(년)",
+    "contextAfter": "10억이하",
+    "sourceChunkId": "25f3823b111bc",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-25f3823b111bc-8",
+    "kindOfValue": "amount",
+    "quotedSentence": "10억원초과",
+    "contextBefore": "10억이하",
+    "contextAfter": "20억원이하",
+    "sourceChunkId": "25f3823b111bc",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-25f3823b111bc-9",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원이하",
+    "contextBefore": "10억원초과",
+    "contextAfter": "20억원초과",
+    "sourceChunkId": "25f3823b111bc",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-25f3823b111bc-10",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원초과",
+    "contextBefore": "20억원이하",
+    "contextAfter": "30억원이하",
+    "sourceChunkId": "25f3823b111bc",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-25f3823b111bc-11",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원이하",
+    "contextBefore": "20억원초과",
+    "contextAfter": "30억원초과",
+    "sourceChunkId": "25f3823b111bc",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-25f3823b111bc-12",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원초과",
+    "contextBefore": "30억원이하",
+    "contextAfter": "50억원이하",
+    "sourceChunkId": "25f3823b111bc",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-25f3823b111bc-13",
+    "kindOfValue": "amount",
+    "quotedSentence": "50억원이하",
+    "contextBefore": "30억원초과",
+    "contextAfter": "기본",
+    "sourceChunkId": "25f3823b111bc",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-6da8eb415fd3-6",
+    "kindOfValue": "amount",
+    "quotedSentence": "5억원이하 5억원초과",
+    "contextBefore": "(년)",
+    "contextAfter": "10억이하",
+    "sourceChunkId": "6da8eb415fd3",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-6da8eb415fd3-8",
+    "kindOfValue": "amount",
+    "quotedSentence": "10억원초과",
+    "contextBefore": "10억이하",
+    "contextAfter": "20억원이하",
+    "sourceChunkId": "6da8eb415fd3",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-6da8eb415fd3-9",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원이하",
+    "contextBefore": "10억원초과",
+    "contextAfter": "20억원초과",
+    "sourceChunkId": "6da8eb415fd3",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-6da8eb415fd3-10",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원초과",
+    "contextBefore": "20억원이하",
+    "contextAfter": "30억원이하",
+    "sourceChunkId": "6da8eb415fd3",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-6da8eb415fd3-11",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원이하",
+    "contextBefore": "20억원초과",
+    "contextAfter": "30억원초과",
+    "sourceChunkId": "6da8eb415fd3",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-6da8eb415fd3-12",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원초과",
+    "contextBefore": "30억원이하",
+    "contextAfter": "50억원이하",
+    "sourceChunkId": "6da8eb415fd3",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-6da8eb415fd3-13",
+    "kindOfValue": "amount",
+    "quotedSentence": "50억원이하",
+    "contextBefore": "30억원초과",
+    "contextAfter": "기본",
+    "sourceChunkId": "6da8eb415fd3",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-b7b517bb984b2-6",
+    "kindOfValue": "amount",
+    "quotedSentence": "5억원이하 5억원초과",
+    "contextBefore": "(년)",
+    "contextAfter": "10억이하",
+    "sourceChunkId": "b7b517bb984b2",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-b7b517bb984b2-8",
+    "kindOfValue": "amount",
+    "quotedSentence": "10억원초과",
+    "contextBefore": "10억이하",
+    "contextAfter": "20억원이하",
+    "sourceChunkId": "b7b517bb984b2",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-b7b517bb984b2-9",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원이하",
+    "contextBefore": "10억원초과",
+    "contextAfter": "20억원초과",
+    "sourceChunkId": "b7b517bb984b2",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-b7b517bb984b2-10",
+    "kindOfValue": "amount",
+    "quotedSentence": "20억원초과",
+    "contextBefore": "20억원이하",
+    "contextAfter": "30억원이하",
+    "sourceChunkId": "b7b517bb984b2",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-b7b517bb984b2-11",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원이하",
+    "contextBefore": "20억원초과",
+    "contextAfter": "30억원초과",
+    "sourceChunkId": "b7b517bb984b2",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-b7b517bb984b2-12",
+    "kindOfValue": "amount",
+    "quotedSentence": "30억원초과",
+    "contextBefore": "30억원이하",
+    "contextAfter": "50억원이하",
+    "sourceChunkId": "b7b517bb984b2",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
+  },
+  {
+    "candidateId": "cand-b7b517bb984b2-13",
+    "kindOfValue": "amount",
+    "quotedSentence": "50억원이하",
+    "contextBefore": "30억원초과",
+    "contextAfter": "기본",
+    "sourceChunkId": "b7b517bb984b2",
+    "sourceUrl": "file://D:\\opencode\\sen-contract-rag-blueprint\\data\\raw\\attachments\\extracted\\87e95605c5e4b9e2\\024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf",
+    "sourceTitle": "024-�����ڷ�)�����Ͼ+�չ����+�ǹ���������+�ȳ�.pdf (PDF 첨부)"
   }
 ]

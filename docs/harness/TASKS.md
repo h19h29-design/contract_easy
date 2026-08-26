@@ -102,6 +102,12 @@
 - 증거: `docs/harness/EVAL_RETRIEVAL.md`, `tests/fixtures/retrieval-eval.json`,
   `workers/ingest/src/rule-tables.ts`, `sync-db.ts`, `packages/retrieval/src/keyword.ts`
 
+## T-185~188 확장 마무리 — DONE
+- ZIP 추출(adm-zip): 62개 스캔 → 멤버 52개 추출, 내부 PDF 자동 인제스트(PDF 문서 15→22)
+- #3-나 종결: 빈 카테고리 gm(C00~05)×step(01~06) 전수 조회 무콘텐츠 실측
+- FAQ 통합판 본문 기반 카테고리 추정 분류 적용(null 해소)
+- 리트리벌 다양성 캡(소스당 3건) 추가, 최종 평가 hit@3 77.8% / 거부 5·5 실측
+- 증거: workers/ingest/src/zip-extract.ts, docs/harness/EVAL_RETRIEVAL.md, UNCOLLECTED.md 최종표
 ## T-180 첨부 수집(D-014 승인) + PDF 인제스트 — DONE
 - 운영자 승인(D-014) + robots 재해석(차단 패턴은 직접 확장자 URL 대상, .do 엔드포인트는 외부)에 따라 실행.
 - pnpm crawl:attachments: 135/141 성공(zip65 hwp45 pdf19 xls5 png1), 매직바이트 검증·크기 상한·미실행.

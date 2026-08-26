@@ -8,6 +8,7 @@ import { extractRuleCandidates, candidatesToDraftRules, saveCandidates } from '.
 import { extractContractMethodDrafts } from './rule-tables.js';
 import { syncDatabase } from './sync-db.js';
 import { pdfFileToNormalized, listPdfFiles } from './pdf-attach.js';
+import { extractZipAttachments } from './zip-extract.js';
 import type { NormalizedDoc } from '@sen/shared';
 
 interface DocEntry {
@@ -21,6 +22,10 @@ async function main(): Promise<void> {
   const store = new FileStore(dirs.appStore);
 
   const needsDocs = ['normalize', 'chunk', 'wiki', 'rules', 'all'].includes(cmd);
+  if (needsDocs) {
+    const zipReport = extractZipAttachments(dirs.rawAttachments);
+    console.log(`[zip-extract] scanned=${zipReport.zipsScanned} extracted=${zipReport.membersExtracted} skipped=${zipReport.skippedMembers} bytes=${zipReport.bytesWritten}`);
+  }
   const docs: DocEntry[] = [];
 
   if (needsDocs) {

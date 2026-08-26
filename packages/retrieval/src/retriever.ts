@@ -62,7 +62,17 @@ export class HybridRetriever {
       if (h.effectiveAt) h.score += 0.5; // 시행일 명시 문서 가산
     }
     merged.sort((a, b) => b.score - a.score);
-    return merged.slice(0, limit);
+
+    // 소스 다양성 캡: 동일 문서가 상위를 독점하지 않도록 최대 3건
+    const perSource = new Map<string, number>();
+    const diverse: SearchHit[] = [];
+    for (const h of merged) {
+      const n = perSource.get(h.chunk.sourceVersionId) ?? 0;
+      if (n >= 3) continue;
+      perSource.set(h.chunk.sourceVersionId, n + 1);
+      diverse.push(h);
+    }
+    return diverse.slice(0, limit);
   }
 
   async ask(question: string, filters?: SearchFilters): Promise<AskResult> {
