@@ -2,6 +2,21 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-27 macOS Codex 재개 환경
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm install --frozen-lockfile` | PASS | pnpm 11.23.0, Mac용 embedded-postgres 빌드만 명시 허용 |
+| `pnpm lint` | PASS | ESLint 오류 0 |
+| `pnpm typecheck` | PASS | 9개 워크스페이스 통과 |
+| `pnpm test` | PASS | 8 files, 70 tests |
+| `pnpm build` | PASS | Next.js 14 routes 및 전체 TypeScript 패키지 빌드 |
+| `pnpm test:pg` | PASS | 3 files, 16 tests, embedded PostgreSQL 18.4 |
+| hash+local 벡터 적재·검색 | PASS | 11,259 points 적재, vector/hybrid 검색 스모크 |
+
+- Windows OpenCode 세션 `ses_fc7061eaaffeSd6USmFA2Pu30j`의 clean Git commit `10027fa`를 완전 이력 bundle로 가져와 재개했다.
+- 비밀값과 `.env`는 전송하지 않았다. 원격 저장소는 아직 설정되어 있지 않다.
+
 ## 2026-08-27 Codex 인수인계 정리
 
 | 명령 | 결과 | 핵심 |

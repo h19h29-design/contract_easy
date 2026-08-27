@@ -147,6 +147,11 @@
 4. Docker 가용 환경 최종 검증(`docker compose config/up`, `pnpm db:migrate`).
 5. HWP 표/서식 구조 보존과 OCR 후처리 품질 개선.
 
+## T-199 macOS Codex 재개 환경 — DONE
+- Windows OpenCode 세션의 clean commit `10027fa`와 전체 Git 이력을 현재 작업공간으로 이전.
+- Mac용 embedded-postgres 빌드를 패키지 단위로 허용하고 install/lint/typecheck/test/build/PG/vector 스모크 통과.
+- 원격 저장소는 미설정 상태로 유지. 비밀값과 `.env`는 전송하지 않음.
+
 ## T-200 벡터 인덱스 기반 — DONE
 - EmbeddingProvider: OpenAI/OpenRouter/Ollama/hash.
 - VectorStore: Qdrant REST/local-json.

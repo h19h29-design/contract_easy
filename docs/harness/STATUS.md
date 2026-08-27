@@ -3,6 +3,7 @@
 - 최종 갱신: 2026-08-27
 - 현재 위치: **MVP + PostgreSQL 운영경로 + 확장 코퍼스 + 벡터 인덱스 CLI 완료**.
 - 다음 액션: API 서버에 EmbeddingProvider/VectorStore를 주입해 실제 하이브리드 검색을 활성화한다. 상세는 `CODEX_HANDOFF.md` 참조.
+- 재개 환경: Windows OpenCode의 clean commit `10027fa`를 macOS Codex 작업공간으로 이전하고 install/lint/typecheck/test/build/PG/vector 스모크를 통과했다.
 
 ## 스냅셧
 | 영역 | 상태 |

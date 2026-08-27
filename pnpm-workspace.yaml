@@ -3,6 +3,7 @@ packages:
   - workers/*
   - packages/*
 allowBuilds:
+  '@embedded-postgres/darwin-arm64': true
   '@embedded-postgres/windows-x64': true
   esbuild: true
   tesseract.js: true
