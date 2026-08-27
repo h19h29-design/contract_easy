@@ -28,19 +28,19 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   const store: AppStore =
     ctxIn?.store ?? (await createStore({ databaseUrl: cfg.databaseUrl, appStoreDir: dirs.appStore }));
 
-  // 理쒖큹 愿由ъ옄 ?쒕뵫(?ъ슜??0紐낆씪 ?뚮쭔). 鍮꾨?踰덊샇???섍꼍蹂???먮뒗 媛쒕컻 湲곕낯媛?
+  // 최초 관리자 시딩(사용자 0명일 때만). 비밀번호는 환경변수 또는 개발 기본값.
   if ((await store.listUsers()).length === 0) {
     const initial = process.env.ADMIN_INITIAL_PASSWORD ?? 'ChangeMe!2026';
     await store.ensureDefaultAdmin(hashPassword(initial));
     if (!process.env.ADMIN_INITIAL_PASSWORD) {
-      console.warn('[api] 珥덇린 愿由ъ옄 ?앹꽦: admin / ChangeMe!2026 ??利됱떆 蹂寃??꾩슂(媛쒕컻 ?꾩슜)');
+      console.warn('[api] 초기 관리자 생성: admin / ChangeMe!2026 - 즉시 변경 필요(개발 전용)');
     }
   }
 
   function loadRetriever(): HybridRetriever {
     const chunksFile = path.join(dataPaths().appStore, 'chunks.json');
     let chunks: Chunk[] = [];
-    // chunks.json(?뚯씪 ?몃뜳?????곗꽑 ?ъ슜 ???뚯씪?ㅽ넗??PG 紐⑤몢 ?숈씪?섍쾶 ?숈옉
+    // chunks.json(파일 인덱스)을 우선 사용 - 파일스토어/PG 모두 동일하게 동작
     if (fs.existsSync(chunksFile)) {
       chunks = JSON.parse(fs.readFileSync(chunksFile, 'utf8')) as Chunk[];
     }
@@ -57,7 +57,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     timeWindow: '1 minute'
   });
 
-  // 蹂댁븞 ?ㅻ뜑
+  // 보안 헤더
   app.addHook('onSend', async (_req, reply) => {
     reply.header('X-Frame-Options', 'DENY');
     reply.header('X-Content-Type-Options', 'nosniff');
@@ -65,7 +65,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     reply.header('X-Robots-Tag', 'noai');
   });
 
-  /* ---------- ?몄뀡 ?ы띁 ---------- */
+  /* ---------- 세션 헬퍼 ---------- */
 
   async function currentUser(req: FastifyRequest): Promise<UserRecord | null> {
     const token = req.cookies[SESSION_COOKIE];
@@ -78,12 +78,12 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   async function requireAuth(req: FastifyRequest, reply: FastifyReply, minRole: 'USER' | 'REVIEWER' | 'ADMIN'): Promise<UserRecord | null> {
     const user = await currentUser(req);
     if (!user) {
-      reply.code(401).send({ error: '濡쒓렇?몄씠 ?꾩슂?⑸땲??' });
+      reply.code(401).send({ error: '로그인이 필요합니다.' });
       return null;
     }
     const rank = { USER: 0, REVIEWER: 1, ADMIN: 2 } as const;
     if (rank[user.role] < rank[minRole]) {
-      reply.code(403).send({ error: '沅뚰븳???놁뒿?덈떎.' });
+      reply.code(403).send({ error: '권한이 없습니다.' });
       return null;
     }
     return user;
@@ -92,11 +92,11 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   async function checkCsrf(req: FastifyRequest, reply: FastifyReply): Promise<boolean> {
     const token = req.cookies[SESSION_COOKIE];
     const headerToken = req.headers['x-csrf-token'];
-    if (!token) return true; // 鍮꾨줈洹몄씤 ?붿껌? CSRF ?몄뀡 寃利?????꾨떂
+    if (!token) return true; // 비로그인 요청은 CSRF 세션 검증 대상 아님
     const session = await store.getSession(token);
     if (!session) return true;
     if (!headerToken || headerToken !== session.csrfToken) {
-      reply.code(403).send({ error: 'CSRF ?좏겙???좏슚?섏? ?딆뒿?덈떎.' });
+      reply.code(403).send({ error: 'CSRF 토큰이 유효하지 않습니다.' });
       return false;
     }
     return true;
@@ -104,11 +104,11 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
 
   app.addHook('preHandler', async (req, reply) => {
     if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(req.method)) {
-      checkCsrf(req, reply);
+      if (!(await checkCsrf(req, reply))) return reply;
     }
   });
 
-  /* ---------- 怨듦컻 API ---------- */
+  /* ---------- 공개 API ---------- */
 
   app.get('/api/health', async () => ({
     status: 'ok',
@@ -122,7 +122,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     '/api/search',
     async (req, reply) => {
       const q = (req.query.q ?? '').trim();
-      if (!q) return reply.code(400).send({ error: '寃?됱뼱瑜??낅젰?섏꽭??' });
+      if (!q) return reply.code(400).send({ error: '검색어를 입력하세요.' });
       const filters: SearchFilters = {};
       if (req.query.contractType) filters.contractType = req.query.contractType;
       if (req.query.stage) filters.stage = req.query.stage;
@@ -147,7 +147,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
 
   app.post<{ Body: { question?: string } }>('/api/ask', async (req, reply) => {
     const question = (req.body?.question ?? '').trim();
-    if (!question) return reply.code(400).send({ error: '吏덈Ц???낅젰?섏꽭??' });
+    if (!question) return reply.code(400).send({ error: '질문을 입력하세요.' });
     const res = await retriever.ask(question);
     if (res.answered && res.answer) {
       return {
@@ -158,7 +158,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
           publishedAt: h.publishedAt, effectiveAt: h.effectiveAt,
           lastCheckedAt: (await store.getSource(h.chunk.sourceVersionId))?.versions.at(-1)?.lastCheckedAt ?? null
         }))),
-        disclaimer: '踰뺣쪧 ?먮Ц???꾨땲硫? 理쒖쥌 ?먮떒? ?꾪뻾 踰뺣졊쨌?덇퇋쨌湲곌? 吏移④낵 怨꾩빟?대떦??寃?좊? ?곕쫭?덈떎.'
+        disclaimer: '법률 자문이 아니며, 최종 판단은 현행 법령·예규·기관 지침과 계약담당자 검토를 따릅니다.'
       };
     }
     return {
@@ -172,7 +172,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   app.post<{ Body: WizardInput }>('/api/wizard', async (req, reply) => {
     const input = req.body;
     if (!input || typeof input.estimatedPrice !== 'number' || !input.contractCategory) {
-      return reply.code(400).send({ error: '?낅젰媛믪씠 ?щ컮瑜댁? ?딆뒿?덈떎.' });
+      return reply.code(400).send({ error: '입력값이 올바르지 않습니다.' });
     }
     const activeRules = await store.getActiveRules();
     const { result, conflicts } = evaluateWizard(input, activeRules);
@@ -192,7 +192,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   app.get<{ Params: { name: string } }>('/api/wiki/:name', async (req, reply) => {
     const safe = path.basename(req.params.name);
     const file = path.join(REPO_ROOT, 'wiki', 'generated', safe);
-    if (!fs.existsSync(file)) return reply.code(404).send({ error: '臾몄꽌媛 ?놁뒿?덈떎.' });
+    if (!fs.existsSync(file)) return reply.code(404).send({ error: '문서가 없습니다.' });
     return { name: safe, content: fs.readFileSync(file, 'utf8') };
   });
 
@@ -211,13 +211,13 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
 
   app.post<{ Body: { question?: string; answer?: string; note?: string } }>('/api/reports', async (req, reply) => {
     const q = (req.body?.question ?? '').trim();
-    if (!q) return reply.code(400).send({ error: '?좉퀬??吏덈Ц???꾩슂?⑸땲??' });
+    if (!q) return reply.code(400).send({ error: '신고할 질문이 필요합니다.' });
     const rec = await store.addAnswerReport(q, req.body.answer ?? null, req.body.note ?? '');
     await store.audit(null, 'report.create', 'answer_report', rec.id);
     return rec;
   });
 
-  /* ---------- ?몄쬆 ---------- */
+  /* ---------- 인증 ---------- */
 
   app.post<{ Body: { username?: string; password?: string } }>('/api/auth/login', async (req, reply) => {
     const username = (req.body.username ?? '').trim();
@@ -225,7 +225,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     const user = await store.getUserByUsername(username);
     if (!user || !verifyPassword(password, user.passwordHash)) {
       await store.audit(null, 'auth.login_failed', 'user', null, { username }, req.ip);
-      return reply.code(401).send({ error: '?꾩씠???먮뒗 鍮꾨?踰덊샇媛 ?щ컮瑜댁? ?딆뒿?덈떎.' });
+      return reply.code(401).send({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
     }
     const token = crypto.randomUUID() + crypto.randomUUID();
     const csrfToken = crypto.randomUUID();
@@ -253,7 +253,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     return { loggedIn: true, user: { id: user.id, username: user.username, displayName: user.displayName, role: user.role }, csrfToken: session.csrfToken };
   });
 
-  /* ---------- ?꾨줈?앺듃(USER ?댁긽) ---------- */
+  /* ---------- 프로젝트(USER 이상) ---------- */
 
   app.get('/api/projects', async (req, reply) => {
     const user = await requireAuth(req, reply, 'USER');
@@ -274,7 +274,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       if (!user) return;
       const b = req.body;
       if (!b.name || !b.contractCategory || !b.organizationType) {
-        return reply.code(400).send({ error: '?꾨줈?앺듃紐끒룰났?ш뎄遺꽷룰린愿援щ텇? ?꾩닔?낅땲??' });
+        return reply.code(400).send({ error: '프로젝트명·공사구분·기관구분은 필수입니다.' });
       }
       const project = await store.createProject({
         ownerId: user.id,
@@ -295,7 +295,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     if (!user) return;
     const p = await store.getProject(req.params.id);
     if (!p || !(await store.canAccessProject(p.id, user.id, user.role))) {
-      return reply.code(404).send({ error: '?꾨줈?앺듃媛 ?녾굅???묎렐 沅뚰븳???놁뒿?덈떎.' });
+      return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
     }
     return {
       project: p,
@@ -312,10 +312,10 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       if (!user) return;
       const p = await store.getProject(req.params.id);
       if (!p || !(await store.canAccessProject(p.id, user.id, user.role))) {
-        return reply.code(404).send({ error: '沅뚰븳 ?놁쓬' });
+        return reply.code(404).send({ error: '권한 없음' });
       }
       const item = await store.toggleChecklist(req.params.itemId, Boolean(req.body.done));
-      if (!item) return reply.code(404).send({ error: '??ぉ ?놁쓬' });
+      if (!item) return reply.code(404).send({ error: '항목 없음' });
       await store.audit(user.id, 'project.checklist_toggle', 'checklist_item', item.id, { done: item.done }, req.ip);
       return item;
     }
@@ -328,7 +328,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       if (!user) return;
       const p = await store.getProject(req.params.id);
       if (!p || !(await store.canAccessProject(p.id, user.id, user.role))) {
-        return reply.code(404).send({ error: '沅뚰븳 ?놁쓬' });
+        return reply.code(404).send({ error: '권한 없음' });
       }
       const id = await store.addProjectChange(
         p.id,
@@ -342,7 +342,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     }
   );
 
-  /* ---------- 愿由ъ옄 ---------- */
+  /* ---------- 관리자 ---------- */
 
   app.get('/api/admin/crawls', async (req, reply) => {
     const user = await requireAuth(req, reply, 'ADMIN');
@@ -378,7 +378,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       if (action === 'review') { ok = Boolean(await store.reviewRule(req.params.id, version, 'reviewed')); }
       else if (action === 'activate') { ok = Boolean(await store.activateRule(req.params.id, version, user.displayName)); }
       else if (action === 'reject') { ok = await store.rejectRule(req.params.id, version); }
-      if (!ok) return reply.code(400).send({ error: '?곹깭 蹂寃?遺덇?(draft??reviewed瑜?嫄곗퀜???쒖꽦?붾맗?덈떎).' });
+      if (!ok) return reply.code(400).send({ error: '상태 변경 불가(draft는 reviewed를 거쳐야 활성화됩니다).' });
       await store.audit(user.id, `rule.${action}`, 'rule', `${req.params.id}@${version}`, null, req.ip);
       return { ok: true };
     }
@@ -416,9 +416,9 @@ async function computeProgress(store: AppStore, projectId: string): Promise<numb
 
 export const DEFAULT_CHECKLIST_TEMPLATES: Record<string, string[]> = Object.fromEntries(
   STAGES.map((stage) => [stage, [
-    '?④퀎 紐⑺몴 ?뺤씤',
-    '?꾩슂?쒕쪟 以鍮??щ? ?뺤씤',
-    '?대떦??寃???꾨즺'
+    '단계 목표 확인',
+    '필요서류 준비 여부 확인',
+    '담당자 검토 완료'
   ]])
 );
 

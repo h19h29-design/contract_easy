@@ -1,8 +1,8 @@
 /**
- * ?꾨쿋??怨듦툒??異붿긽??
- * - openai-compat: OpenAI/OpenRouter ??/v1/embeddings ?명솚 API
- * - ollama: 濡쒖뺄 Ollama (/api/embeddings)
- * - hash: 媛쒕컻쨌?뚯뒪?몄슜 寃곗젙???댁떆 ?꾨쿋???섎? ?놁쓬, ?뚯씠?꾨씪??寃利??꾩슜)
+ * 임베딩 공급자 추상화.
+ * - openai/openrouter: OpenAI 호환 /v1/embeddings API
+ * - ollama: 로컬 Ollama /api/embeddings
+ * - hash: 개발·테스트용 결정적 해시 임베딩(외부 의존성 없음)
  */
 
 export interface EmbeddingProvider {
@@ -16,7 +16,7 @@ export interface EmbeddingOptions {
   apiKey?: string;
   baseUrl?: string;
   model?: string;
-  dim?: number; // hash ?꾩슜
+  dim?: number; // hash 전용
 }
 
 export function createEmbeddingProvider(opts: EmbeddingOptions): EmbeddingProvider {
@@ -30,7 +30,7 @@ export function createEmbeddingProvider(opts: EmbeddingOptions): EmbeddingProvid
       return new HashEmbedding(opts.dim ?? 256);
     case 'none':
     default:
-      throw new Error('EMBEDDING_PROVIDER=none ??踰≫꽣 ?뚯씠?꾨씪?몄쓣 ?ъ슜?섎젮硫?怨듦툒?먮? 吏?뺥븯?몄슂.');
+      throw new Error('벡터 파이프라인을 사용하려면 EMBEDDING_PROVIDER를 설정하세요.');
   }
 }
 
@@ -48,7 +48,7 @@ export class OpenAICompatibleEmbedding implements EmbeddingProvider {
       ? 'https://openrouter.ai/api/v1'
       : 'https://api.openai.com/v1')).replace(/\/$/, '');
     this.apiKey = opts.apiKey ?? '';
-    if (!this.apiKey) throw new Error('EMBEDDING_API_KEY ?꾨씫');
+    if (!this.apiKey) throw new Error('EMBEDDING_API_KEY 누락');
   }
 
   async embed(texts: string[]): Promise<number[][]> {
@@ -90,7 +90,7 @@ export class OllamaEmbedding implements EmbeddingProvider {
   }
 }
 
-/** 寃곗젙???댁떆 ?꾨쿋??媛쒕컻쨌?뚯뒪???꾩슜 ???섎? ?좎궗???놁쓬) */
+/** 결정적 해시 임베딩. 개발·테스트 전용이며 의미 유사도 모델이 아니다. */
 export class HashEmbedding implements EmbeddingProvider {
   readonly name = 'hash';
   readonly dim: number;

@@ -141,7 +141,20 @@
 - 증거: docs/harness/UNCOLLECTED.md (2차 갱신)
 
 ## NEXT (다음 세션 권장)
-1. 평가셋 지속 보강(현재 78% → 목표 85%+: 신규 문서 편입 시 누적 갱신)
-2. 규칙 승인 실운용(/admin/rules에서 밴드 초안 3건 원문 대조 후 사람이 승인 — 자동화 금지)
-3. Docker 가용 환경 최종 검증(compose up + db:migrate)
-4. HWP 품질 개선(표/서식 구조 보존 고도화), OCR 후처리 옵션
+1. **T-201 벡터 API 런타임 연결**: API에서 provider/store 생성, `HybridRetriever.vectorSearch` 주입, 필터 보존 테스트. 현재 IN_PROGRESS 착수점은 `CODEX_HANDOFF.md` 참조.
+2. 규칙 승인 실운용(`/admin/rules`에서 밴드 초안 3건을 원문 대조 후 사람이 승인 - 자동화 금지).
+3. 평가셋 지속 보강(현재 hit@3 78.0% → 목표 85% 이상, 신규 문서 편입 시 누적 갱신).
+4. Docker 가용 환경 최종 검증(`docker compose config/up`, `pnpm db:migrate`).
+5. HWP 표/서식 구조 보존과 OCR 후처리 품질 개선.
+
+## T-200 벡터 인덱스 기반 — DONE
+- EmbeddingProvider: OpenAI/OpenRouter/Ollama/hash.
+- VectorStore: Qdrant REST/local-json.
+- `pnpm embed:index`로 hash+local 11,259점 적재 및 검색 검증.
+- HybridRetriever async 검색과 RRF 융합 주입점 구현.
+- 증거: `packages/retrieval/src/{embeddings,vector-store,embed-index,retriever}.ts`, `scripts/verify-vector.mts`, D-015.
+
+## T-201 벡터 API 런타임 연결 — IN_PROGRESS
+- 현재 API의 `loadRetriever()`는 키워드 인덱스만 생성하며 vectorSearch를 주입하지 않는다.
+- 완료조건: 설정된 provider/store를 API에서 생성, 벡터 실패 시 키워드 폴백, 검색 필터 유지, 단위/API 테스트 추가.
+- 검증: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, hash+local API 검색 스모크.

@@ -2,6 +2,21 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-27 Codex 인수인계 정리
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm lint` | PASS | ESLint 오류 0 |
+| `pnpm typecheck` | PASS | 9개 워크스페이스 통과 |
+| `pnpm test` | PASS | 8 files, 70 tests |
+| `pnpm build` | PASS | Next.js 14 routes 및 전체 TypeScript 패키지 빌드 |
+| `pnpm test:pg` | PASS | 3 files, 16 tests, embedded PostgreSQL 18.4 |
+| `pnpm test:e2e` | PASS | Playwright Chromium 5/5. 서버 자동 기동 설정 추가 후 재실행 |
+| hash+local 벡터 적재 | PASS | 11,259 points, 256 dimensions, 176 batches |
+
+- 최초 E2E 시도는 API/웹 미기동으로 5건 연결 거부됐다. `playwright.config.ts`에 `webServer`를 추가한 뒤 동일 명령으로 5/5 통과했다.
+- Docker Compose 실제 기동은 여전히 Docker 미설치로 실행하지 못했다.
+
 ## 2026-08-26 7차 세션 (평가셋 v2 + OCR 검증 + 잔여 정리)
 
 | 항목 | 결과 | 핵심 |

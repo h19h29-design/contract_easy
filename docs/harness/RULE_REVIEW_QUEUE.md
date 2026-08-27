@@ -1,6 +1,6 @@
 # RULE_REVIEW_QUEUE.md — 규칙 승인 대기열(자동 생성)
 
-- 생성시각: 2026-08-26T01:46:01.697Z
+- 생성시각: 2026-08-26T12:55:56.529Z
 - 활성화 절차: `/admin/rules`에서 [검토 완료(reviewed)] → [승인(active)] 순으로 클릭
 - 원칙: 이 문서만 보고 승인하지 말 것 — 반드시 각 항목의 원문 URL에서 값 대조 후 승인
 
@@ -42,34 +42,34 @@
 ## B. 기타 draft 규칙 (0건)
 _없음_
 
-## C. 문장 후보(candidate) 요약 — 상위 30건 / 전체 60건
+## C. 문장 후보(candidate) 요약 — 상위 30건 / 전체 1363건
+- [amount] "추정가격이 10억원 이상인 물품의 평가기준" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "⑴ 추정가격이 100억원 이상인 공사는 8점, 추정가격이 100억원 미만인 공사는 7점" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "5,000억원 초과의 경우 공식에 의해 산출된 요율은 소수점 셋째자리에서 반올림한다" — file://hwp-txt/7c74b820cdeec4d0.txt
+- [amount] "※ 예시) 100억원 미만 50억원 이상 시설공사를 5점으로 배점 조정하는 경우 : 경영상태 15점→20점, 시공경험 15점→10점 등" — file://hwp-txt/52ed59b5d30fe0a7.txt
+- [amount] "추정가격 100억원 미만 50억원 이상" — file://hwp-txt/52ed59b5d30fe0a7.txt
+- [amount] "2) 각 구성원별로 평가하고, 시공비율은 입찰공고에 명시된 비율로 하되, 추정가격이 30억 원 이상인 공사에 대하여는 ‘세부기준’에 따른 구성원의 시공비율 산출과" — file://hwp-txt/52ed59b5d30fe0a7.txt
+- [amount] "수의 계약 | ② 1억원 이하 | 2인 이상 견적서 제출(소액수의), 전자조달 구매" — /fus/MI000000000000000504/contract/list0010v.do/contract/list0030v.do?scg_step=02&gb_cd=A1&gy_cd=B18
+- [amount] "- (평가기준) 타 용역 분야와 동일하게 추정가격 5억원을 기준으로 추정가격 5억원 이상은 지급여력비율에 따른 등급별 점수 부여하고 추정가격 5억원 미만은 100" — file://hwp-txt/5c4ce87e602e4dd4.txt
+- [amount] "추정가격이 10억원 이상인 용역의 평가기준 주6)과 같다" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "추정가격이 10억원 이상인 용역의 평가기준 주7)과 같다" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "추정가격이 1억원 미만인 재난복구 기술용역의 평가기준" — file://hwp-txt/d967c480f33f4137.txt
 - [amount] "기재금액이 5천만원 초과 1억원 이하인 경우: 7만원" — https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do
+- [amount] "다만, 추정가격 2억원 미만 기술용역과 사업수행능력평가(P.Q) 대상이 아닌 재난복구 기술용역은 입찰자(공동수급체는 각 구성원)가 선택한 방법으로 평가하고, 비영" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "추정가격이 10억원 미만 고시금액 이상인 물품의 평가기준" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "(추정가격이 50억원 이상인 공사만 해당)" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "추정가격이 10억원 이상인 물품의 평가기준 : <별표 1>" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "추정가격이 10억원 미만 고시금액(고시금액은 국가를 당사자로 하는 계약에 관한 법률 제4조제1항에 따라 기획재정부 장관이 고시한 금액을 말한다 이하 같다)  이상" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "계약의 공공성 및 어울림 행정을 구현하기 위하여 추정가격 1억원 이하인 계약을 체결하는 경우 여성기업「여성기업지원에 관한 법률」제2조 제1호에 따른 기업" — file://hwp-txt/17b7da7992a1fb74.txt
+- [amount] "추정가격이 1억원 미만인 기술용역의 평가기준" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "추정가격이 100억원미만 50억원이상인공사의 경영상태평가표(21점)" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "⑵ 분담가격 50억원 미만 30억원 이상 공사" — file://hwp-txt/52ed59b5d30fe0a7.txt
+- [amount] "⑶ 분담가격 30억원 미만 3억원 이상 공사" — file://hwp-txt/52ed59b5d30fe0a7.txt
+- [amount] "⑷ 분담가격 3억원 미만 공사" — file://hwp-txt/52ed59b5d30fe0a7.txt
+- [amount] "⑴ 분담가격 100억원 미만 50억원 이상 공사" — file://hwp-txt/52ed59b5d30fe0a7.txt
+- [amount] "「지방세기본법」제102조에 따른 지방세 포탈세액이나 환급ㆍ공제 세액이 5억원 이상인 자" — file://hwp-txt/17b7da7992a1fb74.txt
+- [amount] "종합공사를 기준으로 지역제한을 해야 하며, 전체공사의 추정가격이 100억원 미만인 경우에 한하여 지역제한이 가능하다" — file://hwp-txt/52ed59b5d30fe0a7.txt
 - [amount] "입찰 | 4억원 초과 | 2억원 초과 | 1억 6천만원 초과" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "현장설명: 300억원 이상 의무, 300억원 미만 선택" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "기본(추정가격 2억원 이하) 87.745%(적격심사) 예외 개별 법령 확인 | 최저가 | 낙찰하한율 없음 (종합평가 점수)" — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
-- [amount] "기재금액이 10억 초과인 경우: 35만원" — https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do
-- [amount] "2인 이상 견적서 제출 수의계약 | 4억원 이하 | 2억원 이하 | 1억 6천만원 이하" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "2인 이상 견적서 제출 수의계약: 89.745% 입찰: 기본 89.745%(추정가격 등에 따라 다름)(적격심사 실시) ※ 추정가격 300억원 이상 공사: 종합평가" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "현장설명: 300억원 이상 의무, 300억원 미만 선택" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "추정가격 | 2천만원 초과 ~ 1억원 이하 | 1억 미만 입찰 | 1억~2.3억 미만 입찰" — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
-- [amount] "추정가격 | 2천만원 초과 ~ 1억원 이하 | 1억 미만 입찰 | 1억~2.3억 미만 입찰" — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
-- [amount] "추정가격 | 1억원 초과 | 1억원 이하 | 2천만원이하" — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
-- [amount] "추정가격 | 1억원 초과 | 1억원 이하 | 2천만원이하" — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
-- [amount] "기본(추정가격 2억원 이하) 87.745%(적격심사) 예외 개별 법령 확인 | 최저가 | 낙찰하한율 없음 (종합평가 점수)" — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
-- [amount] "구분 공고 시기 2인 이상 견적서 제출 수의계약 3일 이상(공휴일과 토요일 제외) 입찰 현장설명 ○ 현장설명일의 전날부터 기산하여 7일 전에 공고 현장설명 X 입" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "구분 2인이상 수의계약 입찰 추정가격 2천만원 초과 ~ 1억원 이하 1억 미만 입찰 1억~2.3억 미만 입찰 참가자격 소기업, 소상공인 소기업, 소상공인 중소기업" — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
-- [amount] "기재금액이 1억원 초과 10억원 이하인 경우: 15만원" — https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do
-- [amount] "입찰 | 4억원 초과 | 2억원 초과 | 1억 6천만원 초과" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "사업자등록증 사본, 법인등기사항전부증명서(G2B 등록정보로 대체 가능) 건설업등록증 사본(G2B 등록정보로 대체 가능), 건설업등록수첩 사본 계약보증금(현금, 증" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "현장설명 X | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고(추정가격 10억원 미만)" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "현장설명 X | 입찰서 제출 마감일의 전날부터 기산하여 7일전에 공고(추정가격 10억원 미만)" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "도급 또는 위임에 관한 증서 중 법률에 따라 작성하는 문서로서 대통령령으로 정하는 것 | 기재금액이 1천만원 초과 3천만원 이하인 경우: 2만원" — https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do
-- [amount] "제한입찰: 각 항목별 제한요건은 추정가격 등에 따라 다르며, 각 항목을 중복적으로 제한할 수 없는 것이 기본 원칙 ※ 예외: ⑧중소기업자는 다른 항목과 중복가능 " — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
-- [amount] "2인 이상 견적서 제출 수의계약 | 4억원 이하 | 2억원 이하 | 1억 6천만원 이하" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "기재금액이 3천만원 초과 5천만원 이하인 경우: 4만원" — https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do
-- [amount] "중소기업제품 구매촉진 및 판로 지원에 관한 법률 및 같은 법 시행령에 의하면 추정가격 2억 원 미만인 물품 또는 용역을 조달하려는 경우에는 중소기업자 간 제한경쟁" — https://contract.sen.go.kr/fus/MI000000000000000388/board/BO00000122/CD030/list0010v.do
-- [amount] "「신용카드 및 현금영수증 카드 사용•관리 요령(서울특별시교육청, 2015.1)」에 따르면, 인터넷을 통한 물품구매 시 「전자상거래 등에서의 소비자보호에 관한 법」" — https://contract.sen.go.kr/fus/MI000000000000000387/board/BO00000122/CD020/list0010v.do
-- [amount] "산재보험료: 모든 건설공사 및 전기·통신·소방공사에 적용 고용보험료: 모든 건설공사 및 전기·통신·소방공사에 적용(다만, 총 공사금액 2천만원 미만의 건설공사를 " — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "구분 종합공사 전문공사 전기 등 그 밖의 공사 1인 견적서 제출 가능 수의계약 2천만원 이하 여성기업·장애인기업·사회적경제기업: 5천만원 이하 1인수의 가능 2인" — https://contract.sen.go.kr/fus/MI000000000000000332/html/cont0010v.do
-- [amount] "입찰 입찰(일반,제한) 2단계입찰 협상에의한계약 기본(추정가격 2억원 이하) 87.745%(적격심사) 예외 개별 법령 확인 최저가 낙찰하한율 없음 (종합평가 점수" — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
-- [amount] "수의계약 추정가격 2천만원 초과: 88% 추정가격 2천만원 이하: 90% | 입찰(일반,제한) | 2단계입찰 | 협상에의한계약 | 기본(추정가격 2억원 이하) 8" — https://contract.sen.go.kr/fus/MI000000000000000331/html/cont0010v.do
+- [amount] "가) 추정가격이 10억원 이상인 용역의 입찰가격 평점산식 (79.995%)" — file://hwp-txt/d967c480f33f4137.txt
+- [amount] "추정가격이 300억원 이상인 공사입찰 시 시행령 제15조에 따라 현장설명을 하는 경우에는 현장설명에 참가한 자만이 입찰에 참가할 수 있다" — file://hwp-txt/52ed59b5d30fe0a7.txt
+- [amount] "1) 금차공사의 추정가격 50억원이상은 95점이상인 경우 수의계약이 가능하다" — file://hwp-txt/52ed59b5d30fe0a7.txt

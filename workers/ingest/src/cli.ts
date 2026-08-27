@@ -119,8 +119,7 @@ async function main(): Promise<void> {
     const storeKind = process.env.VECTOR_STORE === 'qdrant' ? 'qdrant' : 'local';
     const r = await runEmbedIndex({
       chunksFile: path.join(dataPaths().appStore, 'chunks.json'),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      provider: cfg.embeddingProvider as any,
+      provider: cfg.embeddingProvider,
       apiKey: cfg.embeddingApiKey,
       model: process.env.EMBEDDING_MODEL || undefined,
       dim: Number(process.env.EMBEDDING_DIM ?? 256),

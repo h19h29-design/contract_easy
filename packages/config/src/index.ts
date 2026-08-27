@@ -26,7 +26,7 @@ export interface AppConfig {
   llmProvider: 'none' | 'openai' | 'openrouter' | 'ollama';
   llmApiKey: string;
   llmModel: string;
-  embeddingProvider: 'none' | 'openai' | 'openrouter' | 'ollama';
+  embeddingProvider: 'none' | 'openai' | 'openrouter' | 'ollama' | 'hash';
   embeddingApiKey: string;
 }
 

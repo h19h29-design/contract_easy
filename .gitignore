@@ -10,10 +10,12 @@ data/normalized/tables/
 data/normalized/forms/
 data/quarantine/
 data/app-store/private/
+data/app-store/vectors.json
 artifacts/preflight/*.html
 artifacts/samples/*.html
 test-results/
 playwright-report/
+tests/e2e/.data/
 wiki/generated/*.tmp.md
 __pycache__/
 tests/pg/.pgdata/

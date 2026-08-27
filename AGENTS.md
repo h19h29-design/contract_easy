@@ -8,10 +8,11 @@
 1. `AGENTS.md` (이 파일)
 2. `docs/harness/STATUS.md` — 현재 진행상태
 3. `docs/harness/TASKS.md` — 작업 목록과 상태
-4. `01_SYSTEM_BLUEPRINT.md`
-5. `02_CRAWL_SEEDS.yaml`
-6. `DECISIONS.md` — 지금까지의 결정과 근거
-7. `docs/harness/RUNBOOK.md`, `docs/harness/COMMANDS.md`
+4. `docs/harness/CODEX_HANDOFF.md` — 즉시 재개 지점과 검증 명령
+5. `01_SYSTEM_BLUEPRINT.md`
+6. `02_CRAWL_SEEDS.yaml`
+7. `DECISIONS.md` — 지금까지의 결정과 근거
+8. `docs/harness/RUNBOOK.md`, `docs/harness/COMMANDS.md`
 
 충돌 시 우선순위: 실행 프롬프트 > 01_BLUEPRINT > 02_SEEDS > 03_MASTER_PROMPT > 기존 코드.
 
@@ -22,7 +23,7 @@
 - 활성 규칙이 없으면 숫자를 추측하지 말고 `REVIEW_REQUIRED`를 반환한다.
 - AI 답변은 최소 1개 이상의 원문 근거(제목/URL/게시일·시행일/확인일) 없이 생성하지 않는다.
 - 로그인·CAPTCHA·접근제한을 우회하지 않는다. robots.txt를 항상 준수한다.
-  - **확인됨(2026-08-25)**: contract.sen.go.kr robots.txt는 페이지 HTML은 허용, 첨부파일(pdf/hwp/xls/zip/png/jpg/doc/ppt/js/gif/bmp/log/jsp) 다운로드는 Disallow → 첨부 수집은 기본 비활성(`CRAWL_ALLOW_ATTACHMENTS=false`). 해제는 법무 확인 후 명시적 승인 필요.
+  - 첨부 수집 기본값은 `CRAWL_ALLOW_ATTACHMENTS=false`. 2026-08-26 운영자 승인(D-014) 범위에서만 `.do` 다운로드 엔드포인트를 실행했으며 임의 확장은 금지한다.
 - 수집 동시성 1, 요청 간격 ≥1200ms, 403/429/5xx 시 지수 백오프, 반복 오류 시 중단.
 - 원본은 불변 저장(SHA-256), 변환본은 별도 경로, 덮어쓰기 금지.
 - 개인정보가 포함된 프로젝트 문서는 공개 RAG corpus에 절대 편입하지 않는다.
@@ -36,7 +37,7 @@
 
 ## 4. 크롤링 안전 규칙
 
-- seed는 `02_CRAWL_SEEDS.yaml`만 사용. 허용 범위: domain `contract.sen.go.kr`, path prefix `/fus/`.
+- seed와 allowlist는 `02_CRAWL_SEEDS.yaml`만 사용. 기본 범위는 `contract.sen.go.kr/fus/`, 예외는 승인된 `buseo.sen.go.kr/buseo/bu20/user/bbs/` FAQ 경로뿐이다.
 - 외부 링크는 URL·메타데이터만 저장, 본문 수집 금지(별도 allowlist 없이).
 - pagination 종료 조건: 다음 페이지 없음 / URL·콘텐츠 반복 / 빈 목록 / 최대 페이지 도달.
 - 예상 건수를 하드코딩하지 않는다. 실측값으로 `CRAWL_COVERAGE.md` 생성.
@@ -61,6 +62,8 @@
 | `pnpm crawl:sample` | 샘플 페이지 1건 수집 |
 | `pnpm crawl:full` | 전체 수집 (조건 충족 시에만) |
 | `pnpm ingest:all` | 정규화 + chunk + 인덱스 + 위키 생성 |
+| `pnpm embed:index` | 청크 임베딩을 local-json 또는 Qdrant에 적재 |
+| `pnpm rules:queue` | 사람 검토용 규칙 승인 대기열 재생성 |
 | `pnpm dev:api` / `pnpm dev:web` | 개발 서버 |
 
 전체 목록: `docs/harness/COMMANDS.md`
