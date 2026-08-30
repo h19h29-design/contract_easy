@@ -248,6 +248,22 @@ describe('프로젝트 생명주기 API', () => {
     expect((await projectRequest('POST', '/api/projects', { ...base, estimatedPrice: 1, contractCategory: 'invalid' })).statusCode).toBe(400);
     expect((await projectRequest('POST', '/api/projects', { ...base, estimatedPrice: 1, organizationType: 'invalid' })).statusCode).toBe(400);
   });
+
+  it('프로젝트·체크리스트·규칙 mutation의 runtime literals를 400으로 거부한다', async () => {
+    const base = { contractCategory: 'construction', estimatedPrice: 1, organizationType: 'school' };
+    for (const name of [1, {}, null, 'x'.repeat(201)]) {
+      expect((await projectRequest('POST', '/api/projects', { ...base, name })).statusCode).toBe(400);
+    }
+    const project = await createProject('엄격 boolean 공사');
+    const itemId = (await store.checklistOf(project.id))[0]!.id;
+    for (const done of ['false', 0, null, {}]) {
+      expect((await projectRequest('PATCH', `/api/projects/${project.id}/checklist/${itemId}`, { done })).statusCode).toBe(400);
+    }
+    for (const version of ['0', '-1', '1.5', 'word']) {
+      const response = await app.inject({ method: 'POST', url: `/api/admin/rules/safe/${version}`, payload: { action: 'activate' }, cookies: { scg_session: sessionToken }, headers: { 'x-csrf-token': csrfToken } });
+      expect(response.statusCode).toBe(400);
+    }
+  });
 });
 
 describe('비공개 체크리스트 증빙 API', () => {

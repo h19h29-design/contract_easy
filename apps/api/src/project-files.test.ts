@@ -60,4 +60,35 @@ describe('private evidence files', () => {
       .toThrow('PRIVATE_PATH_VIOLATION');
     expect(fs.readFileSync(target, 'utf8')).toBe('wrong');
   });
+
+  it('restrictive umask에서도 publish는 exact 0600이며 기존 target 변조를 거부한다', () => {
+    const root = privateRoot();
+    const bytes = Buffer.from('%PDF-1.4\n');
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    const prior = process.umask(0o077);
+    try {
+      const first = writeEvidenceFile({ privateRoot: root, projectId: 'p2', bytes, sha256, ext: 'pdf' });
+      expect(fs.statSync(first.storedPath).mode & 0o777).toBe(0o600);
+      expect(writeEvidenceFile({ privateRoot: root, projectId: 'p2', bytes, sha256, ext: 'pdf' }).created).toBe(false);
+      fs.chmodSync(first.storedPath, 0o644);
+      expect(() => writeEvidenceFile({ privateRoot: root, projectId: 'p2', bytes, sha256, ext: 'pdf' })).toThrow('PRIVATE_PATH_VIOLATION');
+      expect(fs.readFileSync(first.storedPath)).toEqual(bytes);
+    } finally {
+      process.umask(prior);
+    }
+  });
+
+  it('symlink, directory and partial existing target을 변경하지 않고 거부한다', () => {
+    const root = privateRoot();
+    const bytes = Buffer.from('%PDF-1.4\n');
+    for (const [suffix, setup] of [
+      ['d', (target: string) => fs.mkdirSync(target)],
+      ['p', (target: string) => { fs.writeFileSync(target, 'partial'); fs.chmodSync(target, 0o600); }]
+    ] as const) {
+      const sha256 = suffix.repeat(64);
+      const target = path.join(root, 'p3', `${sha256}.pdf`);
+      fs.mkdirSync(path.dirname(target), { recursive: true }); setup(target);
+      expect(() => writeEvidenceFile({ privateRoot: root, projectId: 'p3', bytes, sha256, ext: 'pdf' })).toThrow('PRIVATE_PATH_VIOLATION');
+    }
+  });
 });
