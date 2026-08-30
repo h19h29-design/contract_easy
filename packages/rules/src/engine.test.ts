@@ -157,6 +157,25 @@ describe('detectConflicts(관리자용 사전탐지)', () => {
 });
 
 describe('활성화 검증과 fail-closed 판정', () => {
+  it('literal URL and equality/domain boundaries are validated', () => {
+    const cases: Array<[string, Partial<RuleDefinition>, boolean]> = [
+      ['malformed', { source: { ...rule({}).source, url: 'https://' } }, false],
+      ['http', { source: { ...rule({}).source, url: 'http://example.test' } }, false],
+      ['credentials', { source: { ...rule({}).source, url: 'https://u:p@example.test' } }, false],
+      ['hostless', { source: { ...rule({}).source, url: 'https://#fragment' } }, false],
+      ['https', { source: { ...rule({}).source, url: 'https://example.test/path' } }, true]
+    ];
+    for (const [, patch, valid] of cases) expect(validateActivatableRule(rule(patch)).length === 0).toBe(valid);
+    for (const conditions of [
+      [{ field: 'estimated_price', operator: 'eq', value: 1 }, { field: 'estimated_price', operator: 'gte', value: 1 }, { field: 'estimated_price', operator: 'lte', value: 1 }],
+      [{ field: 'estimated_price', operator: 'eq', value: 1 }, { field: 'estimated_price', operator: 'gt', value: 1 }],
+      [{ field: 'estimated_price', operator: 'eq', value: -1 }],
+      [{ field: 'estimated_price', operator: 'lt', value: 0 }]
+    ] as RuleDefinition['conditions'][]) {
+      const valid = conditions.length === 3;
+      expect(validateActivatableRule(rule({ conditions })).length === 0).toBe(valid);
+    }
+  });
   it('동일값 eq 조건과 양끝 포함 범위를 허용한다', () => {
     const equal = rule({ conditions: [
       { field: 'estimated_price', operator: 'eq', value: 100 },

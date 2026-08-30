@@ -52,6 +52,7 @@ export function writeEvidenceFile(input: {
     try {
       if (!pathMatchesIdentity(temporaryPath, temporaryIdentity)) throw new Error('PRIVATE_PATH_VIOLATION');
       fs.linkSync(temporaryPath, canonicalStoredPath);
+      if (!pathMatchesIdentity(canonicalStoredPath, temporaryIdentity)) throw new Error('PRIVATE_PATH_VIOLATION');
       verifyExistingEvidence(canonicalStoredPath, input);
       return { storedPath, created: true };
     } catch (error) {
