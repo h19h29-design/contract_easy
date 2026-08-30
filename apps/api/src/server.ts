@@ -10,7 +10,7 @@ import {
   STAGES, STAGE_LABELS
 } from '@sen/db';
 import type { AppStore, UserRecord } from '@sen/db';
-import type { Chunk, SearchFilters, WizardInput } from '@sen/shared';
+import { seoulDate, type Chunk, type SearchFilters, type WizardInput } from '@sen/shared';
 import { HybridRetriever } from '@sen/retrieval';
 import { evaluateWizard, detectConflicts } from '@sen/rules';
 
@@ -174,8 +174,9 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     if (!input || typeof input.estimatedPrice !== 'number' || !input.contractCategory) {
       return reply.code(400).send({ error: '입력값이 올바르지 않습니다.' });
     }
-    const activeRules = await store.getActiveRules();
-    const { result, conflicts } = evaluateWizard(input, activeRules);
+    const asOfDate = input.contractPlannedDate ?? seoulDate(new Date());
+    const activeRules = await store.getActiveRules(asOfDate);
+    const { result, conflicts } = evaluateWizard(input, activeRules, { asOfDate });
     return { ...result, conflicts };
   });
 

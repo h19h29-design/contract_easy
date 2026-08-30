@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateWizard, evaluateCondition, detectConflicts, REVIEW_REQUIRED_MESSAGE } from './engine.js';
+import {
+  detectConflicts, evaluateCondition, evaluateWizard, REVIEW_REQUIRED_MESSAGE,
+  validateActivatableRule
+} from './engine.js';
 import type { RuleDefinition, WizardInput } from '@sen/shared';
 
 function input(over: Partial<WizardInput> = {}): WizardInput {
@@ -128,5 +131,65 @@ describe('detectConflicts(관리자용 사전탐지)', () => {
     const a = rule({ id: 'a', conditions: [{ field: 'estimated_price', operator: 'between', value: [0, 100] }] });
     const b = rule({ id: 'b', output: { method: 'B' }, conditions: [{ field: 'estimated_price', operator: 'between', value: [50, 150] }] });
     expect(detectConflicts([a, b])).toHaveLength(1);
+  });
+
+  it('lte와 gt 경계를 포함해 겹치는 active 구간을 탐지', () => {
+    const a = rule({ id: 'a', status: 'active', conditions: [
+      { field: 'estimated_price', operator: 'gte', value: 0 },
+      { field: 'estimated_price', operator: 'lte', value: 100 }
+    ], output: { method: 'A' } });
+    const b = rule({ id: 'b', status: 'active', conditions: [
+      { field: 'estimated_price', operator: 'gt', value: 99 },
+      { field: 'estimated_price', operator: 'lt', value: 200 }
+    ], output: { method: 'B' } });
+    expect(detectConflicts([a, b])).toHaveLength(1);
+  });
+});
+
+describe('활성화 검증과 fail-closed 판정', () => {
+  it('알 수 없는 scope 키는 활성화 검증에서 거부', () => {
+    const issues = validateActivatableRule(rule({ scope: { contract_catgory: 'construction' } }));
+    expect(issues.map((x) => x.code)).toContain('UNKNOWN_SCOPE');
+  });
+
+  it('method 없는 active 보조 규칙만 매칭되면 PARTIAL', () => {
+    const { result } = evaluateWizard(input(), [rule({
+      status: 'active',
+      conditions: [{ field: 'estimated_price', operator: 'between', value: [0, 0] }],
+      output: { documents: ['plan|검토서'] }
+    })]);
+    expect(result.decisionState).toBe('PARTIAL');
+    expect(result.recommendedMethod).toBeUndefined();
+  });
+
+  it('계약예정일보다 미래 시행 규칙은 적용하지 않음', () => {
+    const { result } = evaluateWizard(input(), [rule({
+      status: 'active',
+      conditions: [{ field: 'estimated_price', operator: 'between', value: [0, 0] }],
+      source: {
+        title: '테스트 원문', url: 'https://example.org/future',
+        effectiveFrom: '2027-01-01', checkedAt: '2026-08-25'
+      }
+    })], { asOfDate: '2026-12-31' });
+    expect(result.decisionState).toBe('REVIEW_REQUIRED');
+  });
+
+  it('기준일보다 미래 시행 규칙은 활성화 검증에서 거부', () => {
+    const future = rule({
+      source: {
+        title: '테스트 원문', url: 'https://example.org/future',
+        effectiveFrom: '2027-01-01', checkedAt: '2026-08-25'
+      }
+    });
+    expect(validateActivatableRule(future, { asOfDate: '2026-08-30' }).map((x) => x.code))
+      .toContain('FUTURE_EFFECTIVE_DATE');
+  });
+
+  it('실재하지 않는 원문 확인일은 활성화 검증에서 거부', () => {
+    const invalidDate = rule({ source: {
+      title: '테스트 원문', url: 'https://example.org/rule',
+      effectiveFrom: '2026-01-01', checkedAt: '2026-02-30'
+    } });
+    expect(validateActivatableRule(invalidDate).map((x) => x.code)).toContain('INVALID_SOURCE');
   });
 });

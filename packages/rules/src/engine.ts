@@ -1,8 +1,8 @@
 import type {
   RuleCondition, RuleDefinition, WizardInput, WizardResult,
-  RuleSourceMeta
+  RuleSourceMeta, RuleValidationIssue
 } from '@sen/shared';
-import { isoNow } from '@sen/shared';
+import { isIsoDate, isoNow } from '@sen/shared';
 
 export const REVIEW_REQUIRED_MESSAGE =
   '담당자 검토 필요\n현재 활성화된 검토 규칙이 없습니다.\n원문 자료를 확인한 뒤 관리자 승인이 필요합니다.';
@@ -13,6 +13,44 @@ export interface RuleConflict {
   reason: string;
 }
 
+const ALLOWED_SCOPE_KEYS = new Set([
+  'contract_category', 'organization_type', 'emergency',
+  'government_materials', 'construction_waste'
+]);
+
+const ALLOWED_PRICE_OPERATORS = new Set(['gt', 'gte', 'lt', 'lte', 'between']);
+
+export function validateActivatableRule(
+  rule: RuleDefinition,
+  options: { asOfDate?: string } = {}
+): RuleValidationIssue[] {
+  const issues: RuleValidationIssue[] = [];
+  for (const key of Object.keys(rule.scope)) {
+    if (!ALLOWED_SCOPE_KEYS.has(key)) {
+      issues.push({ code: 'UNKNOWN_SCOPE', message: `지원하지 않는 scope: ${key}` });
+    }
+  }
+  if (!rule.source.title.trim() ||
+    !rule.source.url.startsWith('https://') ||
+    !isIsoDate(rule.source.checkedAt) ||
+    (rule.source.effectiveFrom != null && !isIsoDate(rule.source.effectiveFrom))) {
+    issues.push({ code: 'INVALID_SOURCE', message: 'HTTPS 원문 URL, 제목, 확인일이 필요합니다.' });
+  }
+  if (!rule.output.method?.trim()) {
+    issues.push({ code: 'MISSING_METHOD', message: '계약방법 출력이 필요합니다.' });
+  }
+  if (options.asOfDate && rule.source.effectiveFrom &&
+    isIsoDate(options.asOfDate) && rule.source.effectiveFrom > options.asOfDate) {
+    issues.push({ code: 'FUTURE_EFFECTIVE_DATE', message: '기준일 이후 시행 규칙입니다.' });
+  }
+  if (rule.conditions.length === 0 || rule.conditions.some(
+    (condition) => condition.field !== 'estimated_price' || !ALLOWED_PRICE_OPERATORS.has(condition.operator)
+  )) {
+    issues.push({ code: 'INVALID_CONDITION', message: '지원되는 추정가격 조건이 필요합니다.' });
+  }
+  return issues;
+}
+
 function matchesScope(rule: RuleDefinition, input: WizardInput): boolean {
   return Object.entries(rule.scope).every(([k, v]) => {
     switch (k) {
@@ -21,7 +59,7 @@ function matchesScope(rule: RuleDefinition, input: WizardInput): boolean {
       case 'emergency': return String(input.emergency) === v;
       case 'government_materials': return String(input.governmentMaterials) === v;
       case 'construction_waste': return String(input.constructionWaste) === v;
-      default: return true; // 미지정 키는 제약 없음
+      default: return false;
     }
   });
 }
@@ -46,8 +84,9 @@ export function evaluateCondition(cond: RuleCondition, input: WizardInput, asOfD
     case 'effective_from_satisfied': {
       // 시행일 이후인지(구버전 비활성화 보조). asOfDate가 없으면 통과
       if (!asOfDate) return true;
+      if (!isIsoDate(asOfDate)) return false;
       const eff = typeof cond.value === 'string' ? cond.value : null;
-      return !eff || asOfDate >= eff;
+      return !eff || (isIsoDate(eff) && asOfDate >= eff);
     }
     default:
       return false;
@@ -73,7 +112,7 @@ export function evaluateWizard(
   const matched = rules.filter(
     (r) =>
       r.status === 'active' &&
-      (!asOf || !r.source.effectiveFrom || r.source.effectiveFrom <= asOf) &&
+      isEffectiveOn(r, asOf) &&
       matchesScope(r, input) &&
       r.conditions.every((c) => evaluateCondition(c, input, asOf))
   );
@@ -122,7 +161,21 @@ export function evaluateWizard(
     };
   }
 
-  const primary = matched.find((r) => r.output.method)!;
+  const primary = matched.find((r) => r.output.method?.trim());
+  if (!primary) {
+    return {
+      result: {
+        decisionState: 'PARTIAL',
+        appliedRules,
+        nextSteps,
+        documentsByStage,
+        cautions,
+        evidence,
+        lastCheckedAt
+      },
+      conflicts
+    };
+  }
   return {
     result: {
       decisionState: 'DETERMINED',
@@ -140,6 +193,13 @@ export function evaluateWizard(
     },
     conflicts
   };
+}
+
+function isEffectiveOn(rule: RuleDefinition, asOfDate?: string): boolean {
+  const effectiveFrom = rule.source.effectiveFrom;
+  if (effectiveFrom && !isIsoDate(effectiveFrom)) return false;
+  if (!asOfDate) return true;
+  return isIsoDate(asOfDate) && (!effectiveFrom || effectiveFrom <= asOfDate);
 }
 
 function mergeStageDocuments(rules: RuleDefinition[]): WizardResult['documentsByStage'] {
@@ -171,11 +231,11 @@ export function detectConflicts(rules: RuleDefinition[]): RuleConflict[] {
   for (let i = 0; i < actives.length; i++) {
     for (let j = i + 1; j < actives.length; j++) {
       const a = actives[i]!, b = actives[j]!;
-      const aPrice = a.conditions.find((c) => c.field === 'estimated_price' && c.operator === 'between');
-      const bPrice = b.conditions.find((c) => c.field === 'estimated_price' && c.operator === 'between');
-      if (!aPrice || !bPrice) continue;
-      if (JSON.stringify(a.scope) !== JSON.stringify(b.scope)) continue;
-      if (rangesOverlap(aPrice.value as [number, number], bPrice.value as [number, number]) &&
+      const aInterval = normalizedPriceInterval(a.conditions);
+      const bInterval = normalizedPriceInterval(b.conditions);
+      if (!aInterval || !bInterval) continue;
+      if (scopeKey(a.scope) !== scopeKey(b.scope)) continue;
+      if (rangesOverlap(aInterval, bInterval) &&
           a.output.method !== b.output.method) {
         out.push({
           ruleVersionIdA: `${a.id}@${a.version}`,
@@ -188,8 +248,78 @@ export function detectConflicts(rules: RuleDefinition[]): RuleConflict[] {
   return out;
 }
 
-function rangesOverlap(a: [number, number], b: [number, number]): boolean {
-  const aHi = a[1] <= 0 ? Infinity : a[1];
-  const bHi = b[1] <= 0 ? Infinity : b[1];
-  return Math.max(a[0], b[0]) < Math.min(aHi, bHi);
+interface PriceInterval {
+  lower: number;
+  lowerInclusive: boolean;
+  upper: number;
+  upperInclusive: boolean;
+}
+
+function normalizedPriceInterval(conditions: RuleCondition[]): PriceInterval | null {
+  const priceConditions = conditions.filter((condition) => condition.field === 'estimated_price');
+  if (priceConditions.length === 0) return null;
+  let interval: PriceInterval = {
+    lower: Number.NEGATIVE_INFINITY,
+    lowerInclusive: true,
+    upper: Number.POSITIVE_INFINITY,
+    upperInclusive: true
+  };
+  for (const condition of priceConditions) {
+    const next = intervalFor(condition);
+    if (!next) return null;
+    interval = intersectIntervals(interval, next);
+  }
+  return intervalIsNonEmpty(interval) ? interval : null;
+}
+
+function intervalFor(condition: RuleCondition): PriceInterval | null {
+  const value = Number(condition.value);
+  if (condition.operator === 'between') {
+    if (!Array.isArray(condition.value) || condition.value.length !== 2 ||
+      !condition.value.every((item) => typeof item === 'number' && Number.isFinite(item))) return null;
+    const [lower, upper] = condition.value;
+    if (typeof lower !== 'number' || typeof upper !== 'number') return null;
+    return {
+      lower,
+      lowerInclusive: true,
+      upper: upper <= 0 ? Number.POSITIVE_INFINITY : upper,
+      upperInclusive: false
+    };
+  }
+  if (!Number.isFinite(value)) return null;
+  switch (condition.operator) {
+    case 'gt': return { lower: value, lowerInclusive: false, upper: Infinity, upperInclusive: true };
+    case 'gte': return { lower: value, lowerInclusive: true, upper: Infinity, upperInclusive: true };
+    case 'lt': return { lower: -Infinity, lowerInclusive: true, upper: value, upperInclusive: false };
+    case 'lte': return { lower: -Infinity, lowerInclusive: true, upper: value, upperInclusive: true };
+    case 'eq': return { lower: value, lowerInclusive: true, upper: value, upperInclusive: true };
+    default: return null;
+  }
+}
+
+function intersectIntervals(a: PriceInterval, b: PriceInterval): PriceInterval {
+  const lower = Math.max(a.lower, b.lower);
+  const upper = Math.min(a.upper, b.upper);
+  return {
+    lower,
+    lowerInclusive: a.lower === b.lower ? a.lowerInclusive && b.lowerInclusive :
+      (lower === a.lower ? a.lowerInclusive : b.lowerInclusive),
+    upper,
+    upperInclusive: a.upper === b.upper ? a.upperInclusive && b.upperInclusive :
+      (upper === a.upper ? a.upperInclusive : b.upperInclusive)
+  };
+}
+
+function intervalIsNonEmpty(interval: PriceInterval): boolean {
+  return interval.lower < interval.upper ||
+    (interval.lower === interval.upper && interval.lowerInclusive && interval.upperInclusive);
+}
+
+function rangesOverlap(a: PriceInterval, b: PriceInterval): boolean {
+  const overlap = intersectIntervals(a, b);
+  return intervalIsNonEmpty(overlap);
+}
+
+function scopeKey(scope: RuleDefinition['scope']): string {
+  return JSON.stringify(Object.entries(scope).sort(([a], [b]) => a.localeCompare(b)));
 }

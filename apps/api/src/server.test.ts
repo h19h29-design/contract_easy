@@ -5,14 +5,15 @@ import path from 'node:path';
 import { buildApp } from './server.js';
 import { FileStore } from '@sen/db';
 import { HybridRetriever } from '@sen/retrieval';
-import type { Chunk } from '@sen/shared';
+import type { Chunk, RuleDefinition } from '@sen/shared';
 
 let app: Awaited<ReturnType<typeof buildApp>>['app'];
 let tmpDir: string;
+let store: FileStore;
 
 beforeAll(async () => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'scg-api-'));
-  const store = new FileStore(tmpDir);
+  store = new FileStore(tmpDir);
   const chunk = (id: string, text: string): Chunk => ({
     id, sourceVersionId: 'sv1', url: 'https://contract.sen.go.kr/fus/test',
     docTitle: '테스트 문서', sectionPath: [], order: 0, type: 'paragraph',
@@ -58,6 +59,17 @@ describe('공개 API', () => {
     const body = res.json();
     expect(body.decisionState).toBe('REVIEW_REQUIRED');
     expect(body.recommendedMethod).toBeUndefined();
+  });
+
+  it('계약예정일 이후 시행 active 규칙은 마법사에서 거부', async () => {
+    store.upsertRule(futureRule());
+    const res = await app.inject({
+      method: 'POST', url: '/api/wizard',
+      payload: { ...wizardInput(), contractPlannedDate: '2026-12-31' }
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().decisionState).toBe('REVIEW_REQUIRED');
+    expect(res.json().recommendedMethod).toBeUndefined();
   });
 
   it('검색어 없으면 400', async () => {
@@ -148,4 +160,19 @@ function wizardInput() {
 
 function extractSession(cookieHeader: string): string {
   return cookieHeader.split(';').find((c) => c.startsWith('scg_session='))!.split('=')[1]!;
+}
+
+function futureRule(): RuleDefinition {
+  return {
+    id: 'future.rule', version: 1, status: 'active',
+    scope: { contract_category: 'construction' },
+    conditions: [{ field: 'estimated_price', operator: 'between', value: [0, 0] }],
+    output: { method: 'FUTURE_METHOD' },
+    source: {
+      title: '미래 시행 규칙', url: 'https://example.org/future-rule',
+      effectiveFrom: '2027-01-01', checkedAt: '2026-08-25'
+    },
+    createdAt: '2026-08-25T00:00:00.000Z',
+    updatedAt: '2026-08-25T00:00:00.000Z'
+  };
 }

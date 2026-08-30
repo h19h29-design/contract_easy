@@ -149,6 +149,16 @@ export interface RuleDefinition {
   updatedAt: string;
 }
 
+export interface RuleValidationIssue {
+  code:
+    | 'UNKNOWN_SCOPE'
+    | 'INVALID_SOURCE'
+    | 'INVALID_CONDITION'
+    | 'MISSING_METHOD'
+    | 'FUTURE_EFFECTIVE_DATE';
+  message: string;
+}
+
 export interface WizardInput {
   projectName?: string;
   workType: string;        // 건축/토목/전기/소방/정보통신/기타 (자유문자)

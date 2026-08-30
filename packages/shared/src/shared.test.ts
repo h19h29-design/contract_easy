@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { normalizeUrl, isAllowedByPolicy, robotsAllows, ATTACHMENT_ROBOTS_DISALLOWED_EXTS } from './url.js';
 import { sha256Hex, safeFileName, extOf } from './hash.js';
-import { parseKoreanDate } from './date.js';
+import { isIsoDate, parseKoreanDate, seoulDate } from './date.js';
 
 const policy = {
   allowDomains: ['contract.sen.go.kr'],
@@ -73,5 +73,17 @@ describe('한국어 날짜 파싱', () => {
   });
   it('불가능한 날짜는 null', () => {
     expect(parseKoreanDate('2024.02.30')).toBeNull();
+  });
+});
+
+describe('엄격한 ISO 날짜와 서울 기준일', () => {
+  it('실재하는 YYYY-MM-DD 날짜만 허용', () => {
+    expect(isIsoDate('2026-02-28')).toBe(true);
+    expect(isIsoDate('2026-02-30')).toBe(false);
+    expect(isIsoDate('2026-2-28')).toBe(false);
+  });
+
+  it('UTC 경계를 서울 날짜로 변환', () => {
+    expect(seoulDate(new Date('2026-08-30T15:30:00.000Z'))).toBe('2026-08-31');
   });
 });
