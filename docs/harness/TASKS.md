@@ -159,10 +159,11 @@
 - HybridRetriever async 검색과 RRF 융합 주입점 구현.
 - 증거: `packages/retrieval/src/{embeddings,vector-store,embed-index,retriever}.ts`, `scripts/verify-vector.mts`, D-015.
 
-## T-201 벡터 API 런타임 연결 — IN_PROGRESS
+## T-201 벡터 API 런타임 연결 — DEFERRED(사용자 결정)
 - 현재 API의 `loadRetriever()`는 키워드 인덱스만 생성하며 vectorSearch를 주입하지 않는다.
 - 완료조건: 설정된 provider/store를 API에서 생성, 벡터 실패 시 키워드 폴백, 검색 필터 유지, 단위/API 테스트 추가.
 - 검증: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, hash+local API 검색 스모크.
+- RAG/에이전트 도입 여부 결정 전까지 구현·검증을 보류한다. 완료로 간주하지 않는다.
 
 ## T-202 FileStore 프로젝트 생명주기 기록 — DONE
 - 상태 전이(planning→contracting→working→completed→warranty), 변경·이벤트 append-only JSON 기록, 이전 JSON 로드 호환과 AppStore/PgStore 동형 계약을 완료했다.
@@ -183,12 +184,14 @@
 - 최소 UI와 회귀: `apps/web/app/admin/rules/page.tsx`, `apps/web/app/workspace/projects/[id]/page.tsx`, `apps/web/app/globals.css`, `tests/e2e/flows.spec.ts`.
 - 전체 게이트 증거는 `docs/harness/TEST_RESULTS.md`와 scoped commits에 기록한다.
 
-## T-211 운영 배포 안전장치·NAS 실검증 — IN_PROGRESS
+## T-211 운영 배포 안전장치·NAS 실검증 — DONE(내부 파일럿; 공개 HTTPS 대기)
 - 완료: 운영 API의 PostgreSQL/WEB_ORIGIN 필수 주입, 최초 관리자 비밀번호 전달, 컨테이너 외부 API 수신,
   웹 build-time 공개 API URL, NAS 데이터 절대경로 강제, 내부 PostgreSQL/Qdrant/Valkey host publish 제거,
   웹/API 기본 loopback bind, `db:migrate` 명령과 정적 Compose 회귀 검증을 추가했다.
-- 남음: NAS Container Manager 기동, `docker compose config/up`, 기존 DB `evidence_path` 0건,
-  HTTPS 역방향 프록시, 백업·복구 리허설의 실제 환경 검증.
+- NAS 실증: `/volume2/contract_easy/app` 격리 배포, 5서비스 healthy/restart0, API 8787·web 3300 loopback, 내부 DB/vector/cache host port 미노출, migration 및 legacy `project_checklist_items.evidence_path` non-null 0건 확인.
+- 파일럿: admin 로그인/비밀번호 보존 및 env 제거, 프로젝트 생성·상세·상태 전이·체크리스트·synthetic PDF 증빙 hash 왕복·변경/마일스톤, 401/CSRF/잘못된 입력/fail-closed PASS.
+- 백업: gzip 무결성 및 운영 DB를 덮어쓰지 않는 임시 DB 복구·sanity query·정확한 임시 DB 삭제 PASS.
+- 남음: 확정 hostname/DNS/인증서가 없어 공개 HTTPS reverse proxy는 외부 입력 대기. AnchorMind 기존 컨테이너/볼륨은 미수정.
 - 증거: `docker-compose.yml`, `.env.example`, `infra/docker/web.Dockerfile`,
   `apps/api/src/server.ts`, `scripts/validate-compose.mjs`, `docs/harness/RUNBOOK.md`.
 

@@ -2,6 +2,24 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-30 최종 감사·검증
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm compose:validate` | PASS | 7서비스·healthcheck·필수 환경·loopback·내부 포트 미노출 |
+| `pnpm test:backup` | PASS | docker compose 우선 및 docker-compose fallback 백업/복구 경로 |
+| `bash -n scripts/*.sh` | PASS | 운영 shell 스크립트 문법 |
+| `pnpm lint` | PASS | ESLint exit 0 |
+| `pnpm typecheck` | PASS | 9/10 workspace projects |
+| `pnpm test` | PASS | 10 files, 153 tests |
+| `pnpm test:pg` | PASS | 3 files, 43 tests; forced rollback 로그는 예상됨 |
+| `pnpm build` | PASS | 전체 workspace build, Next.js 정적 페이지 14/14 |
+| `git diff --check` | PASS | whitespace 오류 없음 |
+
+- NAS 실환경은 API/web loopback, 내부 DB/vector/cache 무노출, 5서비스 healthy/restart0, migration 및 legacy `evidence_path` 0건, 파일럿 CRUD/권한/증빙 hash 왕복, gzip 백업·임시 DB 복구/삭제까지 PASS했다.
+- 공개 HTTPS는 확정 hostname/DNS/cert가 없어 임의 구성하지 않았고 외부 입력 대기로 분리했다. AnchorMind 기존 컨테이너/볼륨은 미수정이다.
+- T-201 RAG/vector API 런타임 연결은 사용자 결정으로 DEFERRED이며 완료로 표시하지 않는다.
+
 ## 2026-08-30 T-212 GitHub/GitLab 원격 동기화
 
 | 명령 | 결과 | 핵심 |

@@ -4,6 +4,7 @@ packages:
   - packages/*
 allowBuilds:
   '@embedded-postgres/darwin-arm64': true
+  '@embedded-postgres/linux-x64': false
   '@embedded-postgres/windows-x64': true
   esbuild: true
   tesseract.js: true
