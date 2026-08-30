@@ -33,6 +33,12 @@ function user(username: string, role: 'USER' | 'REVIEWER' | 'ADMIN') {
   return { username, passwordHash: 's:h', displayName: username, role };
 }
 
+type TestPool = { query: (text: string, values?: unknown[]) => Promise<unknown> };
+
+function poolForTest(): TestPool {
+  return (store as unknown as { pool: TestPool }).pool;
+}
+
 describe('PgStore 마이그레이션', () => {
   it('재적용 시 멱등(0건)', async () => {
     const applied = await store.applyMigrations();
@@ -113,6 +119,16 @@ describe('PgStore 규칙 플로우', () => {
     expect((await store.listRules()).find((r) => r.id === 'pg.injected')?.status).toBe('draft');
   });
 
+  it('successful draft upsert refreshes the parent rule scope', async () => {
+    await store.upsertRule(baseRule('pg.scope', 1, 'draft'));
+    await store.upsertRule({ ...baseRule('pg.scope', 1, 'draft'), scope: { organization_type: 'school' } });
+
+    const parent = await poolForTest().query('SELECT scope, current_status FROM rules WHERE id=$1', ['pg.scope']) as {
+      rows: Array<{ scope: Record<string, string>; current_status: string }>;
+    };
+    expect(parent.rows[0]).toEqual({ scope: { organization_type: 'school' }, current_status: 'draft' });
+  });
+
   it('final revision은 REVIEWER가 정확한 다음 버전만 생성할 수 있음', async () => {
     const reviewer = await store.createUser(user('reviewer-revision', 'REVIEWER'));
 
@@ -158,13 +174,47 @@ describe('PgStore 규칙 플로우', () => {
     )).toBe(false);
   });
 
+  it('activation rolls back earlier supersession when a later transaction write throws', async () => {
+    const reviewer = await store.createUser(user('reviewer-rollback', 'REVIEWER'));
+    const admin = await store.createUser(user('admin-rollback', 'ADMIN'));
+    await store.createRuleRevision(baseRule('pg.rollback', 1, 'draft'), reviewer.id);
+    await store.approveRuleReview('pg.rollback', 1, reviewer.id, 'v1 원문 확인', true);
+    expect((await store.activateReviewedRule('pg.rollback', 1, admin.id, '2026-08-30')).ok).toBe(true);
+    await store.createRuleRevision(baseRule('pg.rollback', 2, 'draft'), reviewer.id);
+    await store.approveRuleReview('pg.rollback', 2, reviewer.id, 'v2 원문 확인', true);
+
+    const pool = poolForTest();
+    await pool.query(`CREATE OR REPLACE FUNCTION pg_test_fail_after_supersede() RETURNS trigger AS $$
+      BEGIN RAISE EXCEPTION 'forced activation rollback'; END;
+      $$ LANGUAGE plpgsql`);
+    await pool.query(`CREATE TRIGGER pg_test_fail_after_supersede
+      AFTER UPDATE OF status ON rule_versions
+      FOR EACH ROW WHEN (NEW.status = 'superseded')
+      EXECUTE FUNCTION pg_test_fail_after_supersede()`);
+    try {
+      await expect(store.activateReviewedRule('pg.rollback', 2, admin.id, '2026-08-30'))
+        .rejects.toThrow('forced activation rollback');
+    } finally {
+      await pool.query('DROP TRIGGER IF EXISTS pg_test_fail_after_supersede ON rule_versions');
+      await pool.query('DROP FUNCTION IF EXISTS pg_test_fail_after_supersede()');
+    }
+
+    expect(Object.fromEntries(
+      (await store.listRules()).filter((rule) => rule.id === 'pg.rollback').map((rule) => [rule.version, rule.status])
+    )).toEqual({ 1: 'active', 2: 'reviewed' });
+    expect((await store.listRuleReviews('pg.rollback', 1)).map((review) => review.action)).toEqual(['approve', 'activate']);
+    expect((await store.listRuleReviews('pg.rollback', 2)).map((review) => review.action)).toEqual(['approve']);
+    expect((await store.listAudit()).some((entry) =>
+      entry.action === 'rule.review.activate' && entry.targetId === 'pg.rollback@2'
+    )).toBe(false);
+  });
+
   it('conditional upsert cannot demote a version activated after its stale read', async () => {
     const reviewer = await store.createUser(user('reviewer-race', 'REVIEWER'));
     const admin = await store.createUser(user('admin-race', 'ADMIN'));
     await store.upsertRule(baseRule('pg.race', 1, 'draft'));
 
-    type TestPool = { query: (text: string, values?: unknown[]) => Promise<unknown> };
-    const pool = (store as unknown as { pool: TestPool }).pool;
+    const pool = poolForTest();
     const originalQuery = pool.query;
     let releaseRead!: () => void;
     let releaseWrite!: () => void;

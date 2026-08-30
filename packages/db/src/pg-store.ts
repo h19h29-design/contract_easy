@@ -283,8 +283,8 @@ export class PgStore {
       [`${draft.id}@${draft.version}`, draft.id, draft.version, JSON.stringify(draft), 'draft', now]
     );
     if ((written.rowCount ?? 0) === 0) return;
-    await this.pool.query("UPDATE rules SET current_status=$2, updated_at=$3 WHERE id=$1",
-      [draft.id, 'draft', now]);
+    await this.pool.query("UPDATE rules SET scope=$2::jsonb, current_status=$3, updated_at=$4 WHERE id=$1",
+      [draft.id, JSON.stringify(draft.scope ?? {}), 'draft', now]);
   }
 
   async listRules(): Promise<RuleDefinition[]> {
