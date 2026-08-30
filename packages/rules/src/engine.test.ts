@@ -157,6 +157,14 @@ describe('detectConflicts(관리자용 사전탐지)', () => {
 });
 
 describe('활성화 검증과 fail-closed 판정', () => {
+  it('동일값 eq 조건과 양끝 포함 범위를 허용한다', () => {
+    const equal = rule({ conditions: [
+      { field: 'estimated_price', operator: 'eq', value: 100 },
+      { field: 'estimated_price', operator: 'gte', value: 100 },
+      { field: 'estimated_price', operator: 'lte', value: 100 }
+    ] });
+    expect(validateActivatableRule(equal)).toEqual([]);
+  });
   it('인증정보 URL과 공집합 가격 조건을 거부한다', () => {
     const credentialed = rule({ source: { ...rule({}).source, url: 'https://user:pass@example.test/source' } });
     expect(validateActivatableRule(credentialed).map((x) => x.code)).toContain('INVALID_SOURCE');

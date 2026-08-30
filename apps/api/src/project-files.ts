@@ -35,10 +35,14 @@ export function writeEvidenceFile(input: {
     return { storedPath, created: false };
   }
   const temporaryPath = path.join(canonicalProjectDir, `.${input.sha256}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`);
+  let ownsTemporaryPath = false;
   try {
     const fd = fs.openSync(temporaryPath, 'wx', 0o600);
+    ownsTemporaryPath = true;
     try {
+      fs.chmodSync(temporaryPath, 0o600);
       fs.writeFileSync(fd, input.bytes);
+      if ((fs.fstatSync(fd).mode & 0o777) !== 0o600) throw new Error('PRIVATE_PATH_VIOLATION');
       fs.fsyncSync(fd);
     } finally {
       fs.closeSync(fd);
@@ -52,7 +56,7 @@ export function writeEvidenceFile(input: {
       return { storedPath, created: false };
     }
   } finally {
-    if (fs.existsSync(temporaryPath)) fs.unlinkSync(temporaryPath);
+    if (ownsTemporaryPath && fs.existsSync(temporaryPath)) fs.unlinkSync(temporaryPath);
   }
 }
 

@@ -18,7 +18,7 @@ const ALLOWED_SCOPE_KEYS = new Set([
   'government_materials', 'construction_waste'
 ]);
 
-const ALLOWED_PRICE_OPERATORS = new Set(['gt', 'gte', 'lt', 'lte', 'between']);
+const ALLOWED_PRICE_OPERATORS = new Set(['gt', 'gte', 'lt', 'lte', 'eq', 'between']);
 
 export function validateActivatableRule(
   rule: RuleDefinition,

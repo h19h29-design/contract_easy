@@ -96,7 +96,7 @@ describe('엄격한 FileStore 규칙 검토 계약', () => {
   });
 
   it('비활성화된 사용자는 직접 승인에서 인증되지 않는다', () => {
-    const { store, dir, reviewer } = ruleStore();
+    const { dir, reviewer } = ruleStore();
     const file = path.join(dir, 'db.json');
     const db = JSON.parse(fs.readFileSync(file, 'utf8')) as DbData;
     db.users.find((user) => user.id === reviewer.id)!.disabled = true;
@@ -111,6 +111,19 @@ describe('엄격한 FileStore 규칙 검토 계약', () => {
     store.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true);
     expect(store.activateReviewedRule('safe', 1, admin.id, '2026-08-30')).toMatchObject({ ok: true, rule: { status: 'active' } });
     expect(store.listRuleReviews('safe', 1).map((r) => r.action)).toEqual(['approve', 'activate']);
+  });
+
+  it('revision ingress와 activation 반환값 mutation은 reload에 남지 않는다', () => {
+    const { store, dir, reviewer, admin } = ruleStore();
+    const revision = baseRule('safe', 2, 'draft');
+    expect(store.createRuleRevision(revision, reviewer.id).ok).toBe(true);
+    revision.output.method = '외부 변경';
+    expect(store.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true).ok).toBe(true);
+    const activated = store.activateReviewedRule('safe', 1, admin.id, '2026-08-30');
+    if (activated.ok) activated.rule.output.method = '외부 변경';
+    store.audit(null, 'flush', 'test', null);
+    expect(new FileStore(dir).listRules().find((rule) => rule.id === 'safe' && rule.version === 1)?.output.method).toBe('입찰');
+    expect(new FileStore(dir).listRules().find((rule) => rule.id === 'safe' && rule.version === 2)?.output.method).toBe('입찰');
   });
 
   it('같은 규칙의 reviewed v2는 v1을 supersede하고 activate', () => {

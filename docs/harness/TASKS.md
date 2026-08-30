@@ -175,10 +175,10 @@
 - 임의 condition JSON 없이 method-band 입력만으로 다음 draft revision을 생성한다. legacy rule action API는 제거했다.
 - production에서 WEB_ORIGIN과 빈 사용자 테이블의 ADMIN_INITIAL_PASSWORD를 강제하고, credential CORS를 단일 origin으로 잠근다.
 - 검증: API+FileStore 44/44, PG 통합 40/40, api/web/db typecheck PASS. malformed 직접 호출 fail-closed, source-side active→target draft sync proof, 단일 HTTP(S) CORS origin 검증 포함.
-- 증거: `.superpowers/sdd/2026-08-30-contract-workspace-implementation/task-8-report.md`, `docs/harness/TEST_RESULTS.md`
+- 증거: commits `921b5c6..e1831a5`, `apps/api/src/server.test.ts`, `tests/integration/api-pg.pg.test.ts`, `docs/harness/TEST_RESULTS.md`
 
 ## T-210 공사계약 업무공간 운영 완성 — DONE
 - 규칙 안전성·2인 승인: `packages/shared/src/{date,file,types}.ts`, `packages/rules/src/engine.ts`, `packages/db/src/{app-store,store,pg-store}.ts`.
 - 프로젝트·비공개 증빙·API: `apps/api/src/{server,project-files}.ts`; 상태/변경/일정/증빙은 append-only 보존, owner/ADMIN 및 project/resource 소속 검증 적용.
 - 최소 UI와 회귀: `apps/web/app/admin/rules/page.tsx`, `apps/web/app/workspace/projects/[id]/page.tsx`, `apps/web/app/globals.css`, `tests/e2e/flows.spec.ts`.
-- 전체 게이트(2026-08-30): `pnpm lint`, `pnpm typecheck`, `pnpm test`(10 files, 133 tests), `pnpm test:pg`(3 files, 42 tests), `pnpm build`, `pnpm test:e2e`(7 tests) 모두 PASS. 상세는 `docs/harness/TEST_RESULTS.md` 및 `.superpowers/sdd/2026-08-30-contract-workspace-implementation/task-12-report.md`.
+- 전체 게이트 증거는 `docs/harness/TEST_RESULTS.md`와 scoped commits에 기록한다.

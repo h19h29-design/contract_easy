@@ -470,7 +470,7 @@ export class FileStore implements AppStore {
       return { ok: false, code: 'VERSION_CONFLICT' };
     }
     const now = isoNow();
-    const rule: StoredRule = { ...def, status: 'draft', createdAt: def.createdAt || now, updatedAt: now };
+    const rule: StoredRule = { ...cloneJson(def), status: 'draft', createdAt: def.createdAt || now, updatedAt: now };
     this.data.rules.push(rule);
     this.appendAudit(actorUserId, 'rule.revision.create', 'rule', ruleVersionId(rule), { version: rule.version });
     this.flush();
@@ -546,7 +546,7 @@ export class FileStore implements AppStore {
     this.appendRuleReview(rule, adminId, 'activate', null, at);
     this.appendAudit(adminId, 'rule.review.activate', 'rule', ruleVersionId(rule), { version, asOfDate });
     this.flush();
-    return { ok: true, rule };
+    return { ok: true, rule: cloneJson(rule) };
   }
 
   listRuleReviews(ruleId: string, version: number): RuleReviewRecord[] {
