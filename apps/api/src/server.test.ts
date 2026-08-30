@@ -151,6 +151,23 @@ describe('인증·프로젝트 흐름', () => {
   });
 });
 
+describe('FileStore disabled session boundary', () => {
+  it('enabled 때 만든 session도 reload 뒤 disabled user를 인증하지 않는다', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scg-disabled-session-'));
+    const fileStore = new FileStore(dir);
+    const user = fileStore.createUser({ username: 'disabled-user', passwordHash: 's:fixture', displayName: 'Disabled', role: 'USER' });
+    fileStore.createSession('disabled-session', user.id, 'disabled-csrf', 60_000);
+    const dbPath = path.join(dir, 'db.json');
+    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8')) as { users: Array<{ id: string; disabled: boolean }> };
+    db.users.find((candidate) => candidate.id === user.id)!.disabled = true;
+    fs.writeFileSync(dbPath, JSON.stringify(db), 'utf8');
+    const built = await buildApp({ store: new FileStore(dir), retriever: new HybridRetriever({ chunks: [], versions: [] }) });
+    try {
+      expect((await built.app.inject({ method: 'POST', url: '/api/projects', cookies: { scg_session: 'disabled-session' }, headers: { 'x-csrf-token': 'disabled-csrf' }, payload: { name: 'x', contractCategory: 'construction', estimatedPrice: 1, organizationType: 'school' } })).statusCode).toBe(401);
+    } finally { await built.app.close(); fs.rmSync(dir, { recursive: true, force: true }); }
+  });
+});
+
 describe('프로젝트 생명주기 API', () => {
   let csrfToken = '';
   let sessionToken = '';

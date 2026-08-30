@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resolveEvidenceDownload, writeEvidenceFile } from './project-files.js';
 
 describe('private evidence files', () => {
@@ -90,5 +90,25 @@ describe('private evidence files', () => {
       fs.mkdirSync(path.dirname(target), { recursive: true }); setup(target);
       expect(() => writeEvidenceFile({ privateRoot: root, projectId: 'p3', bytes, sha256, ext: 'pdf' })).toThrow('PRIVATE_PATH_VIOLATION');
     }
+  });
+
+  it('unowned temp collision은 sentinel을 남기고 final symlink를 거부한다', () => {
+    const root = privateRoot();
+    const bytes = Buffer.from('%PDF-1.4\n');
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1234);
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    try {
+      const dir = path.join(root, 'p4'); fs.mkdirSync(dir);
+      const temp = path.join(dir, `.${sha256}.${process.pid}.1234.8.tmp`);
+      fs.writeFileSync(temp, 'sentinel');
+      expect(() => writeEvidenceFile({ privateRoot: root, projectId: 'p4', bytes, sha256, ext: 'pdf' })).toThrow();
+      expect(fs.readFileSync(temp, 'utf8')).toBe('sentinel');
+      fs.unlinkSync(temp);
+      const target = path.join(dir, `${sha256}.pdf`);
+      fs.symlinkSync('/dev/null', target);
+      expect(() => writeEvidenceFile({ privateRoot: root, projectId: 'p4', bytes, sha256, ext: 'pdf' })).toThrow('PRIVATE_PATH_VIOLATION');
+      expect(fs.lstatSync(target).isSymbolicLink()).toBe(true);
+    } finally { now.mockRestore(); random.mockRestore(); }
   });
 });
