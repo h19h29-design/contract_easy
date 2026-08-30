@@ -17,6 +17,13 @@ import { attachmentDisposition, resolveEvidenceDownload, writeEvidenceFile } fro
 
 const SESSION_COOKIE = 'scg_session';
 
+export function resolveApiListenHost(
+  nodeEnv = process.env.NODE_ENV,
+  configuredHost = process.env.API_HOST
+): string {
+  return configuredHost || (nodeEnv === 'production' ? '0.0.0.0' : '127.0.0.1');
+}
+
 export interface AppContext {
   store: AppStore;
   retriever: HybridRetriever | null;
@@ -787,9 +794,10 @@ export const DEFAULT_CHECKLIST_TEMPLATES: Record<string, string[]> = Object.from
 const isMain = process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]));
 if (isMain) {
   const port = Number(process.env.API_PORT ?? 8787);
+  const host = resolveApiListenHost();
   buildApp().then(({ app }) =>
-    app.listen({ port, host: '127.0.0.1' }).then(() => {
-      console.log(`API listening on http://localhost:${port}`);
+    app.listen({ port, host }).then(() => {
+      console.log(`API listening on http://${host}:${port}`);
     })
   );
 }

@@ -5,12 +5,14 @@ services:
     build:
       context: .
       dockerfile: infra/docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL required}
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${API_URL:-http://api:8787}
-      - WEB_PORT=${WEB_PORT:-3000}
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
     ports:
-      - "${WEB_PORT:-3000}:3000"
+      - "${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"
     depends_on:
       api:
         condition: service_healthy
@@ -27,9 +29,12 @@ services:
       dockerfile: infra/docker/api.Dockerfile
     environment:
       - NODE_ENV=production
+      - API_HOST=0.0.0.0
       - API_PORT=8787
-      - DATABASE_URL=${DATABASE_URL:-}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL required}
       - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET required}
+      - WEB_ORIGIN=${WEB_ORIGIN:?WEB_ORIGIN required}
+      - ADMIN_INITIAL_PASSWORD=${ADMIN_INITIAL_PASSWORD:-}
       - SEN_CONTRACT_DATA_ROOT=/data
       - QDRANT_URL=http://qdrant:6333
       - VALKEY_URL=redis://valkey:6379
@@ -38,9 +43,9 @@ services:
       - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-none}
       - EMBEDDING_API_KEY=${EMBEDDING_API_KEY:-}
     ports:
-      - "${API_PORT:-8787}:8787"
+      - "${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${API_PORT:-8787}:8787"
     volumes:
-      - ${SEN_CONTRACT_DATA_ROOT:-./data}:/data
+      - ${SEN_CONTRACT_DATA_ROOT:?SEN_CONTRACT_DATA_ROOT required}:/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,8 +66,6 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-sen}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
       - POSTGRES_DB=${POSTGRES_DB:-sen_contract}
-    ports:
-      - "${POSTGRES_PORT:-15432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -74,8 +77,6 @@ services:
 
   qdrant:
     image: qdrant/qdrant:v1.12.4
-    ports:
-      - "${QDRANT_PORT:-16333}:6333"
     volumes:
       - qdrant_data:/qdrant/storage
     healthcheck:
@@ -87,8 +88,6 @@ services:
 
   valkey:
     image: valkey/valkey:8.0-alpine
-    ports:
-      - "${VALKEY_PORT:-16379}:6379"
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
@@ -106,7 +105,7 @@ services:
       - CRAWLER_USER_AGENT=${CRAWLER_USER_AGENT}
       - CRAWL_ALLOW_ATTACHMENTS=false
     volumes:
-      - ${SEN_CONTRACT_DATA_ROOT:-./data}:/data
+      - ${SEN_CONTRACT_DATA_ROOT:?SEN_CONTRACT_DATA_ROOT required}:/data
     command: ["node", "dist/cli.js", "incremental"]
     restart: "no"
 
@@ -118,7 +117,7 @@ services:
     environment:
       - SEN_CONTRACT_DATA_ROOT=/data
     volumes:
-      - ${SEN_CONTRACT_DATA_ROOT:-./data}:/data
+      - ${SEN_CONTRACT_DATA_ROOT:?SEN_CONTRACT_DATA_ROOT required}:/data
     command: ["node", "../ingest/dist/cli.js", "all"]
     restart: "no"
 

@@ -182,3 +182,12 @@
 - 프로젝트·비공개 증빙·API: `apps/api/src/{server,project-files}.ts`; 상태 전이·변경·일정·증빙 교체 이력은 append-only이며 현재 상태/증빙 참조는 통제된 작업으로만 변경, owner/ADMIN 및 project/resource 소속 검증 적용.
 - 최소 UI와 회귀: `apps/web/app/admin/rules/page.tsx`, `apps/web/app/workspace/projects/[id]/page.tsx`, `apps/web/app/globals.css`, `tests/e2e/flows.spec.ts`.
 - 전체 게이트 증거는 `docs/harness/TEST_RESULTS.md`와 scoped commits에 기록한다.
+
+## T-211 운영 배포 안전장치·NAS 실검증 — IN_PROGRESS
+- 완료: 운영 API의 PostgreSQL/WEB_ORIGIN 필수 주입, 최초 관리자 비밀번호 전달, 컨테이너 외부 API 수신,
+  웹 build-time 공개 API URL, NAS 데이터 절대경로 강제, 내부 PostgreSQL/Qdrant/Valkey host publish 제거,
+  웹/API 기본 loopback bind, `db:migrate` 명령과 정적 Compose 회귀 검증을 추가했다.
+- 남음: NAS Container Manager 기동, `docker compose config/up`, 기존 DB `evidence_path` 0건,
+  HTTPS 역방향 프록시, 백업·복구 리허설의 실제 환경 검증.
+- 증거: `docker-compose.yml`, `.env.example`, `infra/docker/web.Dockerfile`,
+  `apps/api/src/server.ts`, `scripts/validate-compose.mjs`, `docs/harness/RUNBOOK.md`.

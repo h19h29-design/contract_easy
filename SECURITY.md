@@ -3,6 +3,7 @@
 ## 시크릿 관리
 - 모든 비밀은 `.env`(커밋 금지)로 주입. 템플릿은 `.env.example`.
 - `SESSION_SECRET` 미설정 시 개발용 임시 키 생성 + 콘솔 경고. 운영에서는 필수.
+- 운영 초기 관리자 비밀번호는 빈 사용자 DB의 최초 기동에만 주입하고, 생성 완료 후 `.env`에서 제거해 컨테이너를 재생성한다.
 - API 키(LLM/임베딩)는 서버 프로세스에만 존재. 브라우저 응답·로그에 노출 금지.
 
 ## 인증·권한
@@ -34,6 +35,8 @@
 - 보안 헤더: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy.
 - Rate limit: 공개 API IP 기반(@fastify/rate-limit).
 - 감사로그: 인증·규칙 승인·프로젝트 변경 등 관리자/업무 변경 전부 `audit_logs` 기록.
+- 운영 Compose는 웹/API 포트를 기본적으로 host loopback에만 게시하고 Synology HTTPS 역방향 프록시를 경계로 사용한다.
+- PostgreSQL/Qdrant/Valkey에는 host publish를 두지 않는다.
 
 ## 데이터 분리
 - 공개 corpus(`data/raw`, `data/normalized`, 벡터 컬렉션 public-*)와

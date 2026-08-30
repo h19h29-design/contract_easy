@@ -2,6 +2,22 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-30 T-211 운영 배포 안전장치
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm compose:validate` | PASS | 운영 필수 환경, NAS 절대경로, build-time API URL, 내부 서비스 무노출, 웹/API loopback bind, db:migrate 명령 검증 |
+| `pnpm exec vitest run apps/api/src/server.test.ts -t "production API는" --reporter=verbose` | PASS | 1 passed — production 기본 `0.0.0.0`, 개발 기본 loopback, 명시 override 보존 |
+| `pnpm lint` | PASS | ESLint exit 0 |
+| `pnpm typecheck` | PASS | 9/10 workspace projects `tsc --noEmit` 성공 |
+| `pnpm test -- --reporter=dot` | PASS | 10 files, 153 tests |
+| `pnpm test:pg` | PASS | embedded PostgreSQL, 3 files, 43 tests; forced rollback 로그는 예상됨 |
+| `pnpm build` | PASS | 전체 workspace build, Next.js 정적 페이지 14/14 |
+| `NEXT_STANDALONE=1 NEXT_PUBLIC_API_URL=https://api.example.test pnpm --filter web build` | PASS | Docker용 standalone build, 정적 페이지 14/14 및 `apps/web/.next/standalone/apps/web/server.js` 확인 |
+
+- TDD RED: API 리스너 테스트는 구현 전 `resolveApiListenHost` 부재로 1건 실패했다. 강화한 Compose 검증은 필수 환경·build arg·NAS 경로·내부 포트·db:migrate 누락 10건, 후속 loopback bind 누락 2건을 각각 재현한 뒤 GREEN으로 전환했다.
+- `docker compose config/up`은 Mac에 Docker가 없고 NAS Container Manager가 중지 상태여서 실행하지 않았다. 운영 `DATABASE_URL`도 아직 구성하지 않아 legacy `evidence_path` 건수는 확인하지 않았다. 두 항목을 PASS로 간주하지 않는다.
+
 ## 2026-08-30 Final review fix wave
 
 | 명령 | 결과 | 핵심 |

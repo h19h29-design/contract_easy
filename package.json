@@ -23,6 +23,7 @@
     "dev:api": "tsx watch apps/api/src/server.ts",
     "dev:web": "pnpm --filter web dev",
     "db:generate": "drizzle-kit generate --config=packages/db/drizzle.config.ts",
+    "db:migrate": "tsx packages/db/src/migrate.ts",
     "store:reset": "node scripts/reset-store.mjs",
     "compose:validate": "node scripts/validate-compose.mjs",
     "test:pg": "vitest run -c vitest.pg.config.ts",

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { buildApp, DEFAULT_CHECKLIST_TEMPLATES } from './server.js';
+import { buildApp, DEFAULT_CHECKLIST_TEMPLATES, resolveApiListenHost } from './server.js';
 import { FileStore } from '@sen/db';
 import { getConfig } from '@sen/config';
 import { HybridRetriever } from '@sen/retrieval';
@@ -568,6 +568,12 @@ describe('규칙 관리자 API의 엄격한 승인 흐름', () => {
 });
 
 describe('운영 기동 안전장치', () => {
+  it('production API는 기본적으로 컨테이너 외부 연결을 수신하고 개발은 loopback을 유지한다', () => {
+    expect(resolveApiListenHost('production')).toBe('0.0.0.0');
+    expect(resolveApiListenHost('development')).toBe('127.0.0.1');
+    expect(resolveApiListenHost('production', '127.0.0.1')).toBe('127.0.0.1');
+  });
+
   it('production 빈 저장소는 ADMIN_INITIAL_PASSWORD 없이는 기동을 거부한다', async () => {
     const originalNodeEnv = process.env.NODE_ENV;
     const originalWebOrigin = process.env.WEB_ORIGIN;

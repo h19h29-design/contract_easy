@@ -46,15 +46,27 @@ pnpm test:e2e
 `DEPLOY_TO_NAS=true`를 확인한 뒤 실행한다.
 ```bash
 cp .env.example .env
+pnpm compose:validate
 docker compose config
-docker compose up -d
+docker compose up -d --build
 docker compose ps
-pnpm db:migrate
+docker compose run --rm api node packages/db/dist/migrate.js
 ```
 
-- `SESSION_SECRET`은 32바이트 이상 무작위 값으로 설정한다.
-- `SEN_CONTRACT_DATA_ROOT`는 NAS 공유 볼륨으로 지정한다.
-- PostgreSQL, Qdrant, Valkey 포트는 외부에 노출하지 않는다.
+- `.env`의 빈 필수값(`SESSION_SECRET`, `POSTGRES_PASSWORD`, `DATABASE_URL`, `WEB_ORIGIN`,
+  `NEXT_PUBLIC_API_URL`, `SEN_CONTRACT_DATA_ROOT`)을 먼저 채운다. 비밀값은 Git·로그·명령 인자에 넣지 않는다.
+- `NEXT_PUBLIC_API_URL`은 웹 이미지 빌드 때 고정되므로 URL 변경 후에는 `web` 이미지를 다시 빌드한다.
+- `SEN_CONTRACT_DATA_ROOT`는 NAS 공유 볼륨의 절대 경로로 지정한다.
+- API는 PostgreSQL 모드를 필수로 사용하며 기동 시 마이그레이션을 자동 적용한다. 위 명시적 명령은 사전 확인·재실행용이다.
+- 최초 기동에만 `ADMIN_INITIAL_PASSWORD`를 비밀 관리 경로에서 주입한다. 관리자 생성 후 값을 비우고 컨테이너를 재생성한다.
+- 웹/API 호스트 포트는 기본 `127.0.0.1` 바인딩이다. Synology 역방향 프록시에서 두 포트를 HTTPS 호스트명으로 연결한다.
+- PostgreSQL, Qdrant, Valkey는 Compose 내부 네트워크에서만 접근하며 호스트 포트를 노출하지 않는다.
+- 기존 운영 DB가 있다면 배포 전에 아래 결과가 `0`인지 확인한다. 0이 아니면 배포를 중단하고 보존 migration을 먼저 설계한다.
+
+```bash
+docker compose exec -T postgres sh -c \
+  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SELECT count(*) FROM project_checklist_items WHERE evidence_path IS NOT NULL;"'
+```
 
 ## 5. 백업과 복구
 ```bash
@@ -70,8 +82,11 @@ scripts/restore-db.sh backups/xxxx.sql.gz
 
 ## 7. 배포 전 보안 점검
 - [ ] `SESSION_SECRET` 32바이트 이상
-- [ ] 기본 관리자 비밀번호 변경
+- [ ] 최초 관리자 생성 후 `ADMIN_INITIAL_PASSWORD` 제거 및 컨테이너 재생성
+- [ ] `WEB_ORIGIN`/`NEXT_PUBLIC_API_URL` 공개 HTTPS 주소 일치
+- [ ] 웹/API loopback 바인딩 + Synology HTTPS 역방향 프록시
 - [ ] PostgreSQL/Qdrant/Valkey 외부 비노출
 - [ ] `/admin` 추가 인증 또는 접근 제어
 - [ ] NAS 볼륨과 백업 크론 확인
+- [ ] 기존 DB `evidence_path IS NOT NULL` 결과 0
 - [ ] 복구 리허설 1회
