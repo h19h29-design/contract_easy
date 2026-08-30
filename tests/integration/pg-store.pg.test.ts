@@ -311,6 +311,35 @@ describe('PgStore 사용자·세션·프로젝트', () => {
   });
 });
 
+describe('PgStore 프로젝트 생명주기', () => {
+  it('PG 상태 전이와 변경행이 한 트랜잭션으로 저장', async () => {
+    const owner = await store.createUser(user('pg-lifecycle-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: 'PG 생명주기', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, {});
+
+    const result = await store.transitionProjectStatus(project.id, 'contracting', owner.id, '계약 시작');
+
+    expect(result).toMatchObject({ ok: true, project: { status: 'contracting' } });
+    expect((await store.listProjectChanges(project.id))[0]).toMatchObject({
+      changeType: 'status', before: { status: 'planning' }, after: { status: 'contracting' }, approvedBy: owner.id
+    });
+  });
+
+  it('PG event due_at을 서울 날짜로 왕복', async () => {
+    const owner = await store.createUser(user('pg-event-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: 'PG 일정', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, {});
+
+    await store.addProjectEvent(project.id, 'inspection', '검사', '2026-12-20', owner.id);
+
+    expect((await store.listProjectEvents(project.id))[0]?.dueDate).toBe('2026-12-20');
+  });
+});
+
 describe('팩토리 createStore', () => {
   it('DATABASE_URL 지정 시 PgStore 반환', async () => {
     const s = await createStore({ databaseUrl: url, appStoreDir: './data/app-store' });

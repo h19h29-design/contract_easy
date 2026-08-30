@@ -1,7 +1,8 @@
 import type { AttachmentRef, Chunk, RuleDefinition, SourceVersion } from '@sen/shared';
 import type {
   AnswerReportRecord, AuditLogRecord, ChecklistItemRecord,
-  CrawlRunRecord, ProjectRecord, RuleActionResult, RuleReviewRecord,
+  CrawlRunRecord, ProjectChangeRecord, ProjectEventKind, ProjectEventRecord,
+  ProjectRecord, ProjectStatus, ProjectTransitionResult, RuleActionResult, RuleReviewRecord,
   SessionRecord, StepRecord, UserRecord
 } from './store.js';
 
@@ -69,7 +70,12 @@ export interface AppStore {
   checklistOf(projectId: string): MaybeP<ChecklistItemRecord[]>;
   toggleChecklist(itemId: string, done: boolean): MaybeP<ChecklistItemRecord | null>;
   setStepStatus(stepId: string, status: StepRecord['status']): MaybeP<StepRecord | null>;
+  transitionProjectStatus(projectId: string, next: ProjectStatus, actorUserId: string, reason: string): MaybeP<ProjectTransitionResult>;
   addProjectChange(projectId: string, changeType: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string): MaybeP<string>;
+  addProjectChange(projectId: string, changeType: Exclude<ProjectChangeRecord['changeType'], 'status'>, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string, actorUserId: string): MaybeP<ProjectChangeRecord | null>;
+  listProjectChanges(projectId: string): MaybeP<ProjectChangeRecord[]>;
+  addProjectEvent(projectId: string, kind: ProjectEventKind, title: string, dueDate: string, actorUserId: string): MaybeP<ProjectEventRecord | null>;
+  listProjectEvents(projectId: string): MaybeP<ProjectEventRecord[]>;
 
   audit(actorUserId: string | null, action: string, targetType: string, targetId: string | null, detail?: Record<string, unknown> | null, ip?: string | null): MaybeP<void>;
   listAudit(limit?: number): MaybeP<AuditLogRecord[]>;

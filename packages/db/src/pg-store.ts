@@ -3,14 +3,15 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import {
-  stableId, isoNow,
+  stableId, isoNow, isIsoDate, seoulDate,
   type AttachmentRef, type Chunk, type RuleDefinition, type SourceVersion
 } from '@sen/shared';
 import { detectConflicts, validateActivatableRule } from '@sen/rules';
-import { STAGES } from './store.js';
+import { NEXT_PROJECT_STATUS, STAGES } from './store.js';
 import type {
   AnswerReportRecord, AuditLogRecord, ChecklistItemRecord,
-  CrawlRunRecord, ProjectRecord, SessionRecord,
+  CrawlRunRecord, ProjectChangeRecord, ProjectEventKind, ProjectEventRecord,
+  ProjectRecord, ProjectStatus, ProjectTransitionResult, SessionRecord,
   RuleActionResult, RuleReviewRecord, StepRecord, UserRecord
 } from './store.js';
 import type { SourceListItem } from './app-store.js';
@@ -685,7 +686,8 @@ export class PgStore {
   async updateProject(id: string, patch: Partial<ProjectRecord>): Promise<ProjectRecord | null> {
     const cur = await this.getProject(id);
     if (!cur) return null;
-    const next: ProjectRecord = { ...cur, ...patch, updatedAt: isoNow() };
+    // 상태는 transitionProjectStatus만 변경할 수 있다.
+    const next: ProjectRecord = { ...cur, ...patch, status: cur.status, updatedAt: isoNow() };
     await this.pool.query(
       `UPDATE contract_projects SET name=$2, contract_category=$3, estimated_price=$4,
          organization_type=$5, status=$6, wizard_input=$7::jsonb, updated_at=$8
@@ -693,7 +695,7 @@ export class PgStore {
       [id, next.name, next.contractCategory, next.estimatedPrice, next.organizationType,
         next.status, next.wizardInput ? JSON.stringify(next.wizardInput) : null, next.updatedAt]
     );
-    return next;
+    return this.getProject(id);
   }
 
   async stepsOf(projectId: string): Promise<StepRecord[]> {
@@ -751,15 +753,141 @@ export class PgStore {
     };
   }
 
-  async addProjectChange(projectId: string, changeType: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string): Promise<string> {
-    const id = stableId('chg', projectId, changeType, isoNow());
-    await this.pool.query(
-      `INSERT INTO project_changes (id, project_id, change_type, "before", "after", reason, at)
-       VALUES ($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7)`,
-      [id, projectId, changeType, before, after, reason, isoNow()]
+  async transitionProjectStatus(
+    projectId: string,
+    next: ProjectStatus,
+    actorUserId: string,
+    reason: string
+  ): Promise<ProjectTransitionResult> {
+    const client = await this.beginTx();
+    try {
+      const { rows } = await client.query<Row>(
+        'SELECT * FROM contract_projects WHERE id=$1 FOR UPDATE', [projectId]
+      );
+      const row = rows[0];
+      if (!row) {
+        await rollback(client);
+        return { ok: false, code: 'NOT_FOUND' };
+      }
+      const current = mapProjectRow(row);
+      if (NEXT_PROJECT_STATUS[current.status] !== next) {
+        await rollback(client);
+        return { ok: false, code: 'INVALID_TRANSITION' };
+      }
+
+      const at = isoNow();
+      const change: ProjectChangeRecord = {
+        id: stableId('chg', projectId, 'status', at), projectId, changeType: 'status',
+        before: { status: current.status }, after: { status: next }, reason, approvedBy: actorUserId, at
+      };
+      const updated = await client.query<Row>(
+        'UPDATE contract_projects SET status=$2, updated_at=$3 WHERE id=$1 RETURNING *',
+        [projectId, next, at]
+      );
+      await client.query(
+        `INSERT INTO project_changes (id, project_id, change_type, "before", "after", reason, approved_by, at)
+         VALUES ($1,$2,'status',$3::jsonb,$4::jsonb,$5,$6,$7)`,
+        [change.id, projectId, JSON.stringify(change.before), JSON.stringify(change.after), reason, actorUserId, at]
+      );
+      await insertAudit(client, actorUserId, 'project.status.transition', 'project', projectId, {
+        previousStatus: current.status, nextStatus: next, changeId: change.id, reason
+      }, at);
+      return commitResult(client, {
+        ok: true,
+        project: mapProjectRow(updated.rows[0]!),
+        change: cloneProjectChange(change)
+      });
+    } catch (err) {
+      await rollback(client);
+      throw err;
+    }
+  }
+
+  async addProjectChange(projectId: string, changeType: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string): Promise<string>;
+  async addProjectChange(projectId: string, changeType: Exclude<ProjectChangeRecord['changeType'], 'status'>, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string, actorUserId: string): Promise<ProjectChangeRecord | null>;
+  async addProjectChange(
+    projectId: string,
+    changeType: string,
+    before: Record<string, unknown> | null,
+    after: Record<string, unknown> | null,
+    reason: string,
+    actorUserId?: string
+  ): Promise<string | ProjectChangeRecord | null> {
+    const client = await this.beginTx();
+    try {
+      const project = await client.query('SELECT id FROM contract_projects WHERE id=$1', [projectId]);
+      if (!project.rows[0]) {
+        await rollback(client);
+        return actorUserId === undefined ? '' : null;
+      }
+      const at = isoNow();
+      const approvedBy = actorUserId ?? 'system';
+      const change: ProjectChangeRecord = {
+        id: stableId('chg', projectId, changeType, at), projectId,
+        changeType: changeType as ProjectChangeRecord['changeType'],
+        before: cloneJsonRecord(before), after: cloneJsonRecord(after), reason, approvedBy, at
+      };
+      await client.query(
+        `INSERT INTO project_changes (id, project_id, change_type, "before", "after", reason, approved_by, at)
+         VALUES ($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8)`,
+        [change.id, projectId, changeType, JSON.stringify(change.before), JSON.stringify(change.after), reason, approvedBy, at]
+      );
+      await insertAudit(client, approvedBy, 'project.change', 'project_change', change.id, { projectId, changeType, reason }, at);
+      await commit(client);
+      return actorUserId === undefined ? change.id : cloneProjectChange(change);
+    } catch (err) {
+      await rollback(client);
+      throw err;
+    }
+  }
+
+  async listProjectChanges(projectId: string): Promise<ProjectChangeRecord[]> {
+    const { rows } = await this.pool.query<Row>(
+      'SELECT * FROM project_changes WHERE project_id=$1 ORDER BY at DESC', [projectId]
     );
-    await this.audit('system', 'project.change', 'project_change', id, { projectId, changeType, reason });
-    return id;
+    return rows.map(mapProjectChangeRow);
+  }
+
+  async addProjectEvent(
+    projectId: string,
+    kind: ProjectEventKind,
+    title: string,
+    dueDate: string,
+    actorUserId: string
+  ): Promise<ProjectEventRecord | null> {
+    if (!isIsoDate(dueDate)) return null;
+    const client = await this.beginTx();
+    try {
+      const project = await client.query('SELECT id FROM contract_projects WHERE id=$1', [projectId]);
+      if (!project.rows[0]) {
+        await rollback(client);
+        return null;
+      }
+      const createdAt = isoNow();
+      const event: ProjectEventRecord = {
+        id: stableId('evt', projectId, kind, title, dueDate, createdAt), projectId, kind, title, dueDate, createdAt
+      };
+      await client.query(
+        `INSERT INTO project_events (id, project_id, kind, title, due_at, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [event.id, projectId, kind, title, `${dueDate}T00:00:00+09:00`, createdAt]
+      );
+      await insertAudit(client, actorUserId, 'project.event.create', 'project_event', event.id, {
+        projectId, kind, title, dueDate
+      }, createdAt);
+      await commit(client);
+      return { ...event };
+    } catch (err) {
+      await rollback(client);
+      throw err;
+    }
+  }
+
+  async listProjectEvents(projectId: string): Promise<ProjectEventRecord[]> {
+    const { rows } = await this.pool.query<Row>(
+      'SELECT * FROM project_events WHERE project_id=$1 ORDER BY created_at DESC', [projectId]
+    );
+    return rows.map(mapProjectEventRow);
   }
 
   /* ---------- audit ---------- */
@@ -984,8 +1112,37 @@ function mapProjectRow(r: Row): ProjectRecord {
     organizationType: String(r.organization_type),
     status: (['planning', 'contracting', 'working', 'completed', 'warranty'].includes(String(r.status))
       ? String(r.status) : 'planning') as ProjectRecord['status'],
-    wizardInput: (r.wizard_input as ProjectRecord['wizardInput'] | null) ?? null,
+    wizardInput: cloneJson((r.wizard_input as ProjectRecord['wizardInput'] | null) ?? null),
     createdAt: iso(r.created_at), updatedAt: iso(r.updated_at)
+  };
+}
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function cloneJsonRecord(value: Record<string, unknown> | null): Record<string, unknown> | null {
+  return value === null ? null : cloneJson(value);
+}
+
+function cloneProjectChange(change: ProjectChangeRecord): ProjectChangeRecord {
+  return { ...change, before: cloneJsonRecord(change.before), after: cloneJsonRecord(change.after) };
+}
+
+function mapProjectChangeRow(r: Row): ProjectChangeRecord {
+  return {
+    id: String(r.id), projectId: String(r.project_id),
+    changeType: String(r.change_type) as ProjectChangeRecord['changeType'],
+    before: cloneJsonRecord((r.before as Record<string, unknown> | null) ?? null),
+    after: cloneJsonRecord((r.after as Record<string, unknown> | null) ?? null),
+    reason: String(r.reason ?? ''), approvedBy: String(r.approved_by ?? 'system'), at: iso(r.at)
+  };
+}
+
+function mapProjectEventRow(r: Row): ProjectEventRecord {
+  return {
+    id: String(r.id), projectId: String(r.project_id), kind: String(r.kind) as ProjectEventKind,
+    title: String(r.title), dueDate: r.due_at ? seoulDate(new Date(iso(r.due_at))) : '', createdAt: iso(r.created_at)
   };
 }
 
