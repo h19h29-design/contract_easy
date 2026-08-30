@@ -141,10 +141,10 @@
 - 증거: docs/harness/UNCOLLECTED.md (2차 갱신)
 
 ## NEXT (다음 세션 권장)
-1. **T-201 벡터 API 런타임 연결**: API에서 provider/store 생성, `HybridRetriever.vectorSearch` 주입, 필터 보존 테스트. 현재 IN_PROGRESS 착수점은 `CODEX_HANDOFF.md` 참조.
-2. 규칙 승인 실운용(`/admin/rules`에서 밴드 초안 3건을 원문 대조 후 사람이 승인 - 자동화 금지).
-3. 평가셋 지속 보강(현재 hit@3 78.0% → 목표 85% 이상, 신규 문서 편입 시 누적 갱신).
-4. Docker 가용 환경 최종 검증(`docker compose config/up`, `pnpm db:migrate`).
+1. **T-211 NAS 실환경 검증**: Container Manager 기동 후 `docker compose config/up`, `pnpm db:migrate`, HTTPS 역방향 프록시와 복구 리허설.
+2. 파일럿 운영: 테스트 운영자 흐름, 권한, 프로젝트 생성·전이·증빙, 장애·복구 체크리스트 실검증.
+3. 규칙 승인 실운용(`/admin/rules`에서 밴드 초안 3건을 원문 대조 후 사람이 승인 - 자동화 금지).
+4. **보류 — T-201 벡터 API 런타임 연결**: RAG/에이전트 도입 여부 결정 후 재개.
 5. HWP 표/서식 구조 보존과 OCR 후처리 품질 개선.
 
 ## T-199 macOS Codex 재개 환경 — DONE
@@ -191,3 +191,9 @@
   HTTPS 역방향 프록시, 백업·복구 리허설의 실제 환경 검증.
 - 증거: `docker-compose.yml`, `.env.example`, `infra/docker/web.Dockerfile`,
   `apps/api/src/server.ts`, `scripts/validate-compose.mjs`, `docs/harness/RUNBOOK.md`.
+
+## T-212 GitHub/GitLab 원격 동기화 — DONE(현재 Mac 기준)
+- GitHub `h19h29-design/contract_easy`와 공개 GitLab `h19h19/contract_easy`의 `main`을 동일 커밋으로 맞췄다.
+- GitLab 서버의 pull mirror 방향은 현재 계정에서 제공되지 않아, 현재 Mac의 `origin` push URL을 GitHub와 GitLab 두 곳으로 구성했다.
+- `git push origin`은 두 원격에 순차 push한다. GitHub 웹이나 다른 checkout에서 GitHub만 갱신한 변경은 자동 추종하지 않으므로, 해당 환경에도 다중 push 설정 또는 별도 최소권한 자동화가 필요하다.
+- 증거: `git ls-remote --heads` 양쪽 동일 SHA, `git push --dry-run origin main` 양쪽 `Everything up-to-date`, `docs/harness/TEST_RESULTS.md`.

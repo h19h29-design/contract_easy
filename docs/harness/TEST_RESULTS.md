@@ -2,6 +2,17 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-30 T-212 GitHub/GitLab 원격 동기화
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `git push https://gitlab.aigov.go.kr/h19h19/contract_easy.git main` | PASS | GitLab 빈 저장소에 `main` 신규 push |
+| 양쪽 `git ls-remote --heads` | PASS | GitHub/GitLab `main`이 `9fd88d9bb65b656a55a134216dbdb44d7687fa1a`로 일치 |
+| `git push --dry-run origin main` | PASS | 다중 push 대상 GitHub/GitLab 모두 `Everything up-to-date` |
+
+- GitLab UI에서 리포지토리 미러링 기능은 확인했으나 현재 계정에 제공된 방향은 Push뿐이었다. GitLab이 GitHub를 당기는 서버 pull mirror 대신 현재 Mac checkout의 다중 push로 구성했다.
+- 이 구성을 저장소 파일에 포함된 서버 자동 미러로 과장하지 않는다. 다른 checkout 또는 GitHub 웹 직접 변경에는 별도 동기화 구성이 필요하다.
+
 ## 2026-08-30 T-211 운영 배포 안전장치
 
 | 명령 | 결과 | 핵심 |
