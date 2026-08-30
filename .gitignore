@@ -11,6 +11,7 @@ data/normalized/tables/
 data/normalized/forms/
 data/quarantine/
 data/app-store/private/
+data/private/
 data/app-store/vectors.json
 artifacts/preflight/*.html
 artifacts/samples/*.html

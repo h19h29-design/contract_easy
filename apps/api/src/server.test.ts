@@ -2,11 +2,12 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { buildApp } from './server.js';
+import { buildApp, DEFAULT_CHECKLIST_TEMPLATES } from './server.js';
 import { FileStore } from '@sen/db';
 import { getConfig } from '@sen/config';
 import { HybridRetriever } from '@sen/retrieval';
-import type { Chunk, RuleDefinition } from '@sen/shared';
+import { EVIDENCE_MAX_BYTES, type Chunk, type RuleDefinition } from '@sen/shared';
+import { writeEvidenceFile } from './project-files.js';
 
 let app: Awaited<ReturnType<typeof buildApp>>['app'];
 let tmpDir: string;
@@ -246,6 +247,114 @@ describe('프로젝트 생명주기 API', () => {
     expect((await projectRequest('POST', '/api/projects', { ...base, estimatedPrice: '1' })).statusCode).toBe(400);
     expect((await projectRequest('POST', '/api/projects', { ...base, estimatedPrice: 1, contractCategory: 'invalid' })).statusCode).toBe(400);
     expect((await projectRequest('POST', '/api/projects', { ...base, estimatedPrice: 1, organizationType: 'invalid' })).statusCode).toBe(400);
+  });
+});
+
+describe('비공개 체크리스트 증빙 API', () => {
+  let evidenceApp: Awaited<ReturnType<typeof buildApp>>['app'];
+  let evidenceStore: FileStore;
+  let evidenceDir = '';
+  let privateRoot = '';
+  let ownerId = '';
+  const ownerSession = 'evidence-owner-session';
+  const ownerCsrf = 'evidence-owner-csrf';
+
+  beforeAll(async () => {
+    evidenceDir = fs.mkdtempSync(path.join(os.tmpdir(), 'scg-api-evidence-'));
+    privateRoot = path.join(evidenceDir, 'private');
+    evidenceStore = new FileStore(evidenceDir);
+    const owner = evidenceStore.createUser({
+      username: 'evidence-owner', passwordHash: 's:fixture', displayName: '증빙 소유자', role: 'USER'
+    });
+    ownerId = owner.id;
+    evidenceStore.createSession(ownerSession, owner.id, ownerCsrf, 60_000);
+    const built = await buildApp({
+      store: evidenceStore,
+      retriever: new HybridRetriever({ chunks: [], versions: [] }),
+      privateRoot
+    });
+    evidenceApp = built.app;
+  });
+
+  afterAll(async () => {
+    await evidenceApp.close();
+    fs.rmSync(evidenceDir, { recursive: true, force: true });
+  });
+
+  async function createProject(name: string) {
+    const project = evidenceStore.createProject({
+      ownerId, name, contractCategory: 'construction', estimatedPrice: 1,
+      organizationType: 'school', status: 'planning', wizardInput: null
+    }, DEFAULT_CHECKLIST_TEMPLATES);
+    return { project, item: evidenceStore.checklistOf(project.id)[0]! };
+  }
+
+  function ownerRequest(method: 'GET' | 'POST', url: string, payload?: Buffer, headers?: Record<string, string | string[]>) {
+    return evidenceApp.inject({
+      method, url, payload, cookies: { scg_session: ownerSession },
+      headers: { 'x-csrf-token': ownerCsrf, ...headers }
+    });
+  }
+
+  it('정상 PDF를 업로드하고 storedPath 없이 다운로드', async () => {
+    const { project, item } = await createProject('증빙 업로드 공사');
+    const upload = await ownerRequest('POST', `/api/projects/${project.id}/checklist/${item.id}/evidence`, Buffer.from('%PDF-1.4\n'), {
+      'content-type': 'application/octet-stream',
+      'x-file-name': encodeURIComponent('증빙.pdf'),
+      'x-file-mime': 'application/pdf'
+    });
+    expect(upload.statusCode).toBe(200);
+    expect(upload.json().document.storedPath).toBeUndefined();
+
+    const download = await ownerRequest('GET', `/api/projects/${project.id}/documents/${upload.json().document.id}/download`);
+    expect(download.statusCode).toBe(200);
+    expect(download.headers['content-disposition']).toContain("filename*=UTF-8''");
+    expect(download.headers['x-content-type-options']).toBe('nosniff');
+  });
+
+  it('교차 프로젝트 document 다운로드와 item 업로드를 404', async () => {
+    const { project: projectA } = await createProject('증빙 프로젝트 A');
+    const { project: projectB, item: itemB } = await createProject('증빙 프로젝트 B');
+    const linked = evidenceStore.saveChecklistEvidence({
+      projectId: projectB.id, checklistItemId: itemB.id, uploadedBy: ownerId,
+      originalName: '기존.pdf', storedPath: path.join(privateRoot, 'missing.pdf'),
+      mimeType: 'application/pdf', sizeBytes: 1, sha256: 'b'.repeat(64)
+    })!.document;
+
+    expect((await ownerRequest('GET', `/api/projects/${projectA.id}/documents/${linked.id}/download`)).statusCode).toBe(404);
+    expect((await ownerRequest('POST', `/api/projects/${projectA.id}/checklist/${itemB.id}/evidence`, Buffer.from('%PDF-1.4\n'), {
+      'content-type': 'application/octet-stream', 'x-file-name': 'proof.pdf', 'x-file-mime': 'application/pdf'
+    })).statusCode).toBe(404);
+  });
+
+  it('다운로드 MIME은 저장된 메타데이터가 아니라 허용된 파일 확장자로 정한다', async () => {
+    const { project, item } = await createProject('증빙 MIME 경계 공사');
+    const stored = writeEvidenceFile({
+      privateRoot, projectId: project.id, bytes: Buffer.from('%PDF-1.4\n'), sha256: 'c'.repeat(64), ext: 'pdf'
+    });
+    const document = evidenceStore.saveChecklistEvidence({
+      projectId: project.id, checklistItemId: item.id, uploadedBy: ownerId,
+      originalName: '안전.pdf', storedPath: stored.storedPath,
+      mimeType: 'text/html', sizeBytes: 9, sha256: 'c'.repeat(64)
+    })!.document;
+
+    const download = await ownerRequest('GET', `/api/projects/${project.id}/documents/${document.id}/download`);
+    expect(download.statusCode).toBe(200);
+    expect(download.headers['content-type']).toContain('application/pdf');
+  });
+
+  it('크기, MIME 및 filename 헤더를 엄격히 검증한다', async () => {
+    const { project, item } = await createProject('증빙 입력 검증 공사');
+    const url = `/api/projects/${project.id}/checklist/${item.id}/evidence`;
+    const headers = { 'content-type': 'application/octet-stream', 'x-file-name': 'proof.pdf', 'x-file-mime': 'application/pdf' };
+
+    expect((await ownerRequest('POST', url, Buffer.alloc(EVIDENCE_MAX_BYTES + 1), headers)).statusCode).toBe(413);
+    expect((await ownerRequest('POST', url, Buffer.from('%PDF-1.4\n'), { ...headers, 'x-file-mime': 'image/png' })).statusCode).toBe(415);
+    expect((await ownerRequest('POST', url, Buffer.from('%PDF-1.4\n'), { 'content-type': 'application/octet-stream', 'x-file-mime': 'application/pdf' })).statusCode).toBe(400);
+    expect((await ownerRequest('POST', url, Buffer.from('%PDF-1.4\n'), { 'content-type': 'application/octet-stream', 'x-file-name': '%E0%A4%A', 'x-file-mime': 'application/pdf' })).statusCode).toBe(400);
+    expect((await ownerRequest('POST', url, Buffer.from('%PDF-1.4\n'), {
+      'content-type': 'application/octet-stream', 'x-file-name': ['proof.pdf', 'second.pdf'], 'x-file-mime': 'application/pdf'
+    })).statusCode).toBe(400);
   });
 });
 

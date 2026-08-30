@@ -116,12 +116,20 @@ export function dataPaths(cfg = getConfig()) {
     manifests: path.join(root, 'manifests'),
     versions: path.join(root, 'versions'),
     quarantine: path.join(root, 'quarantine'),
-    appStore: path.join(root, 'app-store')
+    appStore: path.join(root, 'app-store'),
+    privateProjects: path.join(root, 'private')
   };
 }
 
 export function ensureDirs(): ReturnType<typeof dataPaths> {
   const p = dataPaths();
-  for (const dir of Object.values(p)) fs.mkdirSync(dir, { recursive: true });
+  for (const dir of Object.values(p)) {
+    if (dir === p.privateProjects) {
+      fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+      fs.chmodSync(dir, 0o700);
+    } else {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  }
   return p;
 }

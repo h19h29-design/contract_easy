@@ -1,4 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { PgStore } from '@sen/db';
 import { HybridRetriever } from '@sen/retrieval';
 import type { Chunk, RuleDefinition } from '@sen/shared';
@@ -7,6 +10,7 @@ import { buildApp } from '../../apps/api/src/server.js';
 /** API가 PostgreSQL 모드로 동작하는지 확인하는 통합 테스트 */
 let app: Awaited<ReturnType<typeof buildApp>>['app'];
 let store: PgStore;
+let privateRoot = '';
 const url = process.env.PG_TEST_URL!;
 
 beforeAll(async () => {
@@ -26,12 +30,14 @@ beforeAll(async () => {
   };
   await store.replaceChunks([chunk]);
   const retriever = new HybridRetriever({ chunks: [chunk], versions: [] });
-  ({ app } = await buildApp({ store, retriever }));
+  privateRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'scg-api-pg-evidence-'));
+  ({ app } = await buildApp({ store, retriever, privateRoot }));
 });
 
 afterAll(async () => {
   await app.close();
   await store.close();
+  fs.rmSync(privateRoot, { recursive: true, force: true });
 });
 
 describe('API PostgreSQL 모드', () => {
@@ -93,6 +99,51 @@ describe('API PostgreSQL 모드', () => {
     });
     expect(response.statusCode).toBe(404);
     expect((await store.checklistOf(projectB.id)).find((item) => item.id === itemB.id)?.done).toBe(false);
+  });
+
+  it('PG API는 증빙 메타데이터를 저장하고 프로젝트 범위에서만 다운로드한다', async () => {
+    const login = await app.inject({
+      method: 'POST', url: '/api/auth/login',
+      payload: { username: 'admin', password: 'ChangeMe!2026' }
+    });
+    const csrf = login.json().csrfToken as string;
+    const sessionToken = login.cookies.find((cookie) => cookie.name === 'scg_session')!.value;
+    const createProject = async (name: string) => {
+      const response = await app.inject({
+        method: 'POST', url: '/api/projects', cookies: { scg_session: sessionToken },
+        headers: { 'x-csrf-token': csrf },
+        payload: { name, contractCategory: 'construction', estimatedPrice: 1, organizationType: 'school' }
+      });
+      expect(response.statusCode).toBe(200);
+      return response.json() as { id: string };
+    };
+    const projectA = await createProject('PG 증빙 A');
+    const projectB = await createProject('PG 증빙 B');
+    const itemA = (await store.checklistOf(projectA.id))[0]!;
+
+    const upload = await app.inject({
+      method: 'POST', url: `/api/projects/${projectA.id}/checklist/${itemA.id}/evidence`,
+      cookies: { scg_session: sessionToken },
+      headers: {
+        'x-csrf-token': csrf, 'content-type': 'application/octet-stream',
+        'x-file-name': encodeURIComponent('PG 증빙.pdf'), 'x-file-mime': 'application/pdf'
+      },
+      payload: Buffer.from('%PDF-1.4\n')
+    });
+    expect(upload.statusCode).toBe(200);
+    expect(upload.json().document.storedPath).toBeUndefined();
+
+    const documentId = upload.json().document.id as string;
+    const download = await app.inject({
+      method: 'GET', url: `/api/projects/${projectA.id}/documents/${documentId}/download`,
+      cookies: { scg_session: sessionToken }
+    });
+    expect(download.statusCode).toBe(200);
+    expect(download.headers['content-disposition']).toContain("filename*=UTF-8''");
+    expect((await app.inject({
+      method: 'GET', url: `/api/projects/${projectB.id}/documents/${documentId}/download`,
+      cookies: { scg_session: sessionToken }
+    })).statusCode).toBe(404);
   });
 
   it('출처 목록이 PG에서 조회됨', async () => {

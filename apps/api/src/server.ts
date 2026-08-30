@@ -10,9 +10,10 @@ import {
   STAGES, STAGE_LABELS
 } from '@sen/db';
 import type { AppStore, ProjectStatus, RuleActionErrorCode, UserRecord } from '@sen/db';
-import { isIsoDate, milestoneState, seoulDate, type Chunk, type RuleCondition, type RuleDefinition, type SearchFilters, type WizardInput } from '@sen/shared';
+import { EVIDENCE_MAX_BYTES, isIsoDate, milestoneState, seoulDate, validateEvidenceFile, type Chunk, type RuleCondition, type RuleDefinition, type SearchFilters, type WizardInput } from '@sen/shared';
 import { HybridRetriever } from '@sen/retrieval';
 import { evaluateWizard, detectConflicts } from '@sen/rules';
+import { attachmentDisposition, resolveEvidenceDownload, writeEvidenceFile } from './project-files.js';
 
 const SESSION_COOKIE = 'scg_session';
 
@@ -20,6 +21,7 @@ export interface AppContext {
   store: AppStore;
   retriever: HybridRetriever | null;
   sessionSecret: string;
+  privateRoot: string;
 }
 
 type RuleAdminBody =
@@ -47,6 +49,7 @@ const RULE_STATUS: Record<RuleActionErrorCode, number> = {
 export async function buildApp(ctxIn?: Partial<AppContext>) {
   const dirs = ensureDirs();
   const cfg = getConfig();
+  const privateRoot = ctxIn?.privateRoot ?? dirs.privateProjects;
   if (process.env.NODE_ENV === 'production' && !cfg.webOrigin) {
     throw new Error('WEB_ORIGIN 환경변수가 필요합니다.');
   }
@@ -78,6 +81,17 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   let retriever = ctxIn?.retriever ?? loadRetriever();
 
   const app = Fastify({ logger: false });
+  app.addContentTypeParser(
+    'application/octet-stream',
+    { parseAs: 'buffer', bodyLimit: EVIDENCE_MAX_BYTES },
+    (_req, body, done) => done(null, body)
+  );
+  app.setErrorHandler((error, _req, reply) => {
+    if (error.code === 'FST_ERR_CTP_BODY_TOO_LARGE') {
+      return reply.code(413).send({ error: '증빙 파일 크기가 제한을 초과했습니다.' });
+    }
+    return reply.send(error);
+  });
   await app.register(cookie);
   await app.register(cors, { origin: cfg.webOrigin, credentials: true });
   await app.register(rateLimit, {
@@ -373,6 +387,94 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     }
   );
 
+  app.post<{ Params: { id: string; itemId: string } }>(
+    '/api/projects/:id/checklist/:itemId/evidence',
+    async (req, reply) => {
+      const user = await requireAuth(req, reply, 'USER');
+      if (!user) return;
+      if (!(await store.canAccessProject(req.params.id, user.id, user.role))) {
+        return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
+      }
+
+      const encodedName = singleHeader(req, 'x-file-name');
+      const declaredMime = singleHeader(req, 'x-file-mime');
+      if (!encodedName || encodedName.includes(',') || encodedName.length > 500 || !declaredMime) {
+        return reply.code(400).send({ error: '증빙 파일 헤더가 올바르지 않습니다.' });
+      }
+
+      let originalName: string;
+      try {
+        originalName = decodeURIComponent(encodedName);
+      } catch {
+        return reply.code(400).send({ error: '파일명이 올바르지 않습니다.' });
+      }
+      if (!originalName) return reply.code(400).send({ error: '파일명이 올바르지 않습니다.' });
+      if (!Buffer.isBuffer(req.body)) return reply.code(400).send({ error: '증빙 파일 본문이 올바르지 않습니다.' });
+
+      const validation = validateEvidenceFile(req.body, originalName, declaredMime);
+      if (!validation.ok) {
+        const status = validation.code === 'TOO_LARGE' ? 413
+          : validation.code === 'MIME_MISMATCH' || validation.code === 'MAGIC_MISMATCH' ? 415
+            : 400;
+        return reply.code(status).send({ error: validation.code });
+      }
+
+      const stored = writeEvidenceFile({
+        privateRoot,
+        projectId: req.params.id,
+        bytes: req.body,
+        sha256: validation.sha256,
+        ext: validation.ext
+      });
+      const linked = await store.saveChecklistEvidence({
+        projectId: req.params.id,
+        checklistItemId: req.params.itemId,
+        uploadedBy: user.id,
+        originalName: validation.originalName,
+        storedPath: stored.storedPath,
+        mimeType: validation.mimeType,
+        sizeBytes: validation.sizeBytes,
+        sha256: validation.sha256
+      });
+      // 잘못된 항목 연결 실패 시에도 생성 파일은 보존한다. 이후 관리자가 안전하게 정리할 수 있다.
+      if (!linked) return reply.code(404).send({ error: '체크리스트 항목이 없습니다.' });
+      await store.audit(user.id, 'project.evidence_upload', 'project_document', linked.document.id, {
+        checklistItemId: req.params.itemId,
+        sha256: validation.sha256,
+        created: stored.created
+      }, req.ip);
+      const { storedPath: _storedPath, ...document } = linked.document;
+      return { document, previousDocumentId: linked.previousDocumentId };
+    }
+  );
+
+  app.get<{ Params: { id: string; documentId: string } }>(
+    '/api/projects/:id/documents/:documentId/download',
+    async (req, reply) => {
+      const user = await requireAuth(req, reply, 'USER');
+      if (!user) return;
+      if (!(await store.canAccessProject(req.params.id, user.id, user.role))) {
+        return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
+      }
+      const document = await store.getProjectDocument(req.params.id, req.params.documentId);
+      if (!document) return reply.code(404).send({ error: '증빙 파일이 없습니다.' });
+
+      let filePath: string;
+      try {
+        filePath = resolveEvidenceDownload(privateRoot, document.storedPath);
+      } catch {
+        return reply.code(404).send({ error: '증빙 파일이 없습니다.' });
+      }
+      const mimeType = evidenceMimeForPath(filePath);
+      if (!mimeType) return reply.code(404).send({ error: '증빙 파일이 없습니다.' });
+      reply
+        .type(mimeType)
+        .header('Content-Disposition', attachmentDisposition(document.originalName))
+        .header('X-Content-Type-Options', 'nosniff');
+      return reply.send(fs.createReadStream(filePath));
+    }
+  );
+
   app.post<{ Params: { id: string }, Body: { status?: ProjectStatus; reason?: string } }>(
     '/api/projects/:id/status',
     async (req, reply) => {
@@ -627,6 +729,24 @@ function isProjectEventKind(value: unknown): value is typeof PROJECT_EVENT_KINDS
 
 function isBoundedText(value: unknown, min: number, max: number): value is string {
   return typeof value === 'string' && value.length >= min && value.length <= max;
+}
+
+function singleHeader(req: FastifyRequest, name: string): string | null {
+  let count = 0;
+  for (let index = 0; index < req.raw.rawHeaders.length; index += 2) {
+    if (req.raw.rawHeaders[index]?.toLowerCase() === name) count += 1;
+  }
+  const value = req.headers[name];
+  return count === 1 && typeof value === 'string' ? value : null;
+}
+
+function evidenceMimeForPath(filePath: string): 'application/pdf' | 'image/jpeg' | 'image/png' | null {
+  switch (path.extname(filePath).toLowerCase()) {
+    case '.pdf': return 'application/pdf';
+    case '.jpg': return 'image/jpeg';
+    case '.png': return 'image/png';
+    default: return null;
+  }
 }
 
 function isJsonObjectOrNull(value: unknown): value is Record<string, unknown> | null {
