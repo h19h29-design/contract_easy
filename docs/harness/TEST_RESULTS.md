@@ -2,6 +2,20 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-30 Final review fix wave
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm lint` | PASS | ESLint exit 0 |
+| `pnpm typecheck` | PASS | 9/10 workspace projects `tsc --noEmit` 성공 |
+| `pnpm test` | PASS | 10 files, 137 tests |
+| `pnpm test:pg` | PASS | 3 files, 42 tests; forced rollback 로그는 예상됨 |
+| `pnpm build` | PASS | workspace build exit 0 |
+| `pnpm test:e2e` | PASS | Playwright exit 0; `NO_COLOR`/`FORCE_COLOR` 경고만 발생 |
+
+- 집중 RED→GREEN 증거와 최종 root-cause 요약: `.superpowers/sdd/2026-08-30-contract-workspace-implementation/final-fix-report.md`.
+- 운영 `DATABASE_URL`은 구성되지 않아 legacy `project_checklist_items.evidence_path` non-null 조회를 실행하지 않았다. 배포 전 0건을 확인하고, 0건이 아니면 보존 migration을 설계할 때까지 중단한다.
+
 ## 2026-08-30 공사계약 업무공간 최종 회귀
 
 | 명령 | 결과 | 핵심 |

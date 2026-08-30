@@ -24,6 +24,7 @@
 - 파일명은 표시용으로만 정규화하고, 저장 경로에는 사용하지 않는다. 서버 계산 SHA-256으로 프로젝트별 비공개 경로에 저장하며 private root와 project directory는 `0700`, 파일은 `0600`으로 제한한다.
 - owner와 `ADMIN`만 프로젝트에 접근할 수 있다. URL project ID와 checklist item/document 등 하위 resource의 project ID를 모든 읽기·쓰기 경계에서 함께 검사해 교차 프로젝트 IDOR를 막는다.
 - 증빙 교체는 새 문서·파일을 만들고 현재 논리 참조만 바꾼다. 이전 파일·행·변경 기록은 삭제하지 않는다.
+- 게시 전 임시 `0600` 파일을 완전히 기록·fsync한 뒤 no-replace 원자 publish 한다. 기존 hash 경로는 canonical private root 안의 일반 파일·정확한 크기/SHA-256·`0600` 권한을 모두 확인할 때만 dedupe하며, 게시된 증빙은 덮어쓰거나 삭제하지 않는다.
 - 다운로드는 `Content-Disposition: attachment` 및 `X-Content-Type-Options: nosniff`를 사용한다. host `storedPath`는 API 응답, 웹 렌더링, 감사로그에 노출하지 않는다.
 - 비공개 파일은 격리 저장만 하며 corpus, normalized 자료, 검색, vector store 또는 RAG 경로로 전달하지 않는다.
 
@@ -46,3 +47,7 @@
 ## 알려진 제한(MVP)
 - 파일스토어 모드는 단일 프로세스 가정. 운영은 PostgreSQL 필수.
 - 세션 저장소가 파일 기반 → 다중 인스턴스 수평확장 시 Redis 계열로 교체 필요.
+
+## 배포 전 데이터 확인
+- 운영 PostgreSQL 배포 전 `project_checklist_items.evidence_path`의 non-null 행 수를 조회한다. 0이 아니면 배포를 중단하고 기존 증빙을 보존하는 migration을 설계한다.
+- 이 확인은 운영 `DATABASE_URL`이 구성되지 않아 이 작업공간에서 실행하지 않았다. 비밀값을 조회·출력하지 않는다.
