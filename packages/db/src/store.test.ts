@@ -79,6 +79,30 @@ describe('엄격한 FileStore 규칙 검토 계약', () => {
     expect(store.listRuleReviews('safe', 1).map((r) => r.action)).toEqual(['approve', 'activate']);
   });
 
+  it('같은 규칙의 reviewed v2는 v1을 supersede하고 activate', () => {
+    const { store, reviewer, admin } = ruleStore();
+    expect(store.approveRuleReview('safe', 1, reviewer.id, 'v1 원문 대조 완료', true).ok).toBe(true);
+    expect(store.activateReviewedRule('safe', 1, admin.id, '2026-08-30').ok).toBe(true);
+    expect(store.createRuleRevision(baseRule('safe', 2, 'draft', '수의계약'), reviewer.id).ok).toBe(true);
+    expect(store.approveRuleReview('safe', 2, reviewer.id, 'v2 원문 대조 완료', true).ok).toBe(true);
+
+    expect(store.activateReviewedRule('safe', 2, admin.id, '2026-08-30')).toMatchObject({ ok: true, rule: { status: 'active' } });
+    expect(Object.fromEntries(store.listRules().map((r) => [`${r.id}@${r.version}`, r.status]))).toMatchObject({
+      'safe@1': 'superseded',
+      'safe@2': 'active'
+    });
+  });
+
+  it('다른 논리 규칙의 충돌은 activate를 거부', () => {
+    const { store, reviewer, admin } = ruleStore();
+    expect(store.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true).ok).toBe(true);
+    expect(store.activateReviewedRule('safe', 1, admin.id, '2026-08-30').ok).toBe(true);
+    expect(store.createRuleRevision(baseRule('conflict', 1, 'draft', '수의계약'), reviewer.id).ok).toBe(true);
+    expect(store.approveRuleReview('conflict', 1, reviewer.id, '원문 대조 완료', true).ok).toBe(true);
+
+    expect(store.activateReviewedRule('conflict', 1, admin.id, '2026-08-30')).toEqual({ ok: false, code: 'RULE_CONFLICT' });
+  });
+
   it('hold는 draft와 검토기록을 보존', () => {
     const { store, reviewer } = ruleStore();
     store.upsertRule(baseRule('candidate.held', 1, 'draft', '입찰'));

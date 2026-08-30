@@ -430,9 +430,13 @@ export class FileStore implements AppStore {
     if (!approval) return { ok: false, code: 'MISSING_REVIEW' };
     if (approval.actorUserId === adminId) return { ok: false, code: 'SAME_ACTOR' };
     if (validateActivatableRule(rule, { asOfDate }).length > 0) return { ok: false, code: 'RULE_INVALID' };
-    const proposed = this.data.rules.map((candidate) =>
-      candidate === rule ? { ...candidate, status: 'active' as const } : candidate
-    );
+    const proposed = this.data.rules.map((candidate) => {
+      if (candidate === rule) return { ...candidate, status: 'active' as const };
+      if (candidate.id === ruleId && candidate.status === 'active') {
+        return { ...candidate, status: 'superseded' as const };
+      }
+      return candidate;
+    });
     if (detectConflicts(proposed).length > 0) return { ok: false, code: 'RULE_CONFLICT' };
     const at = isoNow();
     for (const candidate of this.data.rules) {
