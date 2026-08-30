@@ -11,6 +11,7 @@
 | `pnpm --filter @sen/api typecheck && pnpm --filter web typecheck && pnpm --filter @sen/db typecheck` | PASS | 모든 `tsc --noEmit` 성공 |
 
 - TDD RED: API 권한/개정/운영 bootstrap 테스트는 구현 전 4/15 실패(403·404·개발 fallback)했고, malformed action body 회귀는 500을 재현한 뒤 400으로 보완했다. 후속 hardening은 truthy confirmation 수용과 invalid origin 미차단을 재현한 뒤 정확한 boolean/string 및 단일 HTTP(S) origin 검증을 추가했다.
+- CORS wildcard host hardening: literal·percent-encoded wildcard hostname이 URL parser를 통과하는 회귀를 RED로 재현한 뒤 parsed/decoded hostname·origin 모두에서 거부했다. API 18/18, api/config typecheck PASS.
 
 ## 2026-08-30 FileStore 프로젝트 생명주기
 

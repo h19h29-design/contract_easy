@@ -278,6 +278,7 @@ describe('운영 기동 안전장치', () => {
     const originalInitialPassword = process.env.ADMIN_INITIAL_PASSWORD;
     const invalidOrigins = [
       '*', 'null', 'file:///tmp/app', 'https://user:pass@example.test',
+      'https://*.example.test', 'https://%2A.example.test',
       'https://example.test/path', 'https://example.test?x=1', 'https://example.test#fragment'
     ];
     const tempDirs: string[] = [];

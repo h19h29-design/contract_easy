@@ -44,10 +44,14 @@ export function normalizeWebOrigin(value: string): string {
   } catch {
     throw new Error('WEB_ORIGIN은 단일 HTTP(S) origin이어야 합니다.');
   }
+  const decodedHostname = decodeURIComponent(url.hostname);
+  const decodedOrigin = decodeURIComponent(url.origin);
   if (
     (url.protocol !== 'http:' && url.protocol !== 'https:') ||
     url.origin === 'null' || url.username || url.password ||
-    url.pathname !== '/' || url.search || url.hash
+    url.pathname !== '/' || url.search || url.hash ||
+    url.hostname.includes('*') || url.origin.includes('*') ||
+    decodedHostname.includes('*') || decodedOrigin.includes('*')
   ) {
     throw new Error('WEB_ORIGIN은 단일 HTTP(S) origin이어야 합니다.');
   }
