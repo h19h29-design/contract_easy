@@ -179,6 +179,6 @@
 
 ## T-210 공사계약 업무공간 운영 완성 — DONE
 - 규칙 안전성·2인 승인: `packages/shared/src/{date,file,types}.ts`, `packages/rules/src/engine.ts`, `packages/db/src/{app-store,store,pg-store}.ts`.
-- 프로젝트·비공개 증빙·API: `apps/api/src/{server,project-files}.ts`; 상태/변경/일정/증빙은 append-only 보존, owner/ADMIN 및 project/resource 소속 검증 적용.
+- 프로젝트·비공개 증빙·API: `apps/api/src/{server,project-files}.ts`; 상태 전이·변경·일정·증빙 교체 이력은 append-only이며 현재 상태/증빙 참조는 통제된 작업으로만 변경, owner/ADMIN 및 project/resource 소속 검증 적용.
 - 최소 UI와 회귀: `apps/web/app/admin/rules/page.tsx`, `apps/web/app/workspace/projects/[id]/page.tsx`, `apps/web/app/globals.css`, `tests/e2e/flows.spec.ts`.
 - 전체 게이트 증거는 `docs/harness/TEST_RESULTS.md`와 scoped commits에 기록한다.
