@@ -157,6 +157,25 @@ describe('API PostgreSQL 모드', () => {
     expect(Array.isArray(res.json().sources)).toBe(true);
   });
 
+  it('PG API도 malformed rule/project/checklist literals를 400으로 거부한다', async () => {
+    const login = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { username: 'admin', password: 'ChangeMe!2026' } });
+    const csrf = login.json().csrfToken as string;
+    const token = login.cookies.find((cookie) => cookie.name === 'scg_session')!.value;
+    const headers = { 'x-csrf-token': csrf };
+    for (const version of ['0', '1.5', 'word']) {
+      expect((await app.inject({ method: 'POST', url: `/api/admin/rules/none/${version}`, cookies: { scg_session: token }, headers, payload: { action: 'activate' } })).statusCode).toBe(400);
+    }
+    const base = { contractCategory: 'construction', estimatedPrice: 1, organizationType: 'school' };
+    for (const name of [1, {}, null]) {
+      expect((await app.inject({ method: 'POST', url: '/api/projects', cookies: { scg_session: token }, headers, payload: { ...base, name } })).statusCode).toBe(400);
+    }
+    const created = await app.inject({ method: 'POST', url: '/api/projects', cookies: { scg_session: token }, headers, payload: { ...base, name: 'PG strict literals' } });
+    const item = (await store.checklistOf(created.json().id))[0]!;
+    for (const done of ['false', 0, null]) {
+      expect((await app.inject({ method: 'PATCH', url: `/api/projects/${created.json().id}/checklist/${item.id}`, cookies: { scg_session: token }, headers, payload: { done } })).statusCode).toBe(400);
+    }
+  });
+
   it('REVIEWER review 후 같은 ID activation을 거부하고 다른 ADMIN은 성공', async () => {
     const reviewer = await store.createUser({ username: 'pg-api-reviewer', passwordHash: 's:fixture', displayName: 'PG Reviewer', role: 'REVIEWER' });
     const admin2 = await store.createUser({ username: 'pg-api-admin2', passwordHash: 's:fixture', displayName: 'PG Admin 2', role: 'ADMIN' });
