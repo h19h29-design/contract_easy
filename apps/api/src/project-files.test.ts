@@ -111,4 +111,22 @@ describe('private evidence files', () => {
       expect(fs.lstatSync(target).isSymbolicLink()).toBe(true);
     } finally { now.mockRestore(); random.mockRestore(); }
   });
+
+  it('owned temp is cleaned after publish EEXIST while the published bytes remain immutable', () => {
+    const root = privateRoot();
+    const bytes = Buffer.from('%PDF-1.4\n');
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    const originalLink = fs.linkSync;
+    const link = vi.spyOn(fs, 'linkSync').mockImplementation((temporary, target) => {
+      originalLink(temporary, target);
+      const error = new Error('exists') as NodeJS.ErrnoException; error.code = 'EEXIST'; throw error;
+    });
+    try {
+      const result = writeEvidenceFile({ privateRoot: root, projectId: 'p5', bytes, sha256, ext: 'pdf' });
+      expect(result.created).toBe(false);
+      const dir = path.join(root, 'p5');
+      expect(fs.readdirSync(dir).filter((name) => name.endsWith('.tmp'))).toEqual([]);
+      expect(fs.readFileSync(path.join(dir, `${sha256}.pdf`))).toEqual(bytes);
+    } finally { link.mockRestore(); }
+  });
 });

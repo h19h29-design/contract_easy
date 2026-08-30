@@ -121,6 +121,7 @@ describe('API PostgreSQL 모드', () => {
     const projectB = await createProject('PG 증빙 B');
     const itemA = (await store.checklistOf(projectA.id))[0]!;
 
+    const beforeAudits = (await store.listAudit()).length;
     const upload = await app.inject({
       method: 'POST', url: `/api/projects/${projectA.id}/checklist/${itemA.id}/evidence`,
       cookies: { scg_session: sessionToken },
@@ -132,6 +133,10 @@ describe('API PostgreSQL 모드', () => {
     });
     expect(upload.statusCode).toBe(200);
     expect(upload.json().document.storedPath).toBeUndefined();
+    const audits = await store.listAudit();
+    expect(audits).toHaveLength(beforeAudits + 1);
+    expect(audits[0]).toMatchObject({ action: 'checklist.evidence.save', detail: { checklistItemId: itemA.id, sha256: expect.any(String) } });
+    expect(audits[0]?.detail).not.toHaveProperty('storedPath');
 
     const documentId = upload.json().document.id as string;
     const download = await app.inject({

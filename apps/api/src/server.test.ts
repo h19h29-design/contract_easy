@@ -358,6 +358,7 @@ describe('비공개 체크리스트 증빙 API', () => {
 
   it('정상 PDF를 업로드하고 storedPath 없이 다운로드', async () => {
     const { project, item } = await createProject('증빙 업로드 공사');
+    const beforeAudits = evidenceStore.listAudit().length;
     const upload = await ownerRequest('POST', `/api/projects/${project.id}/checklist/${item.id}/evidence`, Buffer.from('%PDF-1.4\n'), {
       'content-type': 'application/octet-stream',
       'x-file-name': encodeURIComponent('증빙.pdf'),
@@ -365,6 +366,10 @@ describe('비공개 체크리스트 증빙 API', () => {
     });
     expect(upload.statusCode).toBe(200);
     expect(upload.json().document.storedPath).toBeUndefined();
+    const audits = evidenceStore.listAudit();
+    expect(audits).toHaveLength(beforeAudits + 1);
+    expect(audits[0]).toMatchObject({ actorUserId: ownerId, action: 'checklist.evidence.save', detail: { checklistItemId: item.id, sha256: expect.any(String) } });
+    expect(audits[0]?.detail).not.toHaveProperty('storedPath');
 
     const download = await ownerRequest('GET', `/api/projects/${project.id}/documents/${upload.json().document.id}/download`);
     expect(download.statusCode).toBe(200);
