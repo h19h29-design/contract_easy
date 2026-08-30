@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { PgStore } from '@sen/db';
 import { HybridRetriever } from '@sen/retrieval';
-import type { Chunk } from '@sen/shared';
+import type { Chunk, RuleDefinition } from '@sen/shared';
 import { buildApp } from '../../apps/api/src/server.js';
 
 /** API가 PostgreSQL 모드로 동작하는지 확인하는 통합 테스트 */
@@ -72,4 +72,39 @@ describe('API PostgreSQL 모드', () => {
     expect(res.statusCode).toBe(200);
     expect(Array.isArray(res.json().sources)).toBe(true);
   });
+
+  it('REVIEWER review 후 같은 ID activation을 거부하고 다른 ADMIN은 성공', async () => {
+    const reviewer = await store.createUser({ username: 'pg-api-reviewer', passwordHash: 's:fixture', displayName: 'PG Reviewer', role: 'REVIEWER' });
+    const admin2 = await store.createUser({ username: 'pg-api-admin2', passwordHash: 's:fixture', displayName: 'PG Admin 2', role: 'ADMIN' });
+    await store.createSession('pg-api-reviewer-token', reviewer.id, 'pg-api-reviewer-csrf', 60_000);
+    await store.createSession('pg-api-admin2-token', admin2.id, 'pg-api-admin2-csrf', 60_000);
+    await store.upsertRule(strictRule());
+
+    const reviewed = await injectAs('pg-api-reviewer-token', 'pg-api-reviewer-csrf', {
+      action: 'review', comment: '원문과 경계 확인', sourceConfirmed: true
+    });
+    expect(reviewed.statusCode).toBe(200);
+
+    await (store as unknown as { pool: { query: (sql: string, values: unknown[]) => Promise<unknown> } }).pool.query(
+      "UPDATE users SET role='ADMIN' WHERE id=$1", [reviewer.id]
+    );
+    expect((await injectAs('pg-api-reviewer-token', 'pg-api-reviewer-csrf', { action: 'activate' })).statusCode).toBe(409);
+    expect((await injectAs('pg-api-admin2-token', 'pg-api-admin2-csrf', { action: 'activate' })).statusCode).toBe(200);
+  });
 });
+
+function injectAs(token: string, csrfToken: string, payload: unknown) {
+  return app.inject({
+    method: 'POST', url: '/api/admin/rules/pg-api-strict/1',
+    cookies: { scg_session: token }, headers: { 'x-csrf-token': csrfToken }, payload
+  });
+}
+
+function strictRule(): RuleDefinition {
+  return {
+    id: 'pg-api-strict', version: 1, status: 'draft', scope: { organization_type: 'api-pg-isolated' },
+    conditions: [{ field: 'estimated_price', operator: 'gte', value: 0 }], output: { method: '일반경쟁' },
+    source: { title: 'PG 엄격 승인 테스트 근거', url: 'https://example.org/pg-api-strict', effectiveFrom: null, checkedAt: '2026-08-30' },
+    createdAt: '2026-08-30T00:00:00.000Z', updatedAt: '2026-08-30T00:00:00.000Z'
+  };
+}

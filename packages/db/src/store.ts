@@ -549,43 +549,6 @@ export class FileStore implements AppStore {
     return this.data.ruleReviews.filter((review) => review.ruleVersionId === id);
   }
 
-  /** 규칙 승인: draft/reviewed → active (사람 검토 필수, 자동 활성화 없음) */
-  activateRule(ruleId: string, version: number, reviewer: string): StoredRule | null {
-    const rule = this.data.rules.find((r) => r.id === ruleId && r.version === version);
-    if (!rule) return null;
-    if (rule.status === 'draft') return null; // reviewed 상태를 거쳐야 함
-    // 동일 논리ID의 기존 active는 superseded 처리
-    for (const r of this.data.rules) {
-      if (r.id === ruleId && r.version !== version && r.status === 'active') {
-        r.status = 'superseded';
-        r.supersededBy = `${ruleId}@${version}`;
-        r.updatedAt = isoNow();
-      }
-    }
-    rule.status = 'active';
-    rule.reviewedBy = reviewer;
-    rule.updatedAt = isoNow();
-    this.flush();
-    return rule;
-  }
-
-  reviewRule(ruleId: string, version: number, next: 'reviewed'): StoredRule | null {
-    const rule = this.data.rules.find((r) => r.id === ruleId && r.version === version);
-    if (!rule || rule.status !== 'draft') return null;
-    rule.status = next;
-    rule.updatedAt = isoNow();
-    this.flush();
-    return rule;
-  }
-
-  rejectRule(ruleId: string, version: number): boolean {
-    const idx = this.data.rules.findIndex((r) => r.id === ruleId && r.version === version);
-    if (idx < 0) return false;
-    this.data.rules.splice(idx, 1);
-    this.flush();
-    return true;
-  }
-
   /**
    * 자동 추출 후보 draft 정리: 최신 추출 배치에 없는 candidate.* 초안만 제거.
    * reviewed/active/superseded 상태와 사람이 만든 규칙은 절대 삭제하지 않는다.

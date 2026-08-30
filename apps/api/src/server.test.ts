@@ -149,6 +149,100 @@ describe('인증·프로젝트 흐름', () => {
   });
 });
 
+describe('규칙 관리자 API의 엄격한 승인 흐름', () => {
+  it('REVIEWER review 후 같은 ID activation을 거부하고 다른 ADMIN은 성공', async () => {
+    const fixture = await createRuleAdminFixture();
+    try {
+      const reviewed = await fixture.injectAs(fixture.reviewer, 'POST', '/api/admin/rules/strict/1', {
+        action: 'review', comment: '원문과 경계 확인', sourceConfirmed: true
+      });
+      expect(reviewed.statusCode).toBe(200);
+
+      const promotedStore = promoteToAdmin(fixture.dir, fixture.reviewer.id);
+      const promotedApp = await buildApp({ store: promotedStore, retriever: fixture.retriever });
+      try {
+        expect((await injectAs(promotedApp.app, fixture.reviewer, 'POST', '/api/admin/rules/strict/1', {
+          action: 'activate'
+        })).statusCode).toBe(409);
+        expect((await injectAs(promotedApp.app, fixture.admin2, 'POST', '/api/admin/rules/strict/1', {
+          action: 'activate'
+        })).statusCode).toBe(200);
+      } finally {
+        await promotedApp.app.close();
+      }
+    } finally {
+      await fixture.close();
+    }
+  });
+
+  it('sourceConfirmed 없는 review를 400으로 거부', async () => {
+    const fixture = await createRuleAdminFixture();
+    try {
+      const res = await fixture.injectAs(fixture.reviewer, 'POST', '/api/admin/rules/strict/1', {
+        action: 'review', comment: '확인'
+      });
+      expect(res.statusCode).toBe(400);
+    } finally {
+      await fixture.close();
+    }
+  });
+
+  it('규칙 작업 본문이 없으면 400으로 거부', async () => {
+    const fixture = await createRuleAdminFixture();
+    try {
+      const res = await fixture.injectAs(fixture.reviewer, 'POST', '/api/admin/rules/strict/1', undefined);
+      expect(res.statusCode).toBe(400);
+    } finally {
+      await fixture.close();
+    }
+  });
+
+  it('검토자는 통제된 method-band 개정만 다음 draft 버전으로 생성한다', async () => {
+    const fixture = await createRuleAdminFixture();
+    try {
+      const res = await fixture.injectAs(fixture.reviewer, 'POST', '/api/admin/rules/strict/1/revisions', {
+        method: '제한경쟁', lower: 100, lowerInclusive: false, upper: 200, upperInclusive: true,
+        message: '금액 구간 재검토',
+        source: { title: '개정 근거', url: 'https://example.org/revision', effectiveFrom: null, checkedAt: '2026-08-30' },
+        conditions: [{ field: 'untrusted', operator: 'eq', value: true }]
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json().rule).toMatchObject({
+        id: 'strict', version: 2, status: 'draft', output: { method: '제한경쟁', message: '금액 구간 재검토' },
+        conditions: [
+          { field: 'estimated_price', operator: 'gt', value: 100 },
+          { field: 'estimated_price', operator: 'lte', value: 200 }
+        ]
+      });
+    } finally {
+      await fixture.close();
+    }
+  });
+});
+
+describe('운영 기동 안전장치', () => {
+  it('production 빈 저장소는 ADMIN_INITIAL_PASSWORD 없이는 기동을 거부한다', async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalWebOrigin = process.env.WEB_ORIGIN;
+    const originalInitialPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scg-api-production-'));
+    try {
+      process.env.NODE_ENV = 'production';
+      process.env.WEB_ORIGIN = 'https://example.test';
+      delete process.env.ADMIN_INITIAL_PASSWORD;
+      await expect(buildApp({ store: new FileStore(dir) })).rejects.toThrow('ADMIN_INITIAL_PASSWORD 환경변수가 필요합니다.');
+    } finally {
+      if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = originalNodeEnv;
+      if (originalWebOrigin === undefined) delete process.env.WEB_ORIGIN;
+      else process.env.WEB_ORIGIN = originalWebOrigin;
+      if (originalInitialPassword === undefined) delete process.env.ADMIN_INITIAL_PASSWORD;
+      else process.env.ADMIN_INITIAL_PASSWORD = originalInitialPassword;
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 function wizardInput() {
   return {
     workType: '건축', contractCategory: 'construction', estimatedPrice: 500_000_000,
@@ -174,5 +268,58 @@ function futureRule(): RuleDefinition {
     },
     createdAt: '2026-08-25T00:00:00.000Z',
     updatedAt: '2026-08-25T00:00:00.000Z'
+  };
+}
+
+type RuleAdminUser = { id: string; token: string; csrfToken: string };
+
+async function createRuleAdminFixture() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scg-api-rules-'));
+  const store = new FileStore(dir);
+  store.upsertRule(strictRule());
+  const reviewer = await createRuleAdminUser(store, 'reviewer', 'REVIEWER');
+  const admin2 = await createRuleAdminUser(store, 'admin2', 'ADMIN');
+  const retriever = new HybridRetriever({ chunks: [], versions: [] });
+  const built = await buildApp({ store, retriever });
+  return {
+    dir, reviewer, admin2, retriever,
+    injectAs: (user: RuleAdminUser, method: 'POST', url: string, payload: unknown) => injectAs(built.app, user, method, url, payload),
+    close: async () => {
+      await built.app.close();
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  };
+}
+
+async function createRuleAdminUser(store: FileStore, username: string, role: 'REVIEWER' | 'ADMIN'): Promise<RuleAdminUser> {
+  const user = store.createUser({ username, passwordHash: 's:fixture', displayName: username, role });
+  const token = `token-${username}`;
+  const csrfToken = `csrf-${username}`;
+  store.createSession(token, user.id, csrfToken, 60_000);
+  return { id: user.id, token, csrfToken };
+}
+
+function injectAs(
+  target: Awaited<ReturnType<typeof buildApp>>['app'], user: RuleAdminUser,
+  method: 'POST', url: string, payload: unknown
+) {
+  return target.inject({ method, url, cookies: { scg_session: user.token }, headers: { 'x-csrf-token': user.csrfToken }, payload });
+}
+
+function promoteToAdmin(dir: string, userId: string): FileStore {
+  const file = path.join(dir, 'db.json');
+  const data = JSON.parse(fs.readFileSync(file, 'utf8')) as { users: Array<{ id: string; role: string }> };
+  data.users.find((user) => user.id === userId)!.role = 'ADMIN';
+  fs.writeFileSync(file, JSON.stringify(data), 'utf8');
+  return new FileStore(dir);
+}
+
+function strictRule(): RuleDefinition {
+  return {
+    id: 'strict', version: 1, status: 'draft', scope: { contract_category: 'construction' },
+    conditions: [{ field: 'estimated_price', operator: 'gte', value: 0 }],
+    output: { method: '일반경쟁' },
+    source: { title: '엄격 승인 테스트 근거', url: 'https://example.org/strict', effectiveFrom: null, checkedAt: '2026-08-30' },
+    createdAt: '2026-08-30T00:00:00.000Z', updatedAt: '2026-08-30T00:00:00.000Z'
   };
 }

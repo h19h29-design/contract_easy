@@ -2,6 +2,16 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-30 규칙 관리자 API·운영 기동 안전장치
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm exec vitest run apps/api/src/server.test.ts` | PASS | 16 tests — 정확한 REVIEWER/ADMIN 승인 분리, 동일 승인자 차단, sourceConfirmed, controlled method-band revision, production initial-admin gate |
+| `pnpm exec vitest run -c vitest.pg.config.ts tests/integration/api-pg.pg.test.ts tests/integration/pg-store.pg.test.ts tests/integration/sync-db.pg.test.ts` | PASS | 3 files, 39 tests — PgStore API strict approval 포함 |
+| `pnpm --filter @sen/api typecheck && pnpm --filter web typecheck && pnpm --filter @sen/db typecheck` | PASS | 모든 `tsc --noEmit` 성공 |
+
+- TDD RED: API 권한/개정/운영 bootstrap 테스트는 구현 전 4/15 실패(403·404·개발 fallback)했고, malformed action body 회귀는 500을 재현한 뒤 400으로 보완했다.
+
 ## 2026-08-30 FileStore 프로젝트 생명주기
 
 | 명령 | 결과 | 핵심 |

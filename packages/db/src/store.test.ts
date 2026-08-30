@@ -33,19 +33,22 @@ describe('원문 버전 관리', () => {
 describe('규칙 승인 플로우(draft → reviewed → active → superseded)', () => {
   it('draft는 바로 activate 불가(자동활성 금지)', () => {
     const store = new FileStore(tmp());
+    const admin = store.createUser({ username: 'r1-admin', passwordHash: 's:h', displayName: 'Admin', role: 'ADMIN' });
     store.upsertRule(baseRule('r1', 1, 'draft'));
-    expect(store.activateRule('r1', 1, 'admin')).toBeNull();
+    expect(store.activateReviewedRule('r1', 1, admin.id, '2026-08-30')).toEqual({ ok: false, code: 'INVALID_STATE' });
   });
 
   it('reviewed 거쳐 active 승인, 신규 버전 active 시 구버전 superseded', () => {
     const store = new FileStore(tmp());
+    const reviewer = store.createUser({ username: 'r1-reviewer', passwordHash: 's:h', displayName: 'Reviewer', role: 'REVIEWER' });
+    const admin = store.createUser({ username: 'r1-admin-2', passwordHash: 's:h', displayName: 'Admin', role: 'ADMIN' });
     store.upsertRule(baseRule('r1', 1, 'draft'));
-    store.reviewRule('r1', 1, 'reviewed');
-    expect(store.activateRule('r1', 1, 'admin')?.status).toBe('active');
+    expect(store.approveRuleReview('r1', 1, reviewer.id, '원문 확인', true).ok).toBe(true);
+    expect(store.activateReviewedRule('r1', 1, admin.id, '2026-08-30')).toMatchObject({ ok: true, rule: { status: 'active' } });
 
     store.upsertRule(baseRule('r1', 2, 'draft'));
-    store.reviewRule('r1', 2, 'reviewed');
-    store.activateRule('r1', 2, 'admin');
+    expect(store.approveRuleReview('r1', 2, reviewer.id, '원문 확인', true).ok).toBe(true);
+    expect(store.activateReviewedRule('r1', 2, admin.id, '2026-08-30').ok).toBe(true);
     const statuses = Object.fromEntries(store.listRules().map((r) => [`${r.id}@${r.version}`, r.status]));
     expect(statuses['r1@1']).toBe('superseded');
     expect(statuses['r1@2']).toBe('active');

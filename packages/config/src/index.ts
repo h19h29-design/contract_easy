@@ -15,6 +15,7 @@ export interface AppConfig {
   qdrantUrl: string;
   valkeyUrl: string;
   sessionSecret: string;
+  webOrigin: string;
   crawler: {
     userAgent: string;
     contact: string;
@@ -41,6 +42,7 @@ export function getConfig(): AppConfig {
     qdrantUrl: envStr('QDRANT_URL', 'http://localhost:16333'),
     valkeyUrl: envStr('VALKEY_URL', 'redis://localhost:16379'),
     sessionSecret: envStr('SESSION_SECRET'),
+    webOrigin: envStr('WEB_ORIGIN', process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000'),
     crawler: {
       userAgent: envStr('CRAWLER_USER_AGENT', 'sen-contract-guide-crawler/0.1 (+contact: unset)'),
       contact: envStr('CRAWLER_CONTACT', 'unset'),

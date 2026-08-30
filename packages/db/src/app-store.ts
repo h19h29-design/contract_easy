@@ -43,9 +43,6 @@ export interface AppStore {
   holdRule(ruleId: string, version: number, reviewerId: string, comment: string): MaybeP<RuleActionResult>;
   activateReviewedRule(ruleId: string, version: number, adminId: string, asOfDate: string): MaybeP<RuleActionResult>;
   listRuleReviews(ruleId: string, version: number): MaybeP<RuleReviewRecord[]>;
-  activateRule(ruleId: string, version: number, reviewer: string): MaybeP<RuleDefinition | null>;
-  reviewRule(ruleId: string, version: number, next: 'reviewed'): MaybeP<RuleDefinition | null>;
-  rejectRule(ruleId: string, version: number): MaybeP<boolean>;
   purgeStaleCandidateDrafts(currentIds: string[]): MaybeP<number>;
   findRulesByIdPrefix(prefix: string): MaybeP<RuleDefinition[]>;
 

@@ -34,11 +34,9 @@ beforeAll(async () => {
     [{ url: 'https://x/file.pdf', fileName: 'f.pdf', ext: 'pdf', robotsDisallowed: true }]
   );
 
-  // 규칙: candidate draft / source-side active
+  // 규칙: candidate draft / 사람이 관리하는 draft
   await fileStore.upsertRule(baseRule('candidate.amount.k1', 1, 'draft'));
   await fileStore.upsertRule(baseRule('manual.rule.r1', 1, 'draft'));
-  await fileStore.reviewRule('manual.rule.r1', 1, 'reviewed');
-  await fileStore.activateRule('manual.rule.r1', 1, '관리자');
 
   // 청크 파일
   const chunks: Chunk[] = [

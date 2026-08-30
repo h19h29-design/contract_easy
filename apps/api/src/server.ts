@@ -9,8 +9,8 @@ import {
   createStore, hashPassword, verifyPassword,
   STAGES, STAGE_LABELS
 } from '@sen/db';
-import type { AppStore, UserRecord } from '@sen/db';
-import { seoulDate, type Chunk, type SearchFilters, type WizardInput } from '@sen/shared';
+import type { AppStore, RuleActionErrorCode, UserRecord } from '@sen/db';
+import { seoulDate, type Chunk, type RuleCondition, type RuleDefinition, type SearchFilters, type WizardInput } from '@sen/shared';
 import { HybridRetriever } from '@sen/retrieval';
 import { evaluateWizard, detectConflicts } from '@sen/rules';
 
@@ -22,18 +22,47 @@ export interface AppContext {
   sessionSecret: string;
 }
 
+type RuleAdminBody =
+  | { action: 'review'; comment: string; sourceConfirmed: true }
+  | { action: 'hold'; comment: string }
+  | { action: 'activate' };
+
+interface MethodBandRevisionBody {
+  method: string;
+  lower: number | null;
+  lowerInclusive: boolean;
+  upper: number | null;
+  upperInclusive: boolean;
+  message: string;
+  source: { title: string; url: string; effectiveFrom: string | null; checkedAt: string };
+}
+
+const RULE_STATUS: Record<RuleActionErrorCode, number> = {
+  NOT_FOUND: 404, ROLE_REQUIRED: 403,
+  SOURCE_CONFIRMATION_REQUIRED: 400, RULE_INVALID: 400,
+  INVALID_STATE: 409, MISSING_REVIEW: 409, SAME_ACTOR: 409,
+  RULE_CONFLICT: 409, VERSION_CONFLICT: 409
+};
+
 export async function buildApp(ctxIn?: Partial<AppContext>) {
   const dirs = ensureDirs();
   const cfg = getConfig();
+  if (process.env.NODE_ENV === 'production' && !cfg.webOrigin) {
+    throw new Error('WEB_ORIGIN 환경변수가 필요합니다.');
+  }
   const store: AppStore =
     ctxIn?.store ?? (await createStore({ databaseUrl: cfg.databaseUrl, appStoreDir: dirs.appStore }));
 
-  // 최초 관리자 시딩(사용자 0명일 때만). 비밀번호는 환경변수 또는 개발 기본값.
+  // 최초 관리자 시딩(사용자 0명일 때만). 운영에서는 명시적 비밀번호가 필수다.
   if ((await store.listUsers()).length === 0) {
-    const initial = process.env.ADMIN_INITIAL_PASSWORD ?? 'ChangeMe!2026';
-    await store.ensureDefaultAdmin(hashPassword(initial));
-    if (!process.env.ADMIN_INITIAL_PASSWORD) {
-      console.warn('[api] 초기 관리자 생성: admin / ChangeMe!2026 - 즉시 변경 필요(개발 전용)');
+    const initial = process.env.ADMIN_INITIAL_PASSWORD;
+    if (process.env.NODE_ENV === 'production' && !initial) {
+      throw new Error('ADMIN_INITIAL_PASSWORD 환경변수가 필요합니다.');
+    }
+    const password = initial ?? 'ChangeMe!2026';
+    await store.ensureDefaultAdmin(hashPassword(password));
+    if (!initial) {
+      console.warn('[api] 개발용 초기 관리자 비밀번호가 생성되었습니다. 즉시 변경 필요');
     }
   }
 
@@ -50,7 +79,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
 
   const app = Fastify({ logger: false });
   await app.register(cookie);
-  await app.register(cors, { origin: true, credentials: true });
+  await app.register(cors, { origin: cfg.webOrigin, credentials: true });
   await app.register(rateLimit, {
     global: true,
     max: 120,
@@ -365,23 +394,74 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     const user = await requireAuth(req, reply, 'REVIEWER');
     if (!user) return;
     const allRules = await store.listRules();
-    return { rules: allRules, conflicts: detectConflicts(allRules) };
+    const reviews = (await Promise.all(
+      allRules.map((rule) => store.listRuleReviews(rule.id, rule.version))
+    )).flat();
+    return { rules: allRules, reviews, conflicts: detectConflicts(allRules) };
   });
 
-  app.post<{ Params: { id: string; version: string }, Body: { action?: 'review' | 'activate' | 'reject' } }>(
+  app.post<{ Params: { id: string; version: string }, Body: RuleAdminBody | undefined }>(
     '/api/admin/rules/:id/:version',
     async (req, reply) => {
-      const user = await requireAuth(req, reply, 'ADMIN');
-      if (!user) return;
+      const user = await currentUser(req);
+      if (!user) return reply.code(401).send({ error: '로그인이 필요합니다.' });
       const version = Number(req.params.version);
-      const action = req.body.action;
-      let ok = false;
-      if (action === 'review') { ok = Boolean(await store.reviewRule(req.params.id, version, 'reviewed')); }
-      else if (action === 'activate') { ok = Boolean(await store.activateRule(req.params.id, version, user.displayName)); }
-      else if (action === 'reject') { ok = await store.rejectRule(req.params.id, version); }
-      if (!ok) return reply.code(400).send({ error: '상태 변경 불가(draft는 reviewed를 거쳐야 활성화됩니다).' });
-      await store.audit(user.id, `rule.${action}`, 'rule', `${req.params.id}@${version}`, null, req.ip);
-      return { ok: true };
+      const body = req.body;
+      const action = body?.action;
+      if ((action === 'review' || action === 'hold') && user.role !== 'REVIEWER') {
+        return reply.code(403).send({ error: '권한이 없습니다.' });
+      }
+      if (action === 'activate' && user.role !== 'ADMIN') {
+        return reply.code(403).send({ error: '권한이 없습니다.' });
+      }
+      let result = null;
+      if (body?.action === 'review') {
+        result = await store.approveRuleReview(req.params.id, version, user.id, body.comment, body.sourceConfirmed);
+      } else if (body?.action === 'hold') {
+        result = await store.holdRule(req.params.id, version, user.id, body.comment);
+      } else if (body?.action === 'activate') {
+        result = await store.activateReviewedRule(req.params.id, version, user.id, seoulDate(new Date()));
+      }
+      if (!result) return reply.code(400).send({ error: '유효하지 않은 규칙 작업입니다.' });
+      if (!result.ok) return reply.code(RULE_STATUS[result.code]).send({ error: result.code });
+      return { ok: true, rule: result.rule };
+    }
+  );
+
+  app.post<{ Params: { id: string; version: string }, Body: MethodBandRevisionBody }>(
+    '/api/admin/rules/:id/:version/revisions',
+    async (req, reply) => {
+      const user = await currentUser(req);
+      if (!user) return reply.code(401).send({ error: '로그인이 필요합니다.' });
+      if (user.role !== 'REVIEWER') return reply.code(403).send({ error: '권한이 없습니다.' });
+      const version = Number(req.params.version);
+      const body = req.body;
+      if (!Number.isInteger(version) || version < 1) return reply.code(400).send({ error: '규칙 버전이 올바르지 않습니다.' });
+      if (!isMethodBandRevision(body)) return reply.code(400).send({ error: '개정 입력값이 올바르지 않습니다.' });
+      if (body.lower !== null && body.upper !== null && body.lower > body.upper) {
+        return reply.code(400).send({ error: '하한은 상한보다 클 수 없습니다.' });
+      }
+      const prior = (await store.listRules()).find((rule) => rule.id === req.params.id && rule.version === version);
+      if (!prior) return reply.code(404).send({ error: 'NOT_FOUND' });
+      const conditions: RuleCondition[] = [];
+      if (body.lower !== null) conditions.push({ field: 'estimated_price', operator: body.lowerInclusive ? 'gte' : 'gt', value: body.lower });
+      if (body.upper !== null) conditions.push({ field: 'estimated_price', operator: body.upperInclusive ? 'lte' : 'lt', value: body.upper });
+      const now = new Date().toISOString();
+      const revision: RuleDefinition = {
+        ...prior,
+        version: prior.version + 1,
+        status: 'draft',
+        conditions,
+        output: { ...prior.output, method: body.method.trim(), message: body.message.trim() },
+        source: { ...body.source, title: body.source.title.trim(), url: body.source.url.trim(), checkedAt: body.source.checkedAt.trim() },
+        reviewedBy: null,
+        supersededBy: null,
+        createdAt: now,
+        updatedAt: now
+      };
+      const result = await store.createRuleRevision(revision, user.id);
+      if (!result.ok) return reply.code(RULE_STATUS[result.code]).send({ error: result.code });
+      return { ok: true, rule: result.rule };
     }
   );
 
@@ -407,6 +487,20 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   });
 
   return { app, store, reloadRetriever: () => { retriever = loadRetriever(); } };
+}
+
+function isMethodBandRevision(body: MethodBandRevisionBody | undefined): body is MethodBandRevisionBody {
+  if (!body || typeof body.method !== 'string' || !body.method.trim() || typeof body.message !== 'string') return false;
+  if (body.lower !== null && (typeof body.lower !== 'number' || !Number.isFinite(body.lower) || body.lower < 0)) return false;
+  if (body.upper !== null && (typeof body.upper !== 'number' || !Number.isFinite(body.upper) || body.upper < 0)) return false;
+  if (typeof body.lowerInclusive !== 'boolean' || typeof body.upperInclusive !== 'boolean') return false;
+  const source = body.source;
+  return Boolean(
+    source && typeof source.title === 'string' && source.title.trim() &&
+    typeof source.url === 'string' && source.url.trim() &&
+    typeof source.checkedAt === 'string' && source.checkedAt.trim() &&
+    (source.effectiveFrom === null || typeof source.effectiveFrom === 'string')
+  );
 }
 
 async function computeProgress(store: AppStore, projectId: string): Promise<number> {

@@ -91,9 +91,6 @@ export default function WorkspacePage() {
           <div className="row-actions">
             <button className="btn-primary" onClick={() => void login()}>로그인</button>
           </div>
-          <p className="muted" style={{ marginTop: 12 }}>
-            개발 기본 계정: admin / ChangeMe!2026 (첫 로그인 후 반드시 변경하세요)
-          </p>
         </section>
       ) : (
         <>

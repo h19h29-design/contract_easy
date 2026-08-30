@@ -264,18 +264,22 @@ describe('PgStore 규칙 플로우', () => {
   });
 
   it('draft→activate 불가 / review 후 activate 가능 / 신규 active 시 구버전 superseded', async () => {
+    const reviewer = await store.createUser(user('reviewer-legacy-flow', 'REVIEWER'));
+    const admin = await store.createUser(user('admin-legacy-flow', 'ADMIN'));
     await store.upsertRule(baseRule('pg.rule', 1, 'draft'));
-    expect(await store.activateRule('pg.rule', 1, 'admin')).toBeNull();
-    expect((await store.reviewRule('pg.rule', 1, 'reviewed'))?.status).toBe('reviewed');
-    expect((await store.activateRule('pg.rule', 1, 'admin'))?.status).toBe('active');
+    expect(await store.activateReviewedRule('pg.rule', 1, admin.id, '2026-08-30')).toEqual({ ok: false, code: 'INVALID_STATE' });
+    expect(await store.approveRuleReview('pg.rule', 1, reviewer.id, '원문 확인', true))
+      .toMatchObject({ ok: true, rule: { status: 'reviewed' } });
+    expect(await store.activateReviewedRule('pg.rule', 1, admin.id, '2026-08-30'))
+      .toMatchObject({ ok: true, rule: { status: 'active' } });
 
     // 재upsert(draft)해도 active 상태 유지(D-011 에스컬레이션 가드)
     await store.upsertRule(baseRule('pg.rule', 1, 'draft'));
     expect((await store.getActiveRules()).some((r) => r.id === 'pg.rule')).toBe(true);
 
     await store.upsertRule(baseRule('pg.rule', 2, 'draft'));
-    await store.reviewRule('pg.rule', 2, 'reviewed');
-    await store.activateRule('pg.rule', 2, 'admin');
+    await store.approveRuleReview('pg.rule', 2, reviewer.id, '원문 확인', true);
+    await store.activateReviewedRule('pg.rule', 2, admin.id, '2026-08-30');
     const statuses = Object.fromEntries(
       (await store.listRules()).filter((r) => r.id === 'pg.rule').map((r) => [r.version, r.status])
     );
@@ -284,9 +288,10 @@ describe('PgStore 규칙 플로우', () => {
   });
 
   it('purgeStaleCandidateDrafts는 candidate draft만 제거', async () => {
+    const reviewer = await store.createUser(user('reviewer-purge', 'REVIEWER'));
     await store.upsertRule(baseRule('candidate.amount.x', 1, 'draft'));
     await store.upsertRule(baseRule('candidate.ratio.y', 1, 'draft'));
-    await store.reviewRule('candidate.ratio.y', 1, 'reviewed');
+    await store.approveRuleReview('candidate.ratio.y', 1, reviewer.id, '원문 확인', true);
     const removed = await store.purgeStaleCandidateDrafts(['candidate.ratio.candidate.ratio.y'.slice(0, 10) + 'y@1']);
     void removed;
     const ids = (await store.listRules()).map((r) => `${r.id}@${r.version}`);

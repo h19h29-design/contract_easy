@@ -463,67 +463,6 @@ export class PgStore {
     }));
   }
 
-  async activateRule(ruleId: string, version: number, reviewer: string): Promise<RuleDefinition | null> {
-    const target = await this.pool.query<{ id: string; status: string }>(
-      'SELECT id, status FROM rule_versions WHERE rule_id=$1 AND version=$2',
-      [ruleId, version]
-    );
-    const row = target.rows[0];
-    if (!row || row.status === 'draft') return null;
-
-    // 같은 논리 ID의 기존 active → superseded 처리
-    await this.pool.query(
-      `UPDATE rule_versions
-       SET status='superseded',
-           definition = jsonb_set(jsonb_set(definition, '{status}','"superseded"'::jsonb),
-                                  '{supersededBy}', to_jsonb($3::text))
-       WHERE rule_id=$1 AND version<>$2 AND status='active'`,
-      [ruleId, version, `${ruleId}@${version}`]
-    );
-    // 대상 버전 active + reviewedBy 기록
-    await this.pool.query(
-      `UPDATE rule_versions
-       SET status='active',
-           definition = jsonb_set(jsonb_set(definition, '{status}','"active"'::jsonb),
-                                  '{reviewedBy}', to_jsonb($2::text))
-       WHERE id=$1`,
-      [row.id, reviewer]
-    );
-    await this.pool.query("UPDATE rules SET current_status='active', updated_at=$2 WHERE id=$1",
-      [ruleId, isoNow()]);
-    return (await this.listRules()).find((r) => r.id === ruleId && r.version === version) ?? null;
-  }
-
-  async reviewRule(ruleId: string, version: number, _next: 'reviewed'): Promise<RuleDefinition | null> {
-    const res = await this.pool.query<{ id: string; status: string }>(
-      'SELECT id, status FROM rule_versions WHERE rule_id=$1 AND version=$2',
-      [ruleId, version]
-    );
-    const row = res.rows[0];
-    if (!row || row.status !== 'draft') return null;
-    await this.pool.query(
-      `UPDATE rule_versions SET status='reviewed',
-         definition = jsonb_set(definition, '{status}', '"reviewed"'::jsonb)
-       WHERE id=$1`,
-      [row.id]
-    );
-    await this.pool.query("UPDATE rules SET current_status='reviewed', updated_at=$2 WHERE id=$1",
-      [ruleId, isoNow()]);
-    return (await this.listRules()).find((r) => r.id === ruleId && r.version === version) ?? null;
-  }
-
-  async rejectRule(ruleId: string, version: number): Promise<boolean> {
-    const res = await this.pool.query('DELETE FROM rule_versions WHERE rule_id=$1 AND version=$2', [ruleId, version]);
-    if ((res.rowCount ?? 0) === 0) return false;
-    const left = await this.pool.query<{ n: number }>(
-      'SELECT count(*)::int AS n FROM rule_versions WHERE rule_id=$1', [ruleId]
-    );
-    if ((left.rows[0]?.n ?? 0) === 0) {
-      await this.pool.query("DELETE FROM rules WHERE id=$1 AND current_status='draft'", [ruleId]);
-    }
-    return true;
-  }
-
   async purgeStaleCandidateDrafts(currentIds: string[]): Promise<number> {
     const keep = currentIds.length > 0 ? currentIds : ['__none__'];
     const del = await this.pool.query(
