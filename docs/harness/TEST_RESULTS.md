@@ -20,6 +20,15 @@
 
 - TDD RED 확인: 구현 전 신규 회귀 4건은 각각 직접 status 변경, oldest-first 목록, 잘못된 날짜 이벤트 저장, 반환/조회 이력 객체 변조로 실패했다.
 
+## 2026-08-30 FileStore ProjectRecord 스냅샷 검토 보완
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm exec vitest run packages/shared/src/shared.test.ts packages/db/src/store.test.ts` | PASS | 2 files, 36 tests — create/get/list/update/transition 반환값과 중첩 wizardInput 변조가 저장 상태를 바꾸지 않음 |
+| `pnpm --filter @sen/db typecheck` | PASS | `tsc --noEmit` 성공 |
+
+- TDD RED 확인: 구현 전 create/get/list/update 반환값을 변조하면 내부 프로젝트가 `working`이 되어 `planning→contracting` 전이가 `INVALID_TRANSITION`으로 실패했다.
+
 ## 2026-08-27 macOS Codex 재개 환경
 
 | 명령 | 결과 | 핵심 |

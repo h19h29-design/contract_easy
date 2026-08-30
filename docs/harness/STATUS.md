@@ -4,7 +4,7 @@
 - 현재 위치: **MVP + PostgreSQL 운영경로 + 확장 코퍼스 + 벡터 인덱스 CLI 완료**.
 - 다음 액션: API 서버에 EmbeddingProvider/VectorStore를 주입해 실제 하이브리드 검색을 활성화한다. 상세는 `CODEX_HANDOFF.md` 참조.
 - 재개 환경: Windows OpenCode의 clean commit `10027fa`를 macOS Codex 작업공간으로 이전하고 install/lint/typecheck/test/build/PG/vector 스모크를 통과했다.
-- 최근 구현: FileStore에 프로젝트 상태 전이와 변경·이벤트 이력(JSON 호환 로드 포함)을 추가했다. 후속 검토에서 `updateProject` 상태 우회 차단, 이벤트 날짜 검증, 최신순 조회, 이력 객체 복사까지 보완했다. AppStore/PgStore 계약 승격은 후속 Task 5에서 진행한다.
+- 최근 구현: FileStore에 프로젝트 상태 전이와 변경·이벤트 이력(JSON 호환 로드 포함)을 추가했다. 후속 검토에서 `updateProject` 상태 우회 차단, 이벤트 날짜 검증, 최신순 조회, 이력 객체 복사와 모든 ProjectRecord 반환 경계의 스냅샷 격리를 보완했다. AppStore/PgStore 계약 승격은 후속 Task 5에서 진행한다.
 
 ## 스냅셧
 | 영역 | 상태 |

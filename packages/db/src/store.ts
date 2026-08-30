@@ -200,6 +200,17 @@ function cloneJsonRecord(value: Record<string, unknown> | null): Record<string, 
   return value === null ? null : JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
 }
 
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function cloneProject(project: ProjectRecord): ProjectRecord {
+  return {
+    ...project,
+    wizardInput: cloneJson(project.wizardInput)
+  };
+}
+
 function cloneProjectChange(change: ProjectChangeRecord): ProjectChangeRecord {
   return {
     ...change,
@@ -644,7 +655,7 @@ export class FileStore implements AppStore {
 
   createProject(p: Omit<ProjectRecord, 'id' | 'createdAt' | 'updatedAt'>, checklistTemplates: Record<string, string[]>): ProjectRecord {
     const id = stableId('prj', p.ownerId, p.name, isoNow());
-    const rec: ProjectRecord = { ...p, id, createdAt: isoNow(), updatedAt: isoNow() };
+    const rec: ProjectRecord = { ...p, wizardInput: cloneJson(p.wizardInput), id, createdAt: isoNow(), updatedAt: isoNow() };
     this.data.projects[id] = rec;
     STAGES.forEach((stage, i) => {
       const stepId = stableId('step', id, stage);
@@ -657,16 +668,17 @@ export class FileStore implements AppStore {
       }
     });
     this.flush();
-    return rec;
+    return cloneProject(rec);
   }
 
   listProjects(ownerId?: string): ProjectRecord[] {
     const all = Object.values(this.data.projects);
-    return ownerId ? all.filter((p) => p.ownerId === ownerId) : all;
+    return (ownerId ? all.filter((p) => p.ownerId === ownerId) : all).map(cloneProject);
   }
 
   getProject(id: string): ProjectRecord | null {
-    return this.data.projects[id] ?? null;
+    const project = this.data.projects[id];
+    return project ? cloneProject(project) : null;
   }
 
   canAccessProject(projectId: string, userId: string, role: UserRecord['role']): boolean {
@@ -679,10 +691,10 @@ export class FileStore implements AppStore {
   updateProject(id: string, patch: Partial<ProjectRecord>): ProjectRecord | null {
     const p = this.data.projects[id];
     if (!p) return null;
-    const { status: _ignoredStatus, ...allowedPatch } = patch;
-    Object.assign(p, allowedPatch, { updatedAt: isoNow() });
+    const { status: _ignoredStatus, wizardInput, ...allowedPatch } = patch;
+    Object.assign(p, allowedPatch, wizardInput === undefined ? {} : { wizardInput: cloneJson(wizardInput) }, { updatedAt: isoNow() });
     this.flush();
-    return p;
+    return cloneProject(p);
   }
 
   stepsOf(projectId: string): StepRecord[] {
@@ -742,7 +754,7 @@ export class FileStore implements AppStore {
       reason
     });
     this.flush();
-    return { ok: true, project, change: cloneProjectChange(change) };
+    return { ok: true, project: cloneProject(project), change: cloneProjectChange(change) };
   }
 
   addProjectChange(projectId: string, changeType: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string): string;

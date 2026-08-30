@@ -148,6 +148,56 @@ describe('프로젝트 접근제어(RBAC)', () => {
 });
 
 describe('프로젝트 상태·변경·일정 이력', () => {
+  it('공개 프로젝트 반환값과 wizardInput 변경은 저장된 프로젝트를 바꾸지 않는다', () => {
+    const store = new FileStore(tmp());
+    const owner = store.createUser({ username: 'snapshot-owner', passwordHash: 's:h', displayName: 'Owner', role: 'USER' });
+    const wizardInput: WizardInput = {
+      projectName: '원본',
+      workType: '건축',
+      contractCategory: 'construction',
+      estimatedPrice: 10,
+      governmentMaterials: false,
+      constructionWaste: false,
+      emergency: false,
+      regionRestriction: false,
+      performanceRestriction: false,
+      organizationType: 'school'
+    };
+    const created = store.createProject({
+      ownerId: owner.id,
+      name: '스냅샷 프로젝트',
+      contractCategory: 'construction',
+      estimatedPrice: 10,
+      organizationType: 'school',
+      status: 'planning',
+      wizardInput
+    }, {});
+
+    wizardInput.workType = '입력 변조';
+    created.status = 'working';
+    created.wizardInput!.workType = 'create 변조';
+    const fromGet = store.getProject(created.id)!;
+    fromGet.status = 'working';
+    fromGet.wizardInput!.workType = 'get 변조';
+    const fromList = store.listProjects()[0]!;
+    fromList.status = 'working';
+    fromList.wizardInput!.workType = 'list 변조';
+    const updated = store.updateProject(created.id, { name: '이름 갱신' })!;
+    updated.status = 'working';
+    updated.wizardInput!.workType = 'update 변조';
+    const transition = store.transitionProjectStatus(created.id, 'contracting', owner.id, '계약 시작');
+    expect(transition).toMatchObject({ ok: true, project: { status: 'contracting' } });
+    if (!transition.ok) throw new Error('상태 전이에 실패했습니다');
+    transition.project.status = 'warranty';
+    transition.project.wizardInput!.workType = 'transition 변조';
+
+    expect(store.getProject(created.id)).toMatchObject({
+      name: '이름 갱신',
+      status: 'contracting',
+      wizardInput: { workType: '건축' }
+    });
+  });
+
   it('직접 프로젝트 수정은 상태를 바꾸지 않고 다른 필드는 갱신한다', () => {
     const { store, project } = projectStore();
 
@@ -280,7 +330,7 @@ describe('비밀번호 해시', () => {
   });
 });
 
-import type { RuleDefinition } from '@sen/shared';
+import type { RuleDefinition, WizardInput } from '@sen/shared';
 
 function ruleStore(): { store: FileStore; dir: string; reviewer: { id: string }; admin: { id: string } } {
   const dir = tmp();
