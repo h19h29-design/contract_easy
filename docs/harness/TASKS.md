@@ -165,7 +165,7 @@
 - 검증: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, hash+local API 검색 스모크.
 
 ## T-202 FileStore 프로젝트 생명주기 기록 — DONE
-- 상태 전이(planning→contracting→working→completed→warranty), 변경·이벤트 append-only JSON 기록, 이전 JSON 로드 호환을 추가했다. AppStore/PgStore 계약 승격은 후속 Task 5 범위다.
+- 상태 전이(planning→contracting→working→completed→warranty), 변경·이벤트 append-only JSON 기록, 이전 JSON 로드 호환과 AppStore/PgStore 동형 계약을 완료했다.
 - 검토 보완: 직접 `updateProject` 상태 변경 차단, 이벤트 엄격 ISO 날짜 검증, 변경·이벤트 최신순 조회, JSON 이력의 입력/반환/조회 객체 복사, ProjectRecord 반환값(create/get/list/update/transition)과 wizardInput의 스냅샷 격리.
 - 검증: `pnpm exec vitest run packages/shared/src/shared.test.ts packages/db/src/store.test.ts` (36/36), `pnpm --filter @sen/db typecheck`.
 - 증거: `packages/db/src/store.ts`, commits `ba454a8..baebe0c`, `docs/harness/TEST_RESULTS.md`. 현재 상태·증빙 참조는 통제된 작업으로만 변경되며 전이/교체 이력은 append-only.

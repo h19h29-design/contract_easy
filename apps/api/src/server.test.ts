@@ -322,9 +322,14 @@ describe('비공개 체크리스트 증빙 API', () => {
     })!.document;
 
     expect((await ownerRequest('GET', `/api/projects/${projectA.id}/documents/${linked.id}/download`)).statusCode).toBe(404);
-    expect((await ownerRequest('POST', `/api/projects/${projectA.id}/checklist/${itemB.id}/evidence`, Buffer.from('%PDF-1.4\n'), {
-      'content-type': 'application/octet-stream', 'x-file-name': 'proof.pdf', 'x-file-mime': 'application/pdf'
+    const docsBefore = evidenceStore.listProjectDocuments(projectA.id);
+    const auditsBefore = evidenceStore.listAudit();
+    expect((await ownerRequest('POST', `/api/projects/${projectA.id}/checklist/${itemB.id}/evidence`, Buffer.from('bad'), {
+      'content-type': 'application/octet-stream', 'x-file-name': '%E0%A4%A', 'x-file-mime': 'text/plain'
     })).statusCode).toBe(404);
+    expect(evidenceStore.listProjectDocuments(projectA.id)).toEqual(docsBefore);
+    expect(evidenceStore.listAudit()).toEqual(auditsBefore);
+    expect(evidenceStore.checklistOf(projectA.id).every((item) => item.evidencePath === null)).toBe(true);
   });
 
   it('다운로드 MIME은 저장된 메타데이터가 아니라 허용된 파일 확장자로 정한다', async () => {
