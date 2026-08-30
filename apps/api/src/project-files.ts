@@ -13,17 +13,24 @@ export function writeEvidenceFile(input: {
   sha256: string;
   ext: 'pdf' | 'jpg' | 'png';
 }): StoredEvidenceFile {
-  if (!/^[A-Za-z0-9_-]+$/.test(input.projectId)) {
+  if (
+    !/^[A-Za-z0-9_-]+$/.test(input.projectId) || !/^[a-f0-9]{64}$/.test(input.sha256) ||
+    !(['pdf', 'jpg', 'png'] as const).includes(input.ext)
+  ) {
     throw new Error('PRIVATE_PATH_VIOLATION');
   }
 
-  const projectDir = path.join(input.privateRoot, input.projectId);
-  fs.mkdirSync(projectDir, { recursive: true, mode: 0o700 });
-  fs.chmodSync(projectDir, 0o700);
-  const storedPath = path.join(projectDir, `${input.sha256}.${input.ext}`);
+  const root = ensurePrivateRoot(input.privateRoot);
+  const projectDir = path.join(root, input.projectId);
+  ensureProjectDirectory(projectDir);
+  const canonicalProjectDir = fs.realpathSync(projectDir);
+  if (!isStrictlyWithin(root, canonicalProjectDir)) throw new Error('PRIVATE_PATH_VIOLATION');
+  fs.chmodSync(canonicalProjectDir, 0o700);
+  const canonicalStoredPath = path.join(canonicalProjectDir, `${input.sha256}.${input.ext}`);
+  const storedPath = path.join(input.privateRoot, input.projectId, `${input.sha256}.${input.ext}`);
 
   try {
-    const fd = fs.openSync(storedPath, 'wx', 0o600);
+    const fd = fs.openSync(canonicalStoredPath, 'wx', 0o600);
     try {
       fs.writeFileSync(fd, input.bytes);
     } finally {
@@ -31,7 +38,10 @@ export function writeEvidenceFile(input: {
     }
     return { storedPath, created: true };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'EEXIST') return { storedPath, created: false };
+    if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+      if (fs.lstatSync(canonicalStoredPath).isSymbolicLink()) throw new Error('PRIVATE_PATH_VIOLATION');
+      return { storedPath, created: false };
+    }
     throw error;
   }
 }
@@ -43,6 +53,30 @@ export function resolveEvidenceDownload(privateRoot: string, storedPath: string)
     throw new Error('PRIVATE_PATH_VIOLATION');
   }
   return target;
+}
+
+function ensurePrivateRoot(privateRoot: string): string {
+  fs.mkdirSync(privateRoot, { recursive: true, mode: 0o700 });
+  const info = fs.lstatSync(privateRoot);
+  if (!info.isDirectory() || info.isSymbolicLink()) throw new Error('PRIVATE_PATH_VIOLATION');
+  fs.chmodSync(privateRoot, 0o700);
+  return fs.realpathSync(privateRoot);
+}
+
+function ensureProjectDirectory(projectDir: string): void {
+  try {
+    const info = fs.lstatSync(projectDir);
+    if (!info.isDirectory() || info.isSymbolicLink()) throw new Error('PRIVATE_PATH_VIOLATION');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    fs.mkdirSync(projectDir, { mode: 0o700 });
+    const created = fs.lstatSync(projectDir);
+    if (!created.isDirectory() || created.isSymbolicLink()) throw new Error('PRIVATE_PATH_VIOLATION');
+  }
+}
+
+function isStrictlyWithin(root: string, target: string): boolean {
+  return target.startsWith(`${root}${path.sep}`);
 }
 
 export function attachmentDisposition(originalName: string): string {

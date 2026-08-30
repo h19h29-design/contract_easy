@@ -356,6 +356,34 @@ describe('비공개 체크리스트 증빙 API', () => {
       'content-type': 'application/octet-stream', 'x-file-name': ['proof.pdf', 'second.pdf'], 'x-file-mime': 'application/pdf'
     })).statusCode).toBe(400);
   });
+
+  it('예상하지 못한 파일 쓰기 오류는 경로 또는 stack 없이 일반 500으로 응답한다', async () => {
+    const { project, item } = await createProject('증빙 내부 오류 공사');
+    const sentinelPath = path.join(evidenceDir, 'sentinel-private-root');
+    fs.writeFileSync(sentinelPath, 'not-a-directory', 'utf8');
+    const failureApp = await buildApp({
+      store: evidenceStore,
+      retriever: new HybridRetriever({ chunks: [], versions: [] }),
+      privateRoot: sentinelPath
+    });
+    try {
+      const response = await failureApp.app.inject({
+        method: 'POST', url: `/api/projects/${project.id}/checklist/${item.id}/evidence`,
+        cookies: { scg_session: ownerSession },
+        headers: {
+          'x-csrf-token': ownerCsrf, 'content-type': 'application/octet-stream',
+          'x-file-name': 'proof.pdf', 'x-file-mime': 'application/pdf'
+        },
+        payload: Buffer.from('%PDF-1.4\n')
+      });
+      expect(response.statusCode).toBe(500);
+      expect(response.json()).toEqual({ error: '서버 내부 오류가 발생했습니다.' });
+      expect(response.body).not.toContain(sentinelPath);
+      expect(response.body).not.toMatch(/Error:\s|at\s+\S+\s*\(/);
+    } finally {
+      await failureApp.app.close();
+    }
+  });
 });
 
 describe('규칙 관리자 API의 엄격한 승인 흐름', () => {

@@ -33,4 +33,18 @@ describe('private evidence files', () => {
   it('privateRoot 밖의 DB 경로를 다운로드하지 않음', () => {
     expect(() => resolveEvidenceDownload(privateRoot(), '/etc/passwd')).toThrow('PRIVATE_PATH_VIOLATION');
   });
+
+  it('프로젝트 디렉터리 symlink를 따라 privateRoot 밖에 쓰거나 chmod 하지 않음', () => {
+    const root = privateRoot();
+    const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'scg-private-outside-'));
+    roots.push(outside);
+    fs.chmodSync(outside, 0o755);
+    fs.symlinkSync(outside, path.join(root, 'p1'));
+
+    expect(() => writeEvidenceFile({
+      privateRoot: root, projectId: 'p1', bytes: Buffer.from('%PDF-1.4\n'), sha256: 'b'.repeat(64), ext: 'pdf'
+    })).toThrow('PRIVATE_PATH_VIOLATION');
+    expect(fs.existsSync(path.join(outside, `${'b'.repeat(64)}.pdf`))).toBe(false);
+    expect(fs.statSync(outside).mode & 0o777).toBe(0o755);
+  });
 });
