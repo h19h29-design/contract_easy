@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { PgStore, createStore } from '@sen/db';
 import type { RuleDefinition } from '@sen/shared';
 
@@ -337,6 +337,173 @@ describe('PgStore 프로젝트 생명주기', () => {
     await store.addProjectEvent(project.id, 'inspection', '검사', '2026-12-20', owner.id);
 
     expect((await store.listProjectEvents(project.id))[0]?.dueDate).toBe('2026-12-20');
+  });
+
+  it('잘못된 상태 전이는 프로젝트·변경·감사 기록을 만들지 않는다', async () => {
+    const owner = await store.createUser(user('pg-invalid-transition-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: '잘못된 상태 전이', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, {});
+
+    expect(await store.transitionProjectStatus(project.id, 'working', owner.id, '건너뜀'))
+      .toEqual({ ok: false, code: 'INVALID_TRANSITION' });
+    expect((await store.getProject(project.id))?.status).toBe('planning');
+    expect(await store.listProjectChanges(project.id)).toEqual([]);
+    expect((await store.listAudit()).filter((entry) => entry.targetId === project.id)).toEqual([]);
+  });
+
+  it('상태 변경 뒤 변경행 쓰기가 실패하면 프로젝트·변경·감사를 모두 롤백한다', async () => {
+    const owner = await store.createUser(user('pg-transition-rollback-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: '상태 전이 롤백', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, {});
+    const pool = poolForTest();
+    await pool.query(`CREATE OR REPLACE FUNCTION pg_test_fail_project_transition() RETURNS trigger AS $$
+      BEGIN RAISE EXCEPTION 'forced project transition rollback'; END;
+      $$ LANGUAGE plpgsql`);
+    await pool.query(`CREATE TRIGGER pg_test_fail_project_transition
+      BEFORE INSERT ON project_changes
+      FOR EACH ROW WHEN (NEW.project_id = '${project.id}')
+      EXECUTE FUNCTION pg_test_fail_project_transition()`);
+    try {
+      await expect(store.transitionProjectStatus(project.id, 'contracting', owner.id, '계약 시작'))
+        .rejects.toThrow('forced project transition rollback');
+    } finally {
+      await pool.query('DROP TRIGGER IF EXISTS pg_test_fail_project_transition ON project_changes');
+      await pool.query('DROP FUNCTION IF EXISTS pg_test_fail_project_transition()');
+    }
+
+    expect((await store.getProject(project.id))?.status).toBe('planning');
+    expect(await store.listProjectChanges(project.id)).toEqual([]);
+    expect((await store.listAudit()).filter((entry) => entry.targetId === project.id)).toEqual([]);
+  });
+
+  it('일반 프로젝트 수정은 상태를 보호하고 undefined wizardInput을 보존한다', async () => {
+    const owner = await store.createUser(user('pg-update-status-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: '상태 보호', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning',
+      wizardInput: {
+        projectName: '원본', workType: '건축', contractCategory: 'construction', estimatedPrice: 1000,
+        governmentMaterials: false, constructionWaste: false, emergency: false, regionRestriction: false,
+        performanceRestriction: false, organizationType: 'school'
+      }
+    }, {});
+
+    const updated = await store.updateProject(project.id, {
+      name: '이름만 변경', status: 'working', wizardInput: undefined
+    });
+
+    expect(updated).toMatchObject({
+      name: '이름만 변경', status: 'planning', wizardInput: { workType: '건축' }
+    });
+    expect(await store.listProjectChanges(project.id)).toEqual([]);
+  });
+
+  it('동시 상태 전이 뒤 일반 수정은 읽은 이전 상태를 되돌리지 않는다', async () => {
+    const owner = await store.createUser(user('pg-stale-update-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: '경합 상태 보호', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, {});
+    const pool = poolForTest();
+    const originalQuery = pool.query;
+    let releaseRead!: () => void;
+    let releaseUpdate!: () => void;
+    const readReached = new Promise<void>((resolve) => { releaseRead = resolve; });
+    const allowUpdate = new Promise<void>((resolve) => { releaseUpdate = resolve; });
+    let paused = false;
+    pool.query = async (text, values) => {
+      const result = await originalQuery.call(pool, text, values);
+      if (!paused && text === 'SELECT * FROM contract_projects WHERE id=$1' && values?.[0] === project.id) {
+        paused = true;
+        releaseRead();
+        await allowUpdate;
+      }
+      return result;
+    };
+    try {
+      const staleUpdate = store.updateProject(project.id, { name: '뒤늦은 이름 수정' });
+      await readReached;
+      expect((await store.transitionProjectStatus(project.id, 'contracting', owner.id, '계약 시작')).ok).toBe(true);
+      releaseUpdate();
+      await staleUpdate;
+    } finally {
+      pool.query = originalQuery;
+    }
+
+    expect((await store.getProject(project.id))?.status).toBe('contracting');
+    expect((await store.listProjectChanges(project.id))[0]).toMatchObject({ changeType: 'status' });
+  });
+
+  it('일반 변경과 이벤트는 append-only로 최신순이며 프로젝트 필드를 수정하지 않는다', async () => {
+    const owner = await store.createUser(user('pg-append-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: '추가 전용 이력', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, {});
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+      const firstChange = await store.addProjectChange(project.id, 'amount', { amount: 1000 }, { amount: 1100 }, '첫 금액 변경', owner.id);
+      const firstEvent = await store.addProjectEvent(project.id, 'inspection', '1차 검사', '2026-12-20', owner.id);
+      vi.setSystemTime(new Date('2026-01-02T00:00:00.000Z'));
+      const secondChange = await store.addProjectChange(project.id, 'duration', { days: 10 }, { days: 11 }, '기간 변경', owner.id);
+      const secondEvent = await store.addProjectEvent(project.id, 'inspection', '2차 검사', '2026-12-21', owner.id);
+
+      expect(await store.listProjectChanges(project.id)).toMatchObject([
+        { id: secondChange?.id, changeType: 'duration' }, { id: firstChange?.id, changeType: 'amount' }
+      ]);
+      expect(await store.listProjectEvents(project.id)).toMatchObject([
+        { id: secondEvent?.id, dueDate: '2026-12-21' }, { id: firstEvent?.id, dueDate: '2026-12-20' }
+      ]);
+      expect(await store.getProject(project.id)).toMatchObject({ estimatedPrice: 1000, status: 'planning' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('유효하지 않은 이벤트 날짜는 이벤트나 감사를 만들지 않는다', async () => {
+    const owner = await store.createUser(user('pg-invalid-date-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: '날짜 검증', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, {});
+
+    expect(await store.addProjectEvent(project.id, 'inspection', '잘못된 날짜', '2026-02-30', owner.id)).toBeNull();
+    expect(await store.addProjectEvent(project.id, 'inspection', '접미사 날짜', '2026-02-28extra', owner.id)).toBeNull();
+    expect(await store.listProjectEvents(project.id)).toEqual([]);
+    expect((await store.listAudit()).filter((entry) => entry.targetId === project.id)).toEqual([]);
+  });
+
+  it('변경 이력 JSON과 이벤트 반환값은 호출자 변경으로 오염되지 않는다', async () => {
+    const owner = await store.createUser(user('pg-json-isolation-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: '이력 격리', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, {});
+    const before: Record<string, unknown> = { amount: { value: 1000 } };
+    const after: Record<string, unknown> = { amount: { value: 1100 } };
+    const change = await store.addProjectChange(project.id, 'amount', before, after, '금액 변경', owner.id);
+    const event = await store.addProjectEvent(project.id, 'inspection', '준공검사 예정', '2026-12-20', owner.id);
+
+    (before.amount as { value: number }).value = 9999;
+    (after.amount as { value: number }).value = 9999;
+    (change!.before!.amount as { value: number }).value = 8888;
+    change!.reason = '변조';
+    event!.title = '변조';
+    const listedChange = (await store.listProjectChanges(project.id))[0]!;
+    const listedEvent = (await store.listProjectEvents(project.id))[0]!;
+    (listedChange.after!.amount as { value: number }).value = 7777;
+    listedChange.reason = '변조';
+    listedEvent.title = '변조';
+
+    expect((await store.listProjectChanges(project.id))[0]).toMatchObject({
+      before: { amount: { value: 1000 } }, after: { amount: { value: 1100 } }, reason: '금액 변경'
+    });
+    expect((await store.listProjectEvents(project.id))[0]).toMatchObject({ title: '준공검사 예정' });
   });
 });
 

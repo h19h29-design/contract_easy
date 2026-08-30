@@ -686,14 +686,21 @@ export class PgStore {
   async updateProject(id: string, patch: Partial<ProjectRecord>): Promise<ProjectRecord | null> {
     const cur = await this.getProject(id);
     if (!cur) return null;
-    // 상태는 transitionProjectStatus만 변경할 수 있다.
-    const next: ProjectRecord = { ...cur, ...patch, status: cur.status, updatedAt: isoNow() };
+    // 상태는 transitionProjectStatus만 변경할 수 있다. SQL에도 status를 포함하지 않아
+    // 상태 전이와 일반 수정이 경합해도 이전 상태를 되돌릴 수 없다.
+    const { status: _ignoredStatus, wizardInput, ...allowedPatch } = patch;
+    const next: ProjectRecord = {
+      ...cur,
+      ...allowedPatch,
+      wizardInput: wizardInput === undefined ? cur.wizardInput : wizardInput,
+      updatedAt: isoNow()
+    };
     await this.pool.query(
       `UPDATE contract_projects SET name=$2, contract_category=$3, estimated_price=$4,
-         organization_type=$5, status=$6, wizard_input=$7::jsonb, updated_at=$8
+         organization_type=$5, wizard_input=$6::jsonb, updated_at=$7
        WHERE id=$1`,
       [id, next.name, next.contractCategory, next.estimatedPrice, next.organizationType,
-        next.status, next.wizardInput ? JSON.stringify(next.wizardInput) : null, next.updatedAt]
+        next.wizardInput ? JSON.stringify(next.wizardInput) : null, next.updatedAt]
     );
     return this.getProject(id);
   }
