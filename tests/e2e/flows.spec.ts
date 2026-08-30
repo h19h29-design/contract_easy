@@ -96,12 +96,25 @@ test('상태·변경·일정·증빙을 한 상세 화면에서 관리', async (
   const project = await createAndOpenProject(page, '업무공간 E2E');
   await page.getByLabel('상태 변경 사유').fill('계약 절차 시작');
   await page.getByRole('button', { name: 'contracting으로 이동' }).click();
-  await expect(page.getByText('contracting')).toBeVisible();
+  await expect(page.getByTestId('current-status')).toHaveText('contracting');
+  await expect(page.getByTestId('project-history')).toContainText('계약 절차 시작');
 
   await page.getByLabel('증빙 파일').first().setInputFiles({
-    name: '증빙.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n')
+    name: '증빙-1.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\nfirst')
   });
-  await expect(page.getByText('증빙.pdf')).toBeVisible();
+  const currentEvidence = page.getByTestId('evidence-current').first();
+  await expect(currentEvidence).toContainText('증빙-1.pdf');
+  await expect(currentEvidence).toContainText(/업로드:/);
+  const firstDownload = await currentEvidence.getByRole('link', { name: '증빙-1.pdf' }).getAttribute('href');
+  expect(firstDownload).toBeTruthy();
+  expect((await page.request.get(firstDownload!)).ok()).toBeTruthy();
+
+  await page.getByLabel('증빙 파일').first().setInputFiles({
+    name: '증빙-2.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\nsecond')
+  });
+  await expect(currentEvidence).toContainText('증빙-2.pdf');
+  await expect(currentEvidence).not.toContainText('증빙-1.pdf');
+  expect((await page.request.get(firstDownload!)).ok()).toBeTruthy();
 
   await page.getByLabel('변경 사유', { exact: true }).fill('사용자 입력 변경 기록');
   await page.getByRole('button', { name: '변경 기록 추가' }).click();
@@ -110,6 +123,6 @@ test('상태·변경·일정·증빙을 한 상세 화면에서 관리', async (
   await page.getByLabel('마일스톤 제목').fill('준공검사 예정');
   await page.getByLabel('마일스톤 날짜').fill('2099-12-31');
   await page.getByRole('button', { name: '일정 추가' }).click();
-  await expect(page.getByText('예정')).toBeVisible();
+  await expect(page.getByTestId('event-state').filter({ hasText: '예정' })).toHaveText('예정');
   expect(project.id).toBeTruthy();
 });

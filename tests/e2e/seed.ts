@@ -3,11 +3,15 @@ import path from 'node:path';
 import { FileStore, hashPassword } from '@sen/db';
 import type { RuleDefinition } from '@sen/shared';
 
-const dataRoot = path.resolve(process.env.SEN_CONTRACT_DATA_ROOT ?? 'tests/e2e/.data');
-// This is an exact, disposable E2E fixture directory; never broaden this target.
-fs.rmSync(dataRoot, { recursive: true, force: true });
+const FIXED_DATA_ROOT = path.resolve('tests/e2e/.data');
+const configuredDataRoot = process.env.SEN_CONTRACT_DATA_ROOT;
+if (configuredDataRoot && path.resolve(configuredDataRoot) !== FIXED_DATA_ROOT) {
+  throw new Error('SEN_CONTRACT_DATA_ROOT must resolve to tests/e2e/.data for E2E seeding.');
+}
+// This is the one exact, disposable E2E fixture directory; never broaden this target.
+fs.rmSync(FIXED_DATA_ROOT, { recursive: true, force: true });
 
-const store = new FileStore(path.join(dataRoot, 'app-store'));
+const store = new FileStore(path.join(FIXED_DATA_ROOT, 'app-store'));
 
 function ensureUser(username: string, password: string, role: 'REVIEWER' | 'ADMIN') {
   if (store.listUsers().some((user) => user.username === username)) return;
