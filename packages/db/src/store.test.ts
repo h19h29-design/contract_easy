@@ -56,6 +56,27 @@ describe('규칙 승인 플로우(draft → reviewed → active → superseded)'
 });
 
 describe('엄격한 FileStore 규칙 검토 계약', () => {
+  it('all object-returning rule and audit boundaries remain detached after flush/reload', () => {
+    const { store, dir, reviewer, admin } = ruleStore();
+    const initial = baseRule('initial', 1, 'draft'); store.upsertRule(initial); initial.output.method = 'mutated';
+    const revision = baseRule('safe', 2, 'draft'); const revised = store.createRuleRevision(revision, reviewer.id); revision.source.title = 'mutated';
+    if (revised.ok) revised.rule.conditions[0]!.value = 999;
+    const approved = store.approveRuleReview('safe', 1, reviewer.id, 'approve', true);
+    if (approved.ok) approved.rule.output.method = 'mutated';
+    const activated = store.activateReviewedRule('safe', 1, admin.id, '2026-08-30');
+    if (activated.ok) activated.rule.source.title = 'mutated';
+    const holdInput = baseRule('held', 1, 'draft'); store.upsertRule(holdInput);
+    const held = store.holdRule('held', 1, reviewer.id, 'hold'); if (held.ok) held.rule.output.method = 'mutated';
+    store.listRules().find((rule) => rule.id === 'initial')!.source.title = 'mutated';
+    const detail = { nested: { value: 'ok' } }; store.audit(null, 'nested', 'test', null, detail); detail.nested.value = 'mutated';
+    store.audit(null, 'flush', 'test', null);
+    const reloaded = new FileStore(dir);
+    expect(reloaded.listRules().find((rule) => rule.id === 'initial')!.output.method).toBe('입찰');
+    expect(reloaded.listRules().find((rule) => rule.id === 'safe' && rule.version === 2)!.source.title).not.toBe('mutated');
+    expect(reloaded.listRules().find((rule) => rule.id === 'safe' && rule.version === 1)!.output.method).toBe('입찰');
+    expect(reloaded.listRules().find((rule) => rule.id === 'held')!.output.method).toBe('입찰');
+    expect((reloaded.listAudit().find((entry) => entry.action === 'nested')!.detail!.nested as { value: string }).value).toBe('ok');
+  });
   it('반환 규칙과 검토 기록 mutation은 flush/reload에 남지 않는다', () => {
     const { store, dir, reviewer } = ruleStore();
     store.listRules()[0]!.output.method = '외부 변경';

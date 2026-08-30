@@ -129,4 +129,18 @@ describe('private evidence files', () => {
       expect(fs.readFileSync(path.join(dir, `${sha256}.pdf`))).toEqual(bytes);
     } finally { link.mockRestore(); }
   });
+
+  it('pathname replacement after pre-link check fails closed and preserves the unowned sentinel', () => {
+    const root = privateRoot(); const bytes = Buffer.from('%PDF-1.4\n');
+    const sha256 = createHash('sha256').update(bytes).digest('hex'); const originalLink = fs.linkSync;
+    const link = vi.spyOn(fs, 'linkSync').mockImplementation((temporary, target) => {
+      fs.renameSync(temporary, `${temporary}.owned`); fs.writeFileSync(temporary, 'unowned sentinel'); originalLink(temporary, target);
+    });
+    try {
+      expect(() => writeEvidenceFile({ privateRoot: root, projectId: 'p6', bytes, sha256, ext: 'pdf' })).toThrow('PRIVATE_PATH_VIOLATION');
+      const dir = path.join(root, 'p6');
+      expect(fs.readdirSync(dir).some((name) => name.endsWith('.tmp'))).toBe(true);
+      expect(fs.readFileSync(path.join(dir, `${sha256}.pdf`), 'utf8')).toBe('unowned sentinel');
+    } finally { link.mockRestore(); }
+  });
 });
