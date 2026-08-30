@@ -200,6 +200,11 @@ describe('활성화 검증과 fail-closed 판정', () => {
       .toContain('INVALID_SOURCE');
   });
 
+  it('명시적으로 제공한 빈 기준일은 활성화 검증에서 거부', () => {
+    expect(validateActivatableRule(rule({}), { asOfDate: '' }).map((x) => x.code))
+      .toContain('INVALID_SOURCE');
+  });
+
   it('형식이 잘못되었거나 역전된 추정가격 조건은 활성화 검증에서 거부', () => {
     const scalarBetween = rule({ conditions: [
       { field: 'estimated_price', operator: 'between', value: 100 }

@@ -39,9 +39,9 @@ export function validateActivatableRule(
   if (!rule.output.method?.trim()) {
     issues.push({ code: 'MISSING_METHOD', message: '계약방법 출력이 필요합니다.' });
   }
-  if (options.asOfDate && !isIsoDate(options.asOfDate)) {
+  if (options.asOfDate !== undefined && !isIsoDate(options.asOfDate)) {
     issues.push({ code: 'INVALID_SOURCE', message: '기준일은 엄격한 yyyy-mm-dd 날짜여야 합니다.' });
-  } else if (options.asOfDate && rule.source.effectiveFrom && rule.source.effectiveFrom > options.asOfDate) {
+  } else if (options.asOfDate !== undefined && rule.source.effectiveFrom && rule.source.effectiveFrom > options.asOfDate) {
     issues.push({ code: 'FUTURE_EFFECTIVE_DATE', message: '기준일 이후 시행 규칙입니다.' });
   }
   if (rule.conditions.length === 0 || rule.conditions.some(

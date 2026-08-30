@@ -65,6 +65,41 @@ pnpm --filter @sen/rules typecheck
 
 Relevant output: `tsc --noEmit` exited 0.
 
+## Fix round 2 — explicit empty reference date
+
+### Changes
+
+- Activation validation now treats every explicitly supplied `asOfDate`,
+  including `''`, as requiring strict ISO-date validation. An omitted
+  `asOfDate` remains allowed.
+
+### TDD evidence
+
+RED command:
+
+```bash
+pnpm exec vitest run packages/rules/src/engine.test.ts
+```
+
+Relevant output: 1 failure and 24 passes. The explicit empty-string date
+returned no `INVALID_SOURCE` issue before the fix.
+
+GREEN command:
+
+```bash
+pnpm exec vitest run packages/rules/src/engine.test.ts
+```
+
+Relevant output: 1 test file passed; 25 tests passed.
+
+Typecheck command:
+
+```bash
+pnpm --filter @sen/rules typecheck
+```
+
+Relevant output: `tsc --noEmit` exited 0.
+
 ## Files changed
 
 - `packages/shared/src/types.ts`
