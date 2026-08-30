@@ -446,7 +446,9 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
         sha256: validation.sha256,
         created: stored.created
       }, req.ip);
-      const { storedPath: _storedPath, ...document } = linked.document;
+      const document = Object.fromEntries(
+        Object.entries(linked.document).filter(([key]) => key !== 'storedPath')
+      );
       return { document, previousDocumentId: linked.previousDocumentId };
     }
   );

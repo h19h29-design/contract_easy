@@ -629,7 +629,8 @@ export class PgStore {
     if (!cur) return null;
     // 상태는 transitionProjectStatus만 변경할 수 있다. SQL에도 status를 포함하지 않아
     // 상태 전이와 일반 수정이 경합해도 이전 상태를 되돌릴 수 없다.
-    const { status: _ignoredStatus, wizardInput, ...allowedPatch } = patch;
+    const { wizardInput, ...allowedPatch } = patch;
+    delete allowedPatch.status;
     const next: ProjectRecord = {
       ...cur,
       ...allowedPatch,

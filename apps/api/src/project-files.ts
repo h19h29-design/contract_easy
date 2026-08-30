@@ -39,7 +39,9 @@ export function writeEvidenceFile(input: {
     return { storedPath, created: true };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
-      if (fs.lstatSync(canonicalStoredPath).isSymbolicLink()) throw new Error('PRIVATE_PATH_VIOLATION');
+      if (fs.lstatSync(canonicalStoredPath).isSymbolicLink()) {
+        throw new Error('PRIVATE_PATH_VIOLATION', { cause: error });
+      }
       return { storedPath, created: false };
     }
     throw error;
@@ -71,7 +73,9 @@ function ensureProjectDirectory(projectDir: string): void {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     fs.mkdirSync(projectDir, { mode: 0o700 });
     const created = fs.lstatSync(projectDir);
-    if (!created.isDirectory() || created.isSymbolicLink()) throw new Error('PRIVATE_PATH_VIOLATION');
+    if (!created.isDirectory() || created.isSymbolicLink()) {
+      throw new Error('PRIVATE_PATH_VIOLATION', { cause: error });
+    }
   }
 }
 

@@ -685,7 +685,8 @@ export class FileStore implements AppStore {
   updateProject(id: string, patch: Partial<ProjectRecord>): ProjectRecord | null {
     const p = this.data.projects[id];
     if (!p) return null;
-    const { status: _ignoredStatus, wizardInput, ...allowedPatch } = patch;
+    const { wizardInput, ...allowedPatch } = patch;
+    delete allowedPatch.status;
     Object.assign(p, allowedPatch, wizardInput === undefined ? {} : { wizardInput: cloneJson(wizardInput) }, { updatedAt: isoNow() });
     this.flush();
     return cloneProject(p);
