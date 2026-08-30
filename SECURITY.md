@@ -12,8 +12,20 @@
 - CSRF: 더블서밋 토큰(쿠키+헤더 일치 검사), 상태 변경 API 전체 적용.
 
 ## 업로드 보안
-- 크기 제한(기본 10MB), 확장자+MIME 이중 검사, 실행파일 차단,
-- 파일명 정규화(경로 분리 문자 제거), 저장은 격리 디렉터리, 원본 실행 없음.
+- 체크리스트 현재 증빙은 항목당 1개이며 정확히 `10 * 1024 * 1024` 바이트(10 MiB) 이하, 빈 파일은 거부한다.
+- 허용 조합은 확장자·선언 MIME·매직바이트를 모두 만족하는 경우뿐이다.
+
+| 확장자 | 선언 MIME | 필수 매직바이트 |
+| --- | --- | --- |
+| `.pdf` | `application/pdf` | `%PDF-` |
+| `.jpg`, `.jpeg` | `image/jpeg` | `FF D8 FF` |
+| `.png` | `image/png` | `89 50 4E 47 0D 0A 1A 0A` |
+
+- 파일명은 표시용으로만 정규화하고, 저장 경로에는 사용하지 않는다. 서버 계산 SHA-256으로 프로젝트별 비공개 경로에 저장하며 private root와 project directory는 `0700`, 파일은 `0600`으로 제한한다.
+- owner와 `ADMIN`만 프로젝트에 접근할 수 있다. URL project ID와 checklist item/document 등 하위 resource의 project ID를 모든 읽기·쓰기 경계에서 함께 검사해 교차 프로젝트 IDOR를 막는다.
+- 증빙 교체는 새 문서·파일을 만들고 현재 논리 참조만 바꾼다. 이전 파일·행·변경 기록은 삭제하지 않는다.
+- 다운로드는 `Content-Disposition: attachment` 및 `X-Content-Type-Options: nosniff`를 사용한다. host `storedPath`는 API 응답, 웹 렌더링, 감사로그에 노출하지 않는다.
+- 비공개 파일은 격리 저장만 하며 corpus, normalized 자료, 검색, vector store 또는 RAG 경로로 전달하지 않는다.
 
 ## 웹 보안
 - SQL Injection: Drizzle 파라미터 바인딩 / 파일스토어는 JSON 직렬화 경유.

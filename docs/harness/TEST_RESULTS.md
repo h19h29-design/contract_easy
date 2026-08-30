@@ -2,6 +2,20 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-30 공사계약 업무공간 최종 회귀
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm lint` | PASS | ESLint exit 0, 오류·경고 출력 없음 |
+| `pnpm typecheck` | PASS | 9/10 workspace projects의 `tsc --noEmit` 성공 |
+| `pnpm test` | PASS | 10 files, 133 tests |
+| `pnpm test:pg` | PASS | embedded PostgreSQL 18.4, 3 files, 42 tests |
+| `pnpm build` | PASS | Next.js 14.2.35 optimized build 및 정적 페이지 14/14 생성 |
+| `pnpm test:e2e` | PASS | Playwright Chromium, 7 tests passed (39.6s) |
+
+- Task 12 첫 lint 시도는 `project-files.ts`의 caught-error cause 2건과 `server.ts`/FileStore/PgStore의 unused binding 3건으로 **5 errors, 0 warnings** 실패했다. 보안 동작을 바꾸지 않는 최소 수정(`8df99fc`) 후 focused Vitest 3 files·57 tests, API/DB typecheck, lint를 통과하고 위 전체 게이트를 처음부터 serial 재실행했다.
+- 예상 경고/제한: Vitest는 Vite CJS Node API deprecation 경고를, E2E web server는 `NO_COLOR`/`FORCE_COLOR` 경고를 출력했다. PG 테스트의 forced rollback ERROR 로그는 rollback 시나리오의 예상 산출물이다. Docker가 설치되지 않아 `docker compose config|up`은 이번 환경에서도 실행하지 않았으며, 위 여섯 게이트의 PASS 주장에는 포함하지 않는다.
+
 ## 2026-08-30 규칙 관리자 API·운영 기동 안전장치
 
 | 명령 | 결과 | 핵심 |
