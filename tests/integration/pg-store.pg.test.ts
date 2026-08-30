@@ -325,6 +325,14 @@ describe('PgStore 프로젝트 생명주기', () => {
     expect((await store.listProjectChanges(project.id))[0]).toMatchObject({
       changeType: 'status', before: { status: 'planning' }, after: { status: 'contracting' }, approvedBy: owner.id
     });
+    expect((await store.listAudit()).filter((entry) =>
+      entry.action === 'project.status.transition' && entry.targetId === project.id
+    )).toEqual([
+      expect.objectContaining({
+        actorUserId: owner.id, action: 'project.status.transition', targetType: 'project', targetId: project.id,
+        detail: expect.objectContaining({ previousStatus: 'planning', nextStatus: 'contracting', reason: '계약 시작' })
+      })
+    ]);
   });
 
   it('PG event due_at을 서울 날짜로 왕복', async () => {
@@ -373,6 +381,33 @@ describe('PgStore 프로젝트 생명주기', () => {
     } finally {
       await pool.query('DROP TRIGGER IF EXISTS pg_test_fail_project_transition ON project_changes');
       await pool.query('DROP FUNCTION IF EXISTS pg_test_fail_project_transition()');
+    }
+
+    expect((await store.getProject(project.id))?.status).toBe('planning');
+    expect(await store.listProjectChanges(project.id)).toEqual([]);
+    expect((await store.listAudit()).filter((entry) => entry.targetId === project.id)).toEqual([]);
+  });
+
+  it('감사행 쓰기가 실패하면 앞선 상태와 변경행도 모두 롤백한다', async () => {
+    const owner = await store.createUser(user('pg-audit-rollback-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: '감사 전이 롤백', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, {});
+    const pool = poolForTest();
+    await pool.query(`CREATE OR REPLACE FUNCTION pg_test_fail_project_transition_audit() RETURNS trigger AS $$
+      BEGIN RAISE EXCEPTION 'forced project transition audit rollback'; END;
+      $$ LANGUAGE plpgsql`);
+    await pool.query(`CREATE TRIGGER pg_test_fail_project_transition_audit
+      BEFORE INSERT ON audit_logs
+      FOR EACH ROW WHEN (NEW.target_id = '${project.id}' AND NEW.action = 'project.status.transition')
+      EXECUTE FUNCTION pg_test_fail_project_transition_audit()`);
+    try {
+      await expect(store.transitionProjectStatus(project.id, 'contracting', owner.id, '감사 실패'))
+        .rejects.toThrow('forced project transition audit rollback');
+    } finally {
+      await pool.query('DROP TRIGGER IF EXISTS pg_test_fail_project_transition_audit ON audit_logs');
+      await pool.query('DROP FUNCTION IF EXISTS pg_test_fail_project_transition_audit()');
     }
 
     expect((await store.getProject(project.id))?.status).toBe('planning');
