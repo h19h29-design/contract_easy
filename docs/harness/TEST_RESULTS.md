@@ -11,6 +11,15 @@
 
 - TDD RED 확인: 같은 focused Vitest 명령은 구현 전 4개 실패(`milestoneState`, 상태 전이·이벤트·변경 목록 메서드 부재)였다.
 
+## 2026-08-30 FileStore 프로젝트 생명주기 검토 보완
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm exec vitest run packages/shared/src/shared.test.ts packages/db/src/store.test.ts` | PASS | 2 files, 35 tests — status 우회 차단, 잘못된 이벤트 날짜 거부, 최신순 이력, JSON 복사 격리 회귀 포함 |
+| `pnpm --filter @sen/db typecheck` | PASS | `tsc --noEmit` 성공 |
+
+- TDD RED 확인: 구현 전 신규 회귀 4건은 각각 직접 status 변경, oldest-first 목록, 잘못된 날짜 이벤트 저장, 반환/조회 이력 객체 변조로 실패했다.
+
 ## 2026-08-27 macOS Codex 재개 환경
 
 | 명령 | 결과 | 핵심 |

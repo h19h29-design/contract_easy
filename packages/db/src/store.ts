@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  stableId, isoNow,
+  stableId, isoNow, isIsoDate,
   type Chunk, type RuleDefinition, type SourceVersion,
   type AttachmentRef, type WizardInput
 } from '@sen/shared';
@@ -193,6 +193,18 @@ export function emptyDb(): DbData {
     sources: {}, chunks: [], rules: [], users: [], sessions: {},
     projects: {}, projectChanges: [], projectEvents: [], steps: [], checklist: [], auditLogs: [], crawlRuns: [],
     answerReports: [], ruleReviews: []
+  };
+}
+
+function cloneJsonRecord(value: Record<string, unknown> | null): Record<string, unknown> | null {
+  return value === null ? null : JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+}
+
+function cloneProjectChange(change: ProjectChangeRecord): ProjectChangeRecord {
+  return {
+    ...change,
+    before: cloneJsonRecord(change.before),
+    after: cloneJsonRecord(change.after)
   };
 }
 
@@ -667,7 +679,8 @@ export class FileStore implements AppStore {
   updateProject(id: string, patch: Partial<ProjectRecord>): ProjectRecord | null {
     const p = this.data.projects[id];
     if (!p) return null;
-    Object.assign(p, patch, { updatedAt: isoNow() });
+    const { status: _ignoredStatus, ...allowedPatch } = patch;
+    Object.assign(p, allowedPatch, { updatedAt: isoNow() });
     this.flush();
     return p;
   }
@@ -729,7 +742,7 @@ export class FileStore implements AppStore {
       reason
     });
     this.flush();
-    return { ok: true, project, change };
+    return { ok: true, project, change: cloneProjectChange(change) };
   }
 
   addProjectChange(projectId: string, changeType: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string): string;
@@ -748,8 +761,8 @@ export class FileStore implements AppStore {
       id: stableId('chg', projectId, changeType, at),
       projectId,
       changeType: changeType as ProjectChangeType,
-      before,
-      after,
+      before: cloneJsonRecord(before),
+      after: cloneJsonRecord(after),
       reason,
       approvedBy: actorUserId ?? 'system',
       at
@@ -757,15 +770,18 @@ export class FileStore implements AppStore {
     this.data.projectChanges.push(change);
     this.appendAudit(change.approvedBy, 'project.change', 'project_change', change.id, { projectId, changeType, reason });
     this.flush();
-    return actorUserId === undefined ? change.id : change;
+    return actorUserId === undefined ? change.id : cloneProjectChange(change);
   }
 
   listProjectChanges(projectId: string): ProjectChangeRecord[] {
-    return this.data.projectChanges.filter((change) => change.projectId === projectId);
+    return this.data.projectChanges
+      .filter((change) => change.projectId === projectId)
+      .sort((a, b) => b.at.localeCompare(a.at))
+      .map(cloneProjectChange);
   }
 
   addProjectEvent(projectId: string, kind: ProjectEventKind, title: string, dueDate: string, actorUserId: string): ProjectEventRecord | null {
-    if (!this.data.projects[projectId]) return null;
+    if (!this.data.projects[projectId] || !isIsoDate(dueDate)) return null;
     const createdAt = isoNow();
     const event: ProjectEventRecord = {
       id: stableId('evt', projectId, kind, title, dueDate, createdAt),
@@ -778,11 +794,14 @@ export class FileStore implements AppStore {
     this.data.projectEvents.push(event);
     this.appendAudit(actorUserId, 'project.event.create', 'project_event', event.id, { projectId, kind, title, dueDate });
     this.flush();
-    return event;
+    return { ...event };
   }
 
   listProjectEvents(projectId: string): ProjectEventRecord[] {
-    return this.data.projectEvents.filter((event) => event.projectId === projectId);
+    return this.data.projectEvents
+      .filter((event) => event.projectId === projectId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((event) => ({ ...event }));
   }
 
   /* ---------- audit ---------- */

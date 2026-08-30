@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -148,6 +148,16 @@ describe('프로젝트 접근제어(RBAC)', () => {
 });
 
 describe('프로젝트 상태·변경·일정 이력', () => {
+  it('직접 프로젝트 수정은 상태를 바꾸지 않고 다른 필드는 갱신한다', () => {
+    const { store, project } = projectStore();
+
+    const updated = store.updateProject(project.id, { name: '이름만 변경', status: 'working' });
+
+    expect(updated).toMatchObject({ name: '이름만 변경', status: 'planning' });
+    expect(store.listProjectChanges(project.id)).toEqual([]);
+    expect(store.listAudit().filter((audit) => audit.action === 'project.status.transition')).toEqual([]);
+  });
+
   it('프로젝트 상태는 바로 다음 상태로만 전이', () => {
     const { store, project, owner } = projectStore();
     expect(store.transitionProjectStatus(project.id, 'working', owner.id, '착공')).toEqual({
@@ -171,34 +181,79 @@ describe('프로젝트 상태·변경·일정 이력', () => {
     expect(store.listProjectChanges(project.id)).toHaveLength(1);
   });
 
-  it('변경과 이벤트를 append-only로 조회', () => {
+  it('변경과 이벤트를 append-only로 최신순 조회', () => {
     const { store, project, owner } = projectStore();
-    const first = store.addProjectChange(
-      project.id,
-      'amount',
-      { amount: 10 },
-      { amount: 11 },
-      '사용자 입력 변경',
-      owner.id
-    );
-    const event = store.addProjectEvent(project.id, 'inspection', '준공검사 예정', '2026-12-20', owner.id);
-    const second = store.addProjectChange(
-      project.id,
-      'duration',
-      { days: 10 },
-      { days: 11 },
-      '기간 변경',
-      owner.id
-    );
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+      const first = store.addProjectChange(
+        project.id,
+        'amount',
+        { amount: 10 },
+        { amount: 11 },
+        '사용자 입력 변경',
+        owner.id
+      );
+      const firstEvent = store.addProjectEvent(project.id, 'inspection', '1차 검사', '2026-12-20', owner.id);
+      vi.setSystemTime(new Date('2026-01-02T00:00:00.000Z'));
+      const second = store.addProjectChange(
+        project.id,
+        'duration',
+        { days: 10 },
+        { days: 11 },
+        '기간 변경',
+        owner.id
+      );
+      const secondEvent = store.addProjectEvent(project.id, 'inspection', '2차 검사', '2026-12-21', owner.id);
 
-    expect(first).toMatchObject({ approvedBy: owner.id, reason: '사용자 입력 변경' });
-    expect(second).toMatchObject({ approvedBy: owner.id, reason: '기간 변경' });
-    expect(store.listProjectChanges(project.id)).toMatchObject([
-      { id: first?.id, changeType: 'amount' },
-      { id: second?.id, changeType: 'duration' }
-    ]);
-    expect(event).toMatchObject({ projectId: project.id, dueDate: '2026-12-20' });
-    expect(store.listProjectEvents(project.id)).toMatchObject([{ id: event?.id, dueDate: '2026-12-20' }]);
+      expect(first).toMatchObject({ approvedBy: owner.id, reason: '사용자 입력 변경' });
+      expect(second).toMatchObject({ approvedBy: owner.id, reason: '기간 변경' });
+      expect(store.listProjectChanges(project.id)).toMatchObject([
+        { id: second?.id, changeType: 'duration' },
+        { id: first?.id, changeType: 'amount' }
+      ]);
+      expect(store.listProjectEvents(project.id)).toMatchObject([
+        { id: secondEvent?.id, dueDate: '2026-12-21' },
+        { id: firstEvent?.id, dueDate: '2026-12-20' }
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('유효하지 않은 이벤트 날짜는 저장하지 않는다', () => {
+    const { store, project, owner } = projectStore();
+
+    expect(store.addProjectEvent(project.id, 'inspection', '잘못된 날짜', '2026-02-30', owner.id)).toBeNull();
+    expect(store.addProjectEvent(project.id, 'inspection', '접미사 날짜', '2026-02-28extra', owner.id)).toBeNull();
+    expect(store.listProjectEvents(project.id)).toEqual([]);
+    expect(store.listAudit().filter((audit) => audit.action === 'project.event.create')).toEqual([]);
+  });
+
+  it('변경과 이벤트 이력은 입력·반환·조회 객체 변경으로 오염되지 않는다', () => {
+    const { store, project, owner } = projectStore();
+    const before: Record<string, unknown> = { amount: { value: 10 } };
+    const after: Record<string, unknown> = { amount: { value: 11 } };
+    const change = store.addProjectChange(project.id, 'amount', before, after, '금액 변경', owner.id)!;
+    const event = store.addProjectEvent(project.id, 'inspection', '준공검사 예정', '2026-12-20', owner.id)!;
+
+    (before.amount as { value: number }).value = 999;
+    (after.amount as { value: number }).value = 999;
+    (change.before!.amount as { value: number }).value = 888;
+    change.reason = '변조';
+    event.title = '변조';
+    const listedChange = store.listProjectChanges(project.id)[0]!;
+    const listedEvent = store.listProjectEvents(project.id)[0]!;
+    (listedChange.after!.amount as { value: number }).value = 777;
+    listedChange.reason = '변조';
+    listedEvent.title = '변조';
+
+    expect(store.listProjectChanges(project.id)[0]).toMatchObject({
+      before: { amount: { value: 10 } },
+      after: { amount: { value: 11 } },
+      reason: '금액 변경'
+    });
+    expect(store.listProjectEvents(project.id)[0]).toMatchObject({ title: '준공검사 예정' });
   });
 
   it('기존 JSON은 변경 및 이벤트 배열 없이도 로드한다', () => {
