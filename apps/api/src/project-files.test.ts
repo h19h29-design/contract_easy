@@ -65,7 +65,7 @@ describe('private evidence files', () => {
     const root = privateRoot();
     const bytes = Buffer.from('%PDF-1.4\n');
     const sha256 = createHash('sha256').update(bytes).digest('hex');
-    const prior = process.umask(0o077);
+    const prior = process.umask(0o777);
     try {
       const first = writeEvidenceFile({ privateRoot: root, projectId: 'p2', bytes, sha256, ext: 'pdf' });
       expect(fs.statSync(first.storedPath).mode & 0o777).toBe(0o600);

@@ -36,11 +36,13 @@ export function writeEvidenceFile(input: {
   }
   const temporaryPath = path.join(canonicalProjectDir, `.${input.sha256}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`);
   let ownsTemporaryPath = false;
+  let temporaryIdentity: { dev: number; ino: number } | null = null;
   try {
     const fd = fs.openSync(temporaryPath, 'wx', 0o600);
     ownsTemporaryPath = true;
     try {
       fs.fchmodSync(fd, 0o600);
+      const info = fs.fstatSync(fd); temporaryIdentity = { dev: info.dev, ino: info.ino };
       fs.writeFileSync(fd, input.bytes);
       if ((fs.fstatSync(fd).mode & 0o777) !== 0o600) throw new Error('PRIVATE_PATH_VIOLATION');
       fs.fsyncSync(fd);
@@ -48,7 +50,9 @@ export function writeEvidenceFile(input: {
       fs.closeSync(fd);
     }
     try {
+      if (!pathMatchesIdentity(temporaryPath, temporaryIdentity)) throw new Error('PRIVATE_PATH_VIOLATION');
       fs.linkSync(temporaryPath, canonicalStoredPath);
+      verifyExistingEvidence(canonicalStoredPath, input);
       return { storedPath, created: true };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
@@ -56,8 +60,13 @@ export function writeEvidenceFile(input: {
       return { storedPath, created: false };
     }
   } finally {
-    if (ownsTemporaryPath && fs.existsSync(temporaryPath)) fs.unlinkSync(temporaryPath);
+    if (ownsTemporaryPath && pathMatchesIdentity(temporaryPath, temporaryIdentity)) fs.unlinkSync(temporaryPath);
   }
+}
+
+function pathMatchesIdentity(target: string, identity: { dev: number; ino: number } | null): boolean {
+  if (!identity) return false;
+  try { const info = fs.lstatSync(target); return info.dev === identity.dev && info.ino === identity.ino; } catch { return false; }
 }
 
 function verifyExistingEvidence(target: string, input: { bytes: Buffer; sha256: string }): void {

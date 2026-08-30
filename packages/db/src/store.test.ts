@@ -104,6 +104,22 @@ describe('엄격한 FileStore 규칙 검토 계약', () => {
     const reloaded = new FileStore(dir);
     expect(reloaded.getUser(reviewer.id)).toBeNull();
     expect(reloaded.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true)).toEqual({ ok: false, code: 'ROLE_REQUIRED' });
+    expect(reloaded.holdRule('safe', 1, reviewer.id, '보류')).toEqual({ ok: false, code: 'ROLE_REQUIRED' });
+  });
+
+  it('비활성화된 ADMIN은 reviewed rule을 activate하지 못한다', () => {
+    const { store, dir, reviewer, admin } = ruleStore();
+    expect(store.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true).ok).toBe(true);
+    const file = path.join(dir, 'db.json'); const db = JSON.parse(fs.readFileSync(file, 'utf8')) as DbData;
+    db.users.find((user) => user.id === admin.id)!.disabled = true; fs.writeFileSync(file, JSON.stringify(db), 'utf8');
+    expect(new FileStore(dir).activateReviewedRule('safe', 1, admin.id, '2026-08-30')).toEqual({ ok: false, code: 'ROLE_REQUIRED' });
+  });
+
+  it('audit nested ingress and listed records are detached across reload', () => {
+    const { store, dir } = ruleStore(); const detail = { nested: { value: 'original' } };
+    store.audit(null, 'audit', 'test', null, detail); detail.nested.value = 'mutated';
+    (store.listAudit()[0]!.detail!.nested as { value: string }).value = 'mutated'; store.audit(null, 'flush', 'test', null);
+    expect((new FileStore(dir).listAudit().find((entry) => entry.action === 'audit')!.detail!.nested as { value: string }).value).toBe('original');
   });
 
   it('별도 ADMIN이 reviewed 규칙을 activate', () => {
