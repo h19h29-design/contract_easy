@@ -67,6 +67,34 @@ describe('API PostgreSQL 모드', () => {
     expect(detail.json().steps).toHaveLength(10);
   });
 
+  it('PG API도 다른 프로젝트의 체크리스트 항목을 수정하지 못한다', async () => {
+    const login = await app.inject({
+      method: 'POST', url: '/api/auth/login',
+      payload: { username: 'admin', password: 'ChangeMe!2026' }
+    });
+    const csrf = login.json().csrfToken as string;
+    const sessionToken = login.cookies.find((cookie) => cookie.name === 'scg_session')!.value;
+    const createProject = async (name: string) => {
+      const response = await app.inject({
+        method: 'POST', url: '/api/projects', cookies: { scg_session: sessionToken },
+        headers: { 'x-csrf-token': csrf },
+        payload: { name, contractCategory: 'construction', estimatedPrice: 1, organizationType: 'school' }
+      });
+      expect(response.statusCode).toBe(200);
+      return response.json() as { id: string };
+    };
+    const projectA = await createProject('PG 체크리스트 A');
+    const projectB = await createProject('PG 체크리스트 B');
+    const itemB = (await store.checklistOf(projectB.id))[0]!;
+
+    const response = await app.inject({
+      method: 'PATCH', url: `/api/projects/${projectA.id}/checklist/${itemB.id}`,
+      cookies: { scg_session: sessionToken }, headers: { 'x-csrf-token': csrf }, payload: { done: true }
+    });
+    expect(response.statusCode).toBe(404);
+    expect((await store.checklistOf(projectB.id)).find((item) => item.id === itemB.id)?.done).toBe(false);
+  });
+
   it('출처 목록이 PG에서 조회됨', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/sources' });
     expect(res.statusCode).toBe(200);

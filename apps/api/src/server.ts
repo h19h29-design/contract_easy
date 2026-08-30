@@ -9,8 +9,8 @@ import {
   createStore, hashPassword, verifyPassword,
   STAGES, STAGE_LABELS
 } from '@sen/db';
-import type { AppStore, RuleActionErrorCode, UserRecord } from '@sen/db';
-import { seoulDate, type Chunk, type RuleCondition, type RuleDefinition, type SearchFilters, type WizardInput } from '@sen/shared';
+import type { AppStore, ProjectStatus, RuleActionErrorCode, UserRecord } from '@sen/db';
+import { isIsoDate, milestoneState, seoulDate, type Chunk, type RuleCondition, type RuleDefinition, type SearchFilters, type WizardInput } from '@sen/shared';
 import { HybridRetriever } from '@sen/retrieval';
 import { evaluateWizard, detectConflicts } from '@sen/rules';
 
@@ -303,15 +303,22 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       const user = await requireAuth(req, reply, 'USER');
       if (!user) return;
       const b = req.body;
-      if (!b.name || !b.contractCategory || !b.organizationType) {
+      const name = b?.name;
+      const contractCategory = b?.contractCategory;
+      const estimatedPrice = b?.estimatedPrice;
+      const organizationType = b?.organizationType;
+      if (
+        !b || !name || !isProjectCategory(contractCategory) || !isOrganizationType(organizationType) ||
+        typeof estimatedPrice !== 'number' || !Number.isFinite(estimatedPrice) || estimatedPrice < 0
+      ) {
         return reply.code(400).send({ error: '프로젝트명·공사구분·기관구분은 필수입니다.' });
       }
       const project = await store.createProject({
         ownerId: user.id,
-        name: b.name.slice(0, 200),
-        contractCategory: b.contractCategory,
-        estimatedPrice: Number(b.estimatedPrice ?? 0),
-        organizationType: b.organizationType,
+        name: name.slice(0, 200),
+        contractCategory,
+        estimatedPrice,
+        organizationType,
         status: 'planning',
         wizardInput: b.wizardInput ?? null
       }, DEFAULT_CHECKLIST_TEMPLATES);
@@ -323,15 +330,27 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   app.get<{ Params: { id: string } }>('/api/projects/:id', async (req, reply) => {
     const user = await requireAuth(req, reply, 'USER');
     if (!user) return;
-    const p = await store.getProject(req.params.id);
-    if (!p || !(await store.canAccessProject(p.id, user.id, user.role))) {
+    if (!(await store.canAccessProject(req.params.id, user.id, user.role))) {
       return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
     }
+    const p = await store.getProject(req.params.id);
+    if (!p) {
+      return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
+    }
+    const today = seoulDate(new Date());
+    const documents = (await store.listProjectDocuments(p.id)).map(({ storedPath: _storedPath, ...document }) => document);
+    const events = (await store.listProjectEvents(p.id)).map((event) => ({
+      ...event,
+      displayState: milestoneState(event.dueDate, today)
+    }));
     return {
       project: p,
       steps: (await store.stepsOf(p.id)).map((s) => ({ ...s, label: STAGE_LABELS[s.stageKey] ?? s.stageKey })),
       checklist: await store.checklistOf(p.id),
-      progress: await computeProgress(store, p.id)
+      progress: await computeProgress(store, p.id),
+      changes: await store.listProjectChanges(p.id),
+      events,
+      documents
     };
   });
 
@@ -340,9 +359,12 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     async (req, reply) => {
       const user = await requireAuth(req, reply, 'USER');
       if (!user) return;
-      const p = await store.getProject(req.params.id);
-      if (!p || !(await store.canAccessProject(p.id, user.id, user.role))) {
+      if (!(await store.canAccessProject(req.params.id, user.id, user.role))) {
         return reply.code(404).send({ error: '권한 없음' });
+      }
+      const checklist = await store.checklistOf(req.params.id);
+      if (!checklist.some((candidate) => candidate.id === req.params.itemId)) {
+        return reply.code(404).send({ error: '항목 없음' });
       }
       const item = await store.toggleChecklist(req.params.itemId, Boolean(req.body.done));
       if (!item) return reply.code(404).send({ error: '항목 없음' });
@@ -351,24 +373,73 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     }
   );
 
-  app.post<{ Params: { id: string }, Body: { changeType?: string; before?: object; after?: object; reason?: string } }>(
+  app.post<{ Params: { id: string }, Body: { status?: ProjectStatus; reason?: string } }>(
+    '/api/projects/:id/status',
+    async (req, reply) => {
+      const user = await requireAuth(req, reply, 'USER');
+      if (!user) return;
+      if (!(await store.canAccessProject(req.params.id, user.id, user.role))) {
+        return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
+      }
+      const status = req.body?.status;
+      const reason = req.body?.reason?.trim();
+      if (!isProjectStatus(status) || !isBoundedText(reason, 1, 2_000)) {
+        return reply.code(400).send({ error: '상태 전이 입력값이 올바르지 않습니다.' });
+      }
+      const result = await store.transitionProjectStatus(req.params.id, status, user.id, reason);
+      if (!result.ok) {
+        return reply.code(result.code === 'INVALID_TRANSITION' ? 409 : 404).send({ error: result.code });
+      }
+      return result;
+    }
+  );
+
+  app.post<{ Params: { id: string }, Body: { changeType?: string; before?: Record<string, unknown> | null; after?: Record<string, unknown> | null; reason?: string } }>(
     '/api/projects/:id/changes',
     async (req, reply) => {
       const user = await requireAuth(req, reply, 'USER');
       if (!user) return;
-      const p = await store.getProject(req.params.id);
-      if (!p || !(await store.canAccessProject(p.id, user.id, user.role))) {
+      if (!(await store.canAccessProject(req.params.id, user.id, user.role))) {
         return reply.code(404).send({ error: '권한 없음' });
       }
-      const id = await store.addProjectChange(
-        p.id,
-        req.body.changeType ?? 'other',
-        (req.body.before as Record<string, unknown>) ?? null,
-        (req.body.after as Record<string, unknown>) ?? null,
-        req.body.reason ?? ''
+      const body = req.body;
+      const reason = body?.reason?.trim();
+      if (
+        !body || !isProjectChangeType(body.changeType) ||
+        !isBoundedText(reason, 1, 2_000) || !isJsonObjectOrNull(body.before) || !isJsonObjectOrNull(body.after) ||
+        !isJsonWithinLimit(body.before, 32 * 1024) || !isJsonWithinLimit(body.after, 32 * 1024)
+      ) {
+        return reply.code(400).send({ error: '변경 이력 입력값이 올바르지 않습니다.' });
+      }
+      const change = await store.addProjectChange(
+        req.params.id,
+        body.changeType,
+        body.before,
+        body.after,
+        reason,
+        user.id
       );
-      await store.audit(user.id, 'project.change_record', 'project_change', id, { changeType: req.body.changeType }, req.ip);
-      return { id };
+      if (!change) return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
+      return { id: change.id };
+    }
+  );
+
+  app.post<{ Params: { id: string }, Body: { kind?: string; title?: string; dueDate?: string } }>(
+    '/api/projects/:id/events',
+    async (req, reply) => {
+      const user = await requireAuth(req, reply, 'USER');
+      if (!user) return;
+      if (!(await store.canAccessProject(req.params.id, user.id, user.role))) {
+        return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
+      }
+      const body = req.body;
+      const title = body?.title?.trim();
+      if (!body || !isProjectEventKind(body.kind) || !isBoundedText(title, 1, 200) || !body.dueDate || !isIsoDate(body.dueDate)) {
+        return reply.code(400).send({ error: '일정 입력값이 올바르지 않습니다.' });
+      }
+      const event = await store.addProjectEvent(req.params.id, body.kind, title, body.dueDate, user.id);
+      if (!event) return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
+      return event;
     }
   );
 
@@ -526,6 +597,49 @@ function isHoldAction(body: unknown): body is Extract<RuleAdminBody, { action: '
     typeof (body as { comment?: unknown }).comment === 'string' &&
     (body as { comment: string }).comment.trim()
   );
+}
+
+const PROJECT_CATEGORIES = new Set<WizardInput['contractCategory']>(['construction', 'electric', 'fire', 'ict', 'other']);
+const ORGANIZATION_TYPES = new Set<WizardInput['organizationType']>(['school', 'office-of-education', 'direct-affiliate']);
+const PROJECT_STATUSES: readonly ProjectStatus[] = ['planning', 'contracting', 'working', 'completed', 'warranty'];
+const PROJECT_CHANGE_TYPES = ['design', 'duration', 'amount', 'other'] as const;
+const PROJECT_EVENT_KINDS = ['deadline', 'milestone', 'inspection', 'payment', 'other'] as const;
+
+function isProjectCategory(value: unknown): value is WizardInput['contractCategory'] {
+  return typeof value === 'string' && PROJECT_CATEGORIES.has(value as WizardInput['contractCategory']);
+}
+
+function isOrganizationType(value: unknown): value is WizardInput['organizationType'] {
+  return typeof value === 'string' && ORGANIZATION_TYPES.has(value as WizardInput['organizationType']);
+}
+
+function isProjectStatus(value: unknown): value is ProjectStatus {
+  return typeof value === 'string' && (PROJECT_STATUSES as readonly string[]).includes(value);
+}
+
+function isProjectChangeType(value: unknown): value is typeof PROJECT_CHANGE_TYPES[number] {
+  return typeof value === 'string' && (PROJECT_CHANGE_TYPES as readonly string[]).includes(value);
+}
+
+function isProjectEventKind(value: unknown): value is typeof PROJECT_EVENT_KINDS[number] {
+  return typeof value === 'string' && (PROJECT_EVENT_KINDS as readonly string[]).includes(value);
+}
+
+function isBoundedText(value: unknown, min: number, max: number): value is string {
+  return typeof value === 'string' && value.length >= min && value.length <= max;
+}
+
+function isJsonObjectOrNull(value: unknown): value is Record<string, unknown> | null {
+  return value === null || (typeof value === 'object' && !Array.isArray(value));
+}
+
+function isJsonWithinLimit(value: Record<string, unknown> | null | undefined, maxLength: number): boolean {
+  if (value === undefined) return false;
+  try {
+    return JSON.stringify(value).length <= maxLength;
+  } catch {
+    return false;
+  }
 }
 
 async function computeProgress(store: AppStore, projectId: string): Promise<number> {

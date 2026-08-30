@@ -150,6 +150,105 @@ describe('인증·프로젝트 흐름', () => {
   });
 });
 
+describe('프로젝트 생명주기 API', () => {
+  let csrfToken = '';
+  let sessionToken = '';
+
+  beforeAll(async () => {
+    const login = await app.inject({
+      method: 'POST', url: '/api/auth/login',
+      payload: { username: 'admin', password: 'ChangeMe!2026' }
+    });
+    csrfToken = login.json().csrfToken as string;
+    sessionToken = extractSession(login.cookies.map((c) => `${c.name}=${c.value}`).join('; '));
+  });
+
+  async function createProject(name: string) {
+    const response = await projectRequest('POST', '/api/projects', {
+      name, contractCategory: 'construction', estimatedPrice: 1, organizationType: 'school'
+    });
+    expect(response.statusCode).toBe(200);
+    return response.json() as { id: string };
+  }
+
+  function projectRequest(method: 'POST' | 'PATCH', url: string, payload: unknown) {
+    return app.inject({
+      method, url, payload, cookies: { scg_session: sessionToken },
+      headers: { 'x-csrf-token': csrfToken }
+    });
+  }
+
+  it('건너뛴 상태 전이는 409, 다음 상태는 200', async () => {
+    const project = await createProject('상태 전이 공사');
+
+    expect((await projectRequest('POST', `/api/projects/${project.id}/status`, {
+      status: 'working', reason: '건너뜀'
+    })).statusCode).toBe(409);
+    expect((await projectRequest('POST', `/api/projects/${project.id}/status`, {
+      status: 'contracting', reason: '계약 시작'
+    })).statusCode).toBe(200);
+  });
+
+  it('다른 프로젝트 itemId 체크 토글은 404', async () => {
+    const projectA = await createProject('체크리스트 A');
+    const projectB = await createProject('체크리스트 B');
+    const itemB = (await store.checklistOf(projectB.id))[0]!;
+
+    const res = await projectRequest('PATCH', `/api/projects/${projectA.id}/checklist/${itemB.id}`, { done: true });
+    expect(res.statusCode).toBe(404);
+    expect(store.checklistOf(projectB.id).find((item) => item.id === itemB.id)?.done).toBe(false);
+  });
+
+  it('변경 payload와 이벤트 날짜를 제한', async () => {
+    const project = await createProject('입력 검증 공사');
+
+    expect((await projectRequest('POST', `/api/projects/${project.id}/changes`, {
+      changeType: 'amount', before: {}, after: {}, reason: ''
+    })).statusCode).toBe(400);
+    expect((await projectRequest('POST', `/api/projects/${project.id}/events`, {
+      kind: 'inspection', title: '검사', dueDate: '2026-02-30'
+    })).statusCode).toBe(400);
+  });
+
+  it('상세 응답은 이력·일정과 저장 경로 없는 증빙 메타데이터를 제공한다', async () => {
+    const project = await createProject('상세 이력 공사');
+    const document = store.saveChecklistEvidence({
+      projectId: project.id,
+      checklistItemId: store.checklistOf(project.id)[0]!.id,
+      uploadedBy: (await store.getUserByUsername('admin'))!.id,
+      originalName: '검사서.pdf', storedPath: '/private/evidence/secret.pdf', mimeType: 'application/pdf',
+      sizeBytes: 7, sha256: 'a'.repeat(64)
+    })!.document;
+
+    expect((await projectRequest('POST', `/api/projects/${project.id}/changes`, {
+      changeType: 'amount', before: { amount: 1 }, after: { amount: 2 }, reason: '계약금액 조정'
+    })).statusCode).toBe(200);
+    expect((await projectRequest('POST', `/api/projects/${project.id}/events`, {
+      kind: 'inspection', title: '준공 검사', dueDate: '2026-08-30'
+    })).statusCode).toBe(200);
+
+    const detail = await app.inject({
+      method: 'GET', url: `/api/projects/${project.id}`, cookies: { scg_session: sessionToken }
+    });
+    expect(detail.statusCode).toBe(200);
+    expect(detail.json()).toMatchObject({
+      changes: [expect.objectContaining({ changeType: 'amount', reason: '계약금액 조정' })],
+      events: [expect.objectContaining({ kind: 'inspection', displayState: expect.any(String) })],
+      documents: [expect.objectContaining({ id: document.id, originalName: '검사서.pdf' })]
+    });
+    expect(detail.json().documents[0]).not.toHaveProperty('storedPath');
+  });
+
+  it('프로젝트 생성은 유한한 0 이상 금액과 허용 열거값만 받는다', async () => {
+    const base = { name: '생성 검증', contractCategory: 'construction', organizationType: 'school' };
+    expect((await projectRequest('POST', '/api/projects', undefined)).statusCode).toBe(400);
+    expect((await projectRequest('POST', '/api/projects', { ...base, estimatedPrice: -1 })).statusCode).toBe(400);
+    expect((await projectRequest('POST', '/api/projects', { ...base, estimatedPrice: '1' })).statusCode).toBe(400);
+    expect((await projectRequest('POST', '/api/projects', { ...base, estimatedPrice: 1, contractCategory: 'invalid' })).statusCode).toBe(400);
+    expect((await projectRequest('POST', '/api/projects', { ...base, estimatedPrice: 1, organizationType: 'invalid' })).statusCode).toBe(400);
+  });
+});
+
 describe('규칙 관리자 API의 엄격한 승인 흐름', () => {
   it('REVIEWER review 후 같은 ID activation을 거부하고 다른 ADMIN은 성공', async () => {
     const fixture = await createRuleAdminFixture();
