@@ -13,14 +13,14 @@ afterAll(async () => {
   await store.close();
 });
 
-function baseRule(id: string, version: number, status: RuleDefinition['status']): RuleDefinition {
+function baseRule(id: string, version: number, status: RuleDefinition['status'], method = '입찰'): RuleDefinition {
   return {
     id,
     version,
     status,
     scope: { contract_category: 'construction' },
     conditions: [{ field: 'estimated_price', operator: 'between', value: [0, 0] }],
-    output: { method: '입찰', reviewRequired: true },
+    output: { method, reviewRequired: true },
     source: { title: 't', url: 'https://example.org', effectiveFrom: null, checkedAt: '2026-08-25' },
     reviewedBy: null,
     supersededBy: null,
@@ -86,6 +86,16 @@ describe('PgStore 규칙 플로우', () => {
     expect(await store.activateReviewedRule('pg.strict', 1, reviewer.id, '2026-08-30'))
       .toEqual({ ok: false, code: 'ROLE_REQUIRED' });
     expect((await store.activateReviewedRule('pg.strict', 1, admin.id, '2026-08-30')).ok).toBe(true);
+    expect((await store.listRuleReviews('pg.strict', 1)).map((review) => review.action))
+      .toEqual(['approve', 'activate']);
+    expect(await store.listAudit()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ actorUserId: reviewer.id, action: 'rule.review.approve', targetId: 'pg.strict@1' }),
+      expect.objectContaining({ actorUserId: admin.id, action: 'rule.review.activate', targetId: 'pg.strict@1' })
+    ]));
+
+    await store.upsertRule(baseRule('pg.strict', 1, 'draft', '수의계약'));
+    expect((await store.listRules()).find((rule) => rule.id === 'pg.strict')
+      ).toMatchObject({ status: 'active', output: { method: '입찰' } });
   });
 
   it('hold는 rule_version을 삭제하지 않고 검토기록을 남김', async () => {
@@ -101,6 +111,93 @@ describe('PgStore 규칙 플로우', () => {
   it('upsert는 active 상태를 직접 주입하지 않음', async () => {
     await store.upsertRule(baseRule('pg.injected', 1, 'active'));
     expect((await store.listRules()).find((r) => r.id === 'pg.injected')?.status).toBe('draft');
+  });
+
+  it('final revision은 REVIEWER가 정확한 다음 버전만 생성할 수 있음', async () => {
+    const reviewer = await store.createUser(user('reviewer-revision', 'REVIEWER'));
+
+    expect(await store.createRuleRevision(baseRule('pg.revision', 1, 'draft'), reviewer.id))
+      .toMatchObject({ ok: true, rule: { version: 1, status: 'draft' } });
+    expect(await store.createRuleRevision(baseRule('pg.revision', 3, 'draft'), reviewer.id))
+      .toEqual({ ok: false, code: 'VERSION_CONFLICT' });
+    expect((await store.createRuleRevision(baseRule('pg.revision', 2, 'draft'), reviewer.id)).ok).toBe(true);
+    expect(await store.createRuleRevision(baseRule('pg.revision', 2, 'draft'), reviewer.id))
+      .toEqual({ ok: false, code: 'VERSION_CONFLICT' });
+  });
+
+  it('final activation은 같은 규칙의 prior active만 supersede함', async () => {
+    const reviewer = await store.createUser(user('reviewer-supersede', 'REVIEWER'));
+    const admin = await store.createUser(user('admin-supersede', 'ADMIN'));
+    await store.createRuleRevision(baseRule('pg.supersede', 1, 'draft'), reviewer.id);
+    await store.approveRuleReview('pg.supersede', 1, reviewer.id, 'v1 원문 확인', true);
+    expect((await store.activateReviewedRule('pg.supersede', 1, admin.id, '2026-08-30')).ok).toBe(true);
+    await store.createRuleRevision(baseRule('pg.supersede', 2, 'draft'), reviewer.id);
+    await store.approveRuleReview('pg.supersede', 2, reviewer.id, 'v2 원문 확인', true);
+
+    expect((await store.activateReviewedRule('pg.supersede', 2, admin.id, '2026-08-30')).ok).toBe(true);
+    expect(Object.fromEntries(
+      (await store.listRules()).filter((rule) => rule.id === 'pg.supersede').map((rule) => [rule.version, rule.status])
+    )).toEqual({ 1: 'superseded', 2: 'active' });
+  });
+
+  it('final activation conflict rolls back without partial activation state', async () => {
+    const reviewer = await store.createUser(user('reviewer-conflict', 'REVIEWER'));
+    const admin = await store.createUser(user('admin-conflict', 'ADMIN'));
+    await store.createRuleRevision(baseRule('pg.conflict.baseline', 1, 'draft'), reviewer.id);
+    await store.approveRuleReview('pg.conflict.baseline', 1, reviewer.id, '기준 원문 확인', true);
+    expect((await store.activateReviewedRule('pg.conflict.baseline', 1, admin.id, '2026-08-30')).ok).toBe(true);
+    await store.createRuleRevision(baseRule('pg.conflict', 1, 'draft', '수의계약'), reviewer.id);
+    await store.approveRuleReview('pg.conflict', 1, reviewer.id, '원문 확인', true);
+
+    expect(await store.activateReviewedRule('pg.conflict', 1, admin.id, '2026-08-30'))
+      .toEqual({ ok: false, code: 'RULE_CONFLICT' });
+    expect((await store.listRules()).find((rule) => rule.id === 'pg.conflict')?.status).toBe('reviewed');
+    expect((await store.listRuleReviews('pg.conflict', 1)).map((review) => review.action)).toEqual(['approve']);
+    expect((await store.listAudit()).some((entry) =>
+      entry.action === 'rule.review.activate' && entry.targetId === 'pg.conflict@1'
+    )).toBe(false);
+  });
+
+  it('conditional upsert cannot demote a version activated after its stale read', async () => {
+    const reviewer = await store.createUser(user('reviewer-race', 'REVIEWER'));
+    const admin = await store.createUser(user('admin-race', 'ADMIN'));
+    await store.upsertRule(baseRule('pg.race', 1, 'draft'));
+
+    type TestPool = { query: (text: string, values?: unknown[]) => Promise<unknown> };
+    const pool = (store as unknown as { pool: TestPool }).pool;
+    const originalQuery = pool.query;
+    let releaseRead!: () => void;
+    let releaseWrite!: () => void;
+    const readReached = new Promise<void>((resolve) => { releaseRead = resolve; });
+    const allowWrite = new Promise<void>((resolve) => { releaseWrite = resolve; });
+    let paused = false;
+    pool.query = async (text, values) => {
+      const result = await originalQuery.call(pool, text, values);
+      if (!paused && text === 'SELECT definition, status FROM rule_versions WHERE rule_id=$1 AND version=$2' && values?.[0] === 'pg.race') {
+        paused = true;
+        releaseRead();
+        await allowWrite;
+      }
+      return result;
+    };
+
+    try {
+      const staleUpsert = store.upsertRule(baseRule('pg.race', 1, 'draft', '수의계약'));
+      await readReached;
+      expect((await store.approveRuleReview('pg.race', 1, reviewer.id, '원문 확인', true)).ok).toBe(true);
+      expect((await store.activateReviewedRule('pg.race', 1, admin.id, '2026-08-30')).ok).toBe(true);
+      releaseWrite();
+      await staleUpsert;
+    } finally {
+      pool.query = originalQuery;
+    }
+
+    const current = await originalQuery.call(pool, 'SELECT current_status FROM rules WHERE id=$1', ['pg.race']) as {
+      rows: Array<{ current_status: string }>;
+    };
+    expect(current.rows[0]?.current_status).toBe('active');
+    expect((await store.listRules()).find((rule) => rule.id === 'pg.race')
+      ).toMatchObject({ status: 'active', output: { method: '입찰' } });
   });
 
   it('draft→activate 불가 / review 후 activate 가능 / 신규 active 시 구버전 superseded', async () => {

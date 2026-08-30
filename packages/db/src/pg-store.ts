@@ -270,15 +270,19 @@ export class PgStore {
     await this.pool.query(
       `INSERT INTO rules (id, scope, current_status, created_at, updated_at)
        VALUES ($1,$2::jsonb,'draft',$3,$3)
-       ON CONFLICT (id) DO UPDATE SET scope=EXCLUDED.scope, updated_at=EXCLUDED.updated_at`,
+       ON CONFLICT (id) DO NOTHING`,
       [draft.id, JSON.stringify(draft.scope ?? {}), now]
     );
-    await this.pool.query(
+    const written = await this.pool.query<{ id: string }>(
       `INSERT INTO rule_versions (id, rule_id, version, definition, status, created_at)
        VALUES ($1,$2,$3,$4::jsonb,$5,$6)
-       ON CONFLICT (rule_id, version) DO UPDATE SET definition=EXCLUDED.definition, status=EXCLUDED.status`,
+       ON CONFLICT (rule_id, version) DO UPDATE
+         SET definition=EXCLUDED.definition, status='draft'
+         WHERE rule_versions.status='draft'
+       RETURNING id`,
       [`${draft.id}@${draft.version}`, draft.id, draft.version, JSON.stringify(draft), 'draft', now]
     );
+    if ((written.rowCount ?? 0) === 0) return;
     await this.pool.query("UPDATE rules SET current_status=$2, updated_at=$3 WHERE id=$1",
       [draft.id, 'draft', now]);
   }
