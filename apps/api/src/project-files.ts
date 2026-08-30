@@ -40,7 +40,7 @@ export function writeEvidenceFile(input: {
     const fd = fs.openSync(temporaryPath, 'wx', 0o600);
     ownsTemporaryPath = true;
     try {
-      fs.chmodSync(temporaryPath, 0o600);
+      fs.fchmodSync(fd, 0o600);
       fs.writeFileSync(fd, input.bytes);
       if ((fs.fstatSync(fd).mode & 0o777) !== 0o600) throw new Error('PRIVATE_PATH_VIOLATION');
       fs.fsyncSync(fd);

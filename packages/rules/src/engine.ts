@@ -274,7 +274,7 @@ function normalizedPriceInterval(conditions: RuleCondition[]): PriceInterval | n
   const priceConditions = conditions.filter((condition) => condition.field === 'estimated_price');
   if (priceConditions.length === 0) return null;
   let interval: PriceInterval = {
-    lower: Number.NEGATIVE_INFINITY,
+    lower: 0,
     lowerInclusive: true,
     upper: Number.POSITIVE_INFINITY,
     upperInclusive: true

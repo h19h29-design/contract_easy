@@ -307,7 +307,7 @@ export class FileStore implements AppStore {
     const at = isoNow();
     this.data.auditLogs.push({
       id: stableId('aud', action, targetType, targetId ?? '', at),
-      actorUserId, action, targetType, targetId, detail: detail ?? null,
+      actorUserId, action, targetType, targetId, detail: detail ? cloneJson(detail) : null,
       ip: ip ?? null, at
     });
     if (this.data.auditLogs.length > 10000) this.data.auditLogs = this.data.auditLogs.slice(-10000);
@@ -870,7 +870,7 @@ export class FileStore implements AppStore {
   }
 
   listAudit(limit = 200): AuditLogRecord[] {
-    return this.data.auditLogs.slice(-limit).reverse();
+    return cloneJson(this.data.auditLogs.slice(-limit).reverse());
   }
 
   /* ---------- crawl runs ---------- */
