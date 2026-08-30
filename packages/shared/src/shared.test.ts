@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { normalizeUrl, isAllowedByPolicy, robotsAllows, ATTACHMENT_ROBOTS_DISALLOWED_EXTS } from './url.js';
 import { sha256Hex, safeFileName, extOf } from './hash.js';
 import { isIsoDate, milestoneState, parseKoreanDate, seoulDate } from './date.js';
+import { EVIDENCE_MAX_BYTES, validateEvidenceFile } from './file.js';
 
 const policy = {
   allowDomains: ['contract.sen.go.kr'],
@@ -61,6 +62,35 @@ describe('해시/파일명', () => {
   it('확장자 추출', () => {
     expect(extOf('https://x.org/f/a.PDF?dl=1')).toBe('pdf');
     expect(extOf('noext')).toBe('');
+  });
+});
+
+describe('비공개 증빙 파일 형식 검증', () => {
+  it('PDF 확장자+MIME+magic가 모두 일치해야 승인', () => {
+    expect(validateEvidenceFile(Buffer.from('%PDF-1.4\n'), 'proof.pdf', 'application/pdf')).toMatchObject({ ok: true, ext: 'pdf' });
+    expect(validateEvidenceFile(Buffer.from('%PDF-1.4\n'), 'proof.png', 'image/png')).toEqual({ ok: false, code: 'MAGIC_MISMATCH' });
+  });
+
+  it('빈 파일과 10 MiB 초과를 거부', () => {
+    expect(validateEvidenceFile(Buffer.alloc(0), 'x.pdf', 'application/pdf')).toEqual({ ok: false, code: 'EMPTY_FILE' });
+    expect(validateEvidenceFile(Buffer.alloc(EVIDENCE_MAX_BYTES + 1), 'x.pdf', 'application/pdf')).toEqual({ ok: false, code: 'TOO_LARGE' });
+  });
+
+  it('경로 입력은 표시용 basename으로 정규화', () => {
+    const result = validateEvidenceFile(Buffer.from('%PDF-1.4\n'), '../../계약서.pdf', 'application/pdf');
+    expect(result).toMatchObject({ ok: true, originalName: '계약서.pdf' });
+  });
+
+  it.each([
+    ['photo.jpeg', 'image/jpeg', Buffer.from([0xff, 0xd8, 0xff, 0x00]), 'jpg'],
+    ['scan.png', 'image/png', Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), 'png']
+  ])('%s의 확장자·MIME·magic을 함께 승인', (name, mime, bytes, ext) => {
+    expect(validateEvidenceFile(bytes, name, mime)).toMatchObject({ ok: true, ext });
+  });
+
+  it('이중 확장자 실행파일은 거부', () => {
+    expect(validateEvidenceFile(Buffer.from('%PDF-1.4\n'), 'proof.pdf.exe', 'application/pdf'))
+      .toEqual({ ok: false, code: 'UNSUPPORTED_EXTENSION' });
   });
 });
 

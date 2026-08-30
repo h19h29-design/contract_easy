@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { PoliteHttpClient } from './http.js';
-import { safeFileName, sha256Hex } from '@sen/shared';
+import { detectFileKind, safeFileName, sha256Hex } from '@sen/shared';
 import { ensureDirs } from '@sen/config';
 import { FileStore } from '@sen/db';
 
@@ -24,31 +24,7 @@ export interface AttachmentOutcome {
   reason?: string;
 }
 
-export function detectKind(buf: Buffer, dispositionName: string): string | null {
-  const head = buf.subarray(0, 8);
-  const hex = head.toString('hex');
-  if (buf.subarray(0, 5).toString('latin1') === '%PDF-') return 'pdf';
-  if (hex.startsWith('504b0304')) {
-    // zip 계열: 확장자 힌트 우선(docx/xlsx/zip)
-    const n = dispositionName.toLowerCase();
-    if (n.endsWith('.hwpx')) return 'hwpx';
-    if (n.endsWith('.docx')) return 'docx';
-    if (n.endsWith('.xlsx')) return 'xlsx';
-    return 'zip';
-  }
-  if (hex.startsWith('d0cf11e0')) {
-    const n = dispositionName.toLowerCase();
-    if (n.endsWith('.doc')) return 'doc';
-    if (n.endsWith('.xls')) return 'xls';
-    if (n.endsWith('.hwp')) return 'hwp';
-    return 'ole';
-  }
-  if (hex.startsWith('ffd8ff')) return 'jpg';
-  if (hex.startsWith('89504e47')) return 'png';
-  if (head.toString('latin1').startsWith('GIF8')) return 'gif';
-  if (hex.startsWith('23215343')) return null; // #!SC 스크립트 위험 → 기각
-  return null;
-}
+export const detectKind = detectFileKind;
 
 function nameFromDisposition(disposition: string | null): string {
   if (!disposition) return '';

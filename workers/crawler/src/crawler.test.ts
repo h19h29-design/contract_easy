@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { detectKind } from './attachments.js';
 
 const ctxBase = {
   client: {} as never,
@@ -92,5 +93,13 @@ describe('fixture 파일 해시·MIME 기록 검증', () => {
     fs.mkdirSync(quarantine, { recursive: true });
     fs.renameSync(file, path.join(quarantine, 'sample.pdf'));
     expect(fs.existsSync(path.join(quarantine, 'sample.pdf'))).toBe(true);
+  });
+});
+
+describe('첨부 magic 형식 감지 호환성', () => {
+  it('PDF·ZIP·OLE 매직을 기존 형식으로 유지한다', () => {
+    expect(detectKind(Buffer.from('%PDF-1.4\n'), 'notice.pdf')).toBe('pdf');
+    expect(detectKind(Buffer.from([0x50, 0x4b, 0x03, 0x04]), 'notice.docx')).toBe('docx');
+    expect(detectKind(Buffer.from([0xd0, 0xcf, 0x11, 0xe0]), 'notice.hwp')).toBe('hwp');
   });
 });
