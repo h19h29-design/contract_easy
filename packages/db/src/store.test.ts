@@ -193,6 +193,63 @@ describe('체크리스트 증빙 메타데이터', () => {
     expect(store.listProjectDocuments(projectA.id)).toEqual([]);
     expect(store.listAudit()).toEqual([]);
   });
+
+  it('동일 시각에 같은 SHA 증빙을 교체해도 문서 ID를 중복하지 않음', () => {
+    const store = new FileStore(tmp());
+    const owner = store.createUser({ username: 'evidence-same-sha', passwordHash: 's:h', displayName: 'Owner', role: 'USER' });
+    const project = store.createProject({
+      ownerId: owner.id, name: '동일 SHA 증빙', contractCategory: 'construction',
+      estimatedPrice: 0, organizationType: 'school', status: 'planning', wizardInput: null
+    }, { plan: ['증빙 제출'] });
+    const item = store.checklistOf(project.id)[0]!;
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-08-30T00:00:00.000Z'));
+      const first = store.saveChecklistEvidence(documentInput(project.id, item.id, 'd'.repeat(64)))!;
+      const second = store.saveChecklistEvidence(documentInput(project.id, item.id, 'd'.repeat(64)))!;
+
+      expect(second.document.id).not.toBe(first.document.id);
+      expect(second.previousDocumentId).toBe(first.document.id);
+      expect(store.listProjectDocuments(project.id)).toHaveLength(2);
+      expect(store.listProjectDocuments(project.id).map((document) => document.id)).toEqual(expect.arrayContaining([
+        first.document.id, second.document.id
+      ]));
+      expect(store.checklistOf(project.id)[0]?.evidencePath).toBe(second.document.id);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('기존 문서의 누락되거나 false인 isPrivate은 true로 정규화한다', () => {
+    const dir = tmp();
+    new FileStore(dir);
+    const file = path.join(dir, 'db.json');
+    const db = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>;
+    db.projectDocuments = [
+      {
+        id: 'legacy-missing-private', projectId: 'legacy-project', uploadedBy: 'u1',
+        originalName: '기존-누락.pdf', storedPath: '/legacy/missing.pdf', mimeType: 'application/pdf',
+        sizeBytes: 12, sha256: 'e'.repeat(64), uploadedAt: '2026-08-30T00:00:00.000Z'
+      },
+      {
+        id: 'legacy-false-private', projectId: 'legacy-project', uploadedBy: 'u2',
+        originalName: '기존-false.pdf', storedPath: '/legacy/false.pdf', mimeType: 'application/pdf',
+        sizeBytes: 34, sha256: 'f'.repeat(64), isPrivate: false, uploadedAt: '2026-08-30T00:00:01.000Z'
+      }
+    ];
+    fs.writeFileSync(file, JSON.stringify(db), 'utf8');
+
+    expect(new FileStore(dir).listProjectDocuments('legacy-project')).toEqual([
+      expect.objectContaining({
+        id: 'legacy-missing-private', uploadedBy: 'u1', originalName: '기존-누락.pdf',
+        storedPath: '/legacy/missing.pdf', sizeBytes: 12, sha256: 'e'.repeat(64), isPrivate: true
+      }),
+      expect.objectContaining({
+        id: 'legacy-false-private', uploadedBy: 'u2', originalName: '기존-false.pdf',
+        storedPath: '/legacy/false.pdf', sizeBytes: 34, sha256: 'f'.repeat(64), isPrivate: true
+      })
+    ]);
+  });
 });
 
 describe('프로젝트 상태·변경·일정 이력', () => {

@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import {
-  stableId, isoNow, isIsoDate, seoulDate,
+  stableId, randomToken, isoNow, isIsoDate, seoulDate,
   type AttachmentRef, type Chunk, type RuleDefinition, type SourceVersion
 } from '@sen/shared';
 import { detectConflicts, validateActivatableRule } from '@sen/rules';
@@ -747,7 +747,7 @@ export class PgStore {
 
       const uploadedAt = isoNow();
       const document: ProjectDocumentRecord = {
-        id: stableId('pdoc', input.projectId, input.checklistItemId, input.sha256, uploadedAt),
+        id: `pdoc_${randomToken()}`,
         projectId: input.projectId,
         uploadedBy: input.uploadedBy,
         originalName: input.originalName,

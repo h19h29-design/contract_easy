@@ -368,6 +368,32 @@ describe('PgStore 체크리스트 증빙 메타데이터', () => {
     expect((await store.checklistOf(projectB.id))[0]?.evidencePath).toBeNull();
     expect(await store.listProjectDocuments(projectA.id)).toEqual([]);
   });
+
+  it('동일 시각에 같은 SHA 증빙을 교체해도 문서 ID를 중복하지 않음', async () => {
+    const owner = await store.createUser(user('pg-evidence-same-sha', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: 'PG 동일 SHA 증빙', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, { plan: ['증빙 제출'] });
+    const item = (await store.checklistOf(project.id))[0]!;
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-08-30T00:00:00.000Z'));
+      const first = (await store.saveChecklistEvidence(documentInput(project.id, item.id, 'd'.repeat(64))))!;
+      const second = (await store.saveChecklistEvidence(documentInput(project.id, item.id, 'd'.repeat(64))))!;
+
+      expect(second.document.id).not.toBe(first.document.id);
+      expect(second.previousDocumentId).toBe(first.document.id);
+      const documents = await store.listProjectDocuments(project.id);
+      expect(documents).toHaveLength(2);
+      expect(documents.map((document) => document.id)).toEqual(expect.arrayContaining([
+        first.document.id, second.document.id
+      ]));
+      expect((await store.checklistOf(project.id))[0]?.evidencePath).toBe(second.document.id);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('PgStore 프로젝트 생명주기', () => {

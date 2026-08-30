@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  stableId, isoNow, isIsoDate,
+  stableId, randomToken, isoNow, isIsoDate,
   type Chunk, type RuleDefinition, type SourceVersion,
   type AttachmentRef, type WizardInput
 } from '@sen/shared';
@@ -261,7 +261,7 @@ export class FileStore implements AppStore {
         projectChanges: parsed.projectChanges ?? [],
         projectEvents: parsed.projectEvents ?? [],
         checklist: (parsed.checklist ?? []).map((item) => ({ ...item, evidencePath: item.evidencePath ?? null })),
-        projectDocuments: parsed.projectDocuments ?? []
+        projectDocuments: (parsed.projectDocuments ?? []).map((document) => ({ ...document, isPrivate: true }))
       };
     } else {
       this.data = emptyDb();
@@ -744,7 +744,7 @@ export class FileStore implements AppStore {
 
     const uploadedAt = isoNow();
     const document: ProjectDocumentRecord = {
-      id: stableId('pdoc', input.projectId, input.checklistItemId, input.sha256, uploadedAt),
+      id: `pdoc_${randomToken()}`,
       projectId: input.projectId,
       uploadedBy: input.uploadedBy,
       originalName: input.originalName,
