@@ -31,7 +31,7 @@ export function validateActivatableRule(
     }
   }
   if (!rule.source.title.trim() ||
-    !rule.source.url.startsWith('https://') ||
+    !isSafeHttpsSourceUrl(rule.source.url) ||
     !isIsoDate(rule.source.checkedAt) ||
     (rule.source.effectiveFrom != null && !isIsoDate(rule.source.effectiveFrom))) {
     issues.push({ code: 'INVALID_SOURCE', message: 'HTTPS 원문 URL, 제목, 확인일이 필요합니다.' });
@@ -46,10 +46,19 @@ export function validateActivatableRule(
   }
   if (rule.conditions.length === 0 || rule.conditions.some(
     (condition) => !isValidActivatablePriceCondition(condition)
-  )) {
+  ) || !normalizedPriceInterval(rule.conditions)) {
     issues.push({ code: 'INVALID_CONDITION', message: '지원되는 추정가격 조건이 필요합니다.' });
   }
   return issues;
+}
+
+function isSafeHttpsSourceUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && Boolean(url.hostname) && !url.username && !url.password;
+  } catch {
+    return false;
+  }
 }
 
 function matchesScope(rule: RuleDefinition, input: WizardInput): boolean {

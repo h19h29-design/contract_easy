@@ -431,23 +431,24 @@ export class FileStore implements AppStore {
   /* ---------- rules ---------- */
 
   upsertRule(def: Omit<StoredRule, 'createdAt' | 'updatedAt'> & Partial<Pick<StoredRule, 'createdAt' | 'updatedAt'>>): void {
-    const idx = this.data.rules.findIndex((r) => r.id === def.id && r.version === def.version);
+    const detached = cloneJson(def);
+    const idx = this.data.rules.findIndex((r) => r.id === detached.id && r.version === detached.version);
     const now = isoNow();
     if (idx >= 0) {
       const prev = this.data.rules[idx]!;
       if (prev.status !== 'draft') return;
       this.data.rules[idx] = {
-        ...prev, ...def, status: 'draft',
+        ...prev, ...detached, status: 'draft',
         createdAt: prev.createdAt, updatedAt: now
       };
     } else {
-      this.data.rules.push({ ...def, status: 'draft', createdAt: def.createdAt ?? now, updatedAt: now });
+      this.data.rules.push({ ...detached, status: 'draft', createdAt: detached.createdAt ?? now, updatedAt: now });
     }
     this.flush();
   }
 
   listRules(): StoredRule[] {
-    return [...this.data.rules].sort((a, b) => a.id.localeCompare(b.id));
+    return cloneJson([...this.data.rules].sort((a, b) => a.id.localeCompare(b.id)));
   }
 
   getActiveRules(asOfIsoDate?: string): StoredRule[] {
@@ -473,7 +474,7 @@ export class FileStore implements AppStore {
     this.data.rules.push(rule);
     this.appendAudit(actorUserId, 'rule.revision.create', 'rule', ruleVersionId(rule), { version: rule.version });
     this.flush();
-    return { ok: true, rule };
+    return { ok: true, rule: cloneJson(rule) };
   }
 
   approveRuleReview(ruleId: string, version: number, reviewerId: string, comment: string, sourceConfirmed: boolean): RuleActionResult {
@@ -493,7 +494,7 @@ export class FileStore implements AppStore {
     this.appendRuleReview(rule, reviewerId, 'approve', comment.trim(), at);
     this.appendAudit(reviewerId, 'rule.review.approve', 'rule', ruleVersionId(rule), { version });
     this.flush();
-    return { ok: true, rule };
+    return { ok: true, rule: cloneJson(rule) };
   }
 
   holdRule(ruleId: string, version: number, reviewerId: string, comment: string): RuleActionResult {
@@ -510,7 +511,7 @@ export class FileStore implements AppStore {
     this.appendRuleReview(rule, reviewerId, 'hold', comment.trim(), at);
     this.appendAudit(reviewerId, 'rule.review.hold', 'rule', ruleVersionId(rule), { version });
     this.flush();
-    return { ok: true, rule };
+    return { ok: true, rule: cloneJson(rule) };
   }
 
   activateReviewedRule(ruleId: string, version: number, adminId: string, asOfDate: string): RuleActionResult {
@@ -550,7 +551,7 @@ export class FileStore implements AppStore {
 
   listRuleReviews(ruleId: string, version: number): RuleReviewRecord[] {
     const id = `${ruleId}@${version}`;
-    return this.data.ruleReviews.filter((review) => review.ruleVersionId === id);
+    return cloneJson(this.data.ruleReviews.filter((review) => review.ruleVersionId === id));
   }
 
   /**
@@ -600,7 +601,7 @@ export class FileStore implements AppStore {
   }
 
   getUser(id: string): UserRecord | null {
-    return this.data.users.find((u) => u.id === id) ?? null;
+    return this.data.users.find((u) => u.id === id && !u.disabled) ?? null;
   }
 
   listUsers(): UserRecord[] {

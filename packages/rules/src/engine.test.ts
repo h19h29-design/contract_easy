@@ -157,6 +157,15 @@ describe('detectConflicts(관리자용 사전탐지)', () => {
 });
 
 describe('활성화 검증과 fail-closed 판정', () => {
+  it('인증정보 URL과 공집합 가격 조건을 거부한다', () => {
+    const credentialed = rule({ source: { ...rule({}).source, url: 'https://user:pass@example.test/source' } });
+    expect(validateActivatableRule(credentialed).map((x) => x.code)).toContain('INVALID_SOURCE');
+    const emptyRange = rule({ conditions: [
+      { field: 'estimated_price', operator: 'gt', value: 100 },
+      { field: 'estimated_price', operator: 'lte', value: 100 }
+    ] });
+    expect(validateActivatableRule(emptyRange).map((x) => x.code)).toContain('INVALID_CONDITION');
+  });
   it('알 수 없는 scope 키는 활성화 검증에서 거부', () => {
     const issues = validateActivatableRule(rule({ scope: { contract_catgory: 'construction' } }));
     expect(issues.map((x) => x.code)).toContain('UNKNOWN_SCOPE');

@@ -56,6 +56,16 @@ describe('규칙 승인 플로우(draft → reviewed → active → superseded)'
 });
 
 describe('엄격한 FileStore 규칙 검토 계약', () => {
+  it('반환 규칙과 검토 기록 mutation은 flush/reload에 남지 않는다', () => {
+    const { store, dir, reviewer } = ruleStore();
+    store.listRules()[0]!.output.method = '외부 변경';
+    expect(store.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true).ok).toBe(true);
+    store.listRuleReviews('safe', 1)[0]!.comment = '외부 변경';
+    store.audit(null, 'flush', 'test', null);
+    const reloaded = new FileStore(dir);
+    expect(reloaded.listRules()[0]!.output.method).not.toBe('외부 변경');
+    expect(reloaded.listRuleReviews('safe', 1)[0]!.comment).toBe('원문 대조 완료');
+  });
   it('직접 호출한 malformed review와 hold 증거를 예외 없이 거부한다', () => {
     const review = ruleStore();
     expect(review.store.approveRuleReview('safe', 1, review.reviewer.id, '원문 대조 완료', 1 as unknown as boolean))
@@ -83,6 +93,17 @@ describe('엄격한 FileStore 규칙 검토 계약', () => {
     fs.writeFileSync(file, JSON.stringify(db), 'utf8');
     const reloaded = new FileStore(dir);
     expect(reloaded.activateReviewedRule('safe', 1, reviewer.id, '2026-08-30')).toEqual({ ok: false, code: 'SAME_ACTOR' });
+  });
+
+  it('비활성화된 사용자는 직접 승인에서 인증되지 않는다', () => {
+    const { store, dir, reviewer } = ruleStore();
+    const file = path.join(dir, 'db.json');
+    const db = JSON.parse(fs.readFileSync(file, 'utf8')) as DbData;
+    db.users.find((user) => user.id === reviewer.id)!.disabled = true;
+    fs.writeFileSync(file, JSON.stringify(db), 'utf8');
+    const reloaded = new FileStore(dir);
+    expect(reloaded.getUser(reviewer.id)).toBeNull();
+    expect(reloaded.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true)).toEqual({ ok: false, code: 'ROLE_REQUIRED' });
   });
 
   it('별도 ADMIN이 reviewed 규칙을 activate', () => {
