@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { buildApp, DEFAULT_CHECKLIST_TEMPLATES } from './server.js';
 import { FileStore } from '@sen/db';
 import { getConfig } from '@sen/config';
@@ -407,13 +408,15 @@ describe('비공개 체크리스트 증빙 API', () => {
 
   it('다운로드 MIME은 저장된 메타데이터가 아니라 허용된 파일 확장자로 정한다', async () => {
     const { project, item } = await createProject('증빙 MIME 경계 공사');
+    const bytes = Buffer.from('%PDF-1.4\n');
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
     const stored = writeEvidenceFile({
-      privateRoot, projectId: project.id, bytes: Buffer.from('%PDF-1.4\n'), sha256: 'c'.repeat(64), ext: 'pdf'
+      privateRoot, projectId: project.id, bytes, sha256, ext: 'pdf'
     });
     const document = evidenceStore.saveChecklistEvidence({
       projectId: project.id, checklistItemId: item.id, uploadedBy: ownerId,
       originalName: '안전.pdf', storedPath: stored.storedPath,
-      mimeType: 'text/html', sizeBytes: 9, sha256: 'c'.repeat(64)
+      mimeType: 'text/html', sizeBytes: 9, sha256
     })!.document;
 
     const download = await ownerRequest('GET', `/api/projects/${project.id}/documents/${document.id}/download`);
