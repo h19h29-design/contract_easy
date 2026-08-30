@@ -325,7 +325,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       const estimatedPrice = b?.estimatedPrice;
       const organizationType = b?.organizationType;
       if (
-        !b || !name || !isProjectCategory(contractCategory) || !isOrganizationType(organizationType) ||
+        !b || !isBoundedText(name, 1, 200) || !isProjectCategory(contractCategory) || !isOrganizationType(organizationType) ||
         typeof estimatedPrice !== 'number' || !Number.isFinite(estimatedPrice) || estimatedPrice < 0
       ) {
         return reply.code(400).send({ error: '프로젝트명·공사구분·기관구분은 필수입니다.' });
@@ -383,7 +383,8 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       if (!checklist.some((candidate) => candidate.id === req.params.itemId)) {
         return reply.code(404).send({ error: '항목 없음' });
       }
-      const item = await store.toggleChecklist(req.params.itemId, Boolean(req.body.done));
+      if (!req.body || typeof req.body.done !== 'boolean') return reply.code(400).send({ error: '체크리스트 입력값이 올바르지 않습니다.' });
+      const item = await store.toggleChecklist(req.params.itemId, req.body.done);
       if (!item) return reply.code(404).send({ error: '항목 없음' });
       await store.audit(user.id, 'project.checklist_toggle', 'checklist_item', item.id, { done: item.done }, req.ip);
       return item;
@@ -397,6 +398,9 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       if (!user) return;
       if (!(await store.canAccessProject(req.params.id, user.id, user.role))) {
         return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
+      }
+      if (!(await store.checklistOf(req.params.id)).some((item) => item.id === req.params.itemId)) {
+        return reply.code(404).send({ error: '체크리스트 항목이 없습니다.' });
       }
 
       const encodedName = singleHeader(req, 'x-file-name');
@@ -441,11 +445,6 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       });
       // 잘못된 항목 연결 실패 시에도 생성 파일은 보존한다. 이후 관리자가 안전하게 정리할 수 있다.
       if (!linked) return reply.code(404).send({ error: '체크리스트 항목이 없습니다.' });
-      await store.audit(user.id, 'project.evidence_upload', 'project_document', linked.document.id, {
-        checklistItemId: req.params.itemId,
-        sha256: validation.sha256,
-        created: stored.created
-      }, req.ip);
       const document = Object.fromEntries(
         Object.entries(linked.document).filter(([key]) => key !== 'storedPath')
       );
@@ -489,7 +488,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
         return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
       }
       const status = req.body?.status;
-      const reason = req.body?.reason?.trim();
+      const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : null;
       if (!isProjectStatus(status) || !isBoundedText(reason, 1, 2_000)) {
         return reply.code(400).send({ error: '상태 전이 입력값이 올바르지 않습니다.' });
       }
@@ -510,7 +509,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
         return reply.code(404).send({ error: '권한 없음' });
       }
       const body = req.body;
-      const reason = body?.reason?.trim();
+      const reason = typeof body?.reason === 'string' ? body.reason.trim() : null;
       if (
         !body || !isProjectChangeType(body.changeType) ||
         !isBoundedText(reason, 1, 2_000) || !isJsonObjectOrNull(body.before) || !isJsonObjectOrNull(body.after) ||
@@ -540,7 +539,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
         return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
       }
       const body = req.body;
-      const title = body?.title?.trim();
+      const title = typeof body?.title === 'string' ? body.title.trim() : null;
       if (!body || !isProjectEventKind(body.kind) || !isBoundedText(title, 1, 200) || !body.dueDate || !isIsoDate(body.dueDate)) {
         return reply.code(400).send({ error: '일정 입력값이 올바르지 않습니다.' });
       }
@@ -586,6 +585,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       const version = Number(req.params.version);
       const body = req.body;
       const action = body?.action;
+      if (!Number.isInteger(version) || version < 1) return reply.code(400).send({ error: '규칙 버전이 올바르지 않습니다.' });
       if (action === 'review' && !isReviewAction(body)) {
         return reply.code(400).send({ error: '검토 증거가 올바르지 않습니다.' });
       }

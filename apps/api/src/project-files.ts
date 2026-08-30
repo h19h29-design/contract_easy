@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 
 export interface StoredEvidenceFile {
   storedPath: string;
@@ -29,22 +30,39 @@ export function writeEvidenceFile(input: {
   const canonicalStoredPath = path.join(canonicalProjectDir, `${input.sha256}.${input.ext}`);
   const storedPath = path.join(input.privateRoot, input.projectId, `${input.sha256}.${input.ext}`);
 
+  if (fs.existsSync(canonicalStoredPath)) {
+    verifyExistingEvidence(canonicalStoredPath, input);
+    return { storedPath, created: false };
+  }
+  const temporaryPath = path.join(canonicalProjectDir, `.${input.sha256}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`);
   try {
-    const fd = fs.openSync(canonicalStoredPath, 'wx', 0o600);
+    const fd = fs.openSync(temporaryPath, 'wx', 0o600);
     try {
       fs.writeFileSync(fd, input.bytes);
+      fs.fsyncSync(fd);
     } finally {
       fs.closeSync(fd);
     }
-    return { storedPath, created: true };
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
-      if (fs.lstatSync(canonicalStoredPath).isSymbolicLink()) {
-        throw new Error('PRIVATE_PATH_VIOLATION', { cause: error });
-      }
+    try {
+      fs.linkSync(temporaryPath, canonicalStoredPath);
+      return { storedPath, created: true };
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      verifyExistingEvidence(canonicalStoredPath, input);
       return { storedPath, created: false };
     }
-    throw error;
+  } finally {
+    if (fs.existsSync(temporaryPath)) fs.unlinkSync(temporaryPath);
+  }
+}
+
+function verifyExistingEvidence(target: string, input: { bytes: Buffer; sha256: string }): void {
+  const info = fs.lstatSync(target);
+  const actualHash = createHash('sha256').update(input.bytes).digest('hex');
+  if (!info.isFile() || info.isSymbolicLink() || (info.mode & 0o777) !== 0o600 ||
+    info.size !== input.bytes.length || actualHash !== input.sha256 ||
+    createHash('sha256').update(fs.readFileSync(target)).digest('hex') !== input.sha256) {
+    throw new Error('PRIVATE_PATH_VIOLATION');
   }
 }
 
