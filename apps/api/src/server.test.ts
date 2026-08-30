@@ -281,6 +281,33 @@ describe('프로젝트 생명주기 API', () => {
       expect(response.statusCode).toBe(400);
     }
   });
+
+  it('상태·변경·일정의 malformed reasons/enums/dates를 400으로 거부한다', async () => {
+    const project = await createProject('route validation');
+    for (const reason of [1, {}, null, 'x'.repeat(2001)]) {
+      expect((await projectRequest('POST', `/api/projects/${project.id}/status`, { status: 'contracting', reason })).statusCode).toBe(400);
+      expect((await projectRequest('POST', `/api/projects/${project.id}/changes`, { changeType: 'amount', before: {}, after: {}, reason })).statusCode).toBe(400);
+    }
+    expect((await projectRequest('POST', `/api/projects/${project.id}/status`, { status: 'invalid', reason: 'x' })).statusCode).toBe(400);
+    expect((await projectRequest('POST', `/api/projects/${project.id}/changes`, { changeType: 'status', before: {}, after: {}, reason: 'x' })).statusCode).toBe(400);
+    for (const dueDate of [1, null, '2026-02-30', 'not-date']) {
+      expect((await projectRequest('POST', `/api/projects/${project.id}/events`, { kind: 'inspection', title: 'x', dueDate })).statusCode).toBe(400);
+    }
+  });
+
+  it('Seoul literal dates return exact overdue/today/upcoming display states', async () => {
+    const stateApp = await buildApp({ store, retriever: new HybridRetriever({ chunks: [], versions: [] }), now: () => new Date('2026-08-30T03:00:00.000Z') });
+    try {
+      const project = await createProject('Seoul state');
+      for (const dueDate of ['2026-08-29', '2026-08-30', '2026-08-31']) {
+        expect((await projectRequest('POST', `/api/projects/${project.id}/events`, { kind: 'inspection', title: dueDate, dueDate })).statusCode).toBe(200);
+      }
+      const detail = await stateApp.app.inject({ method: 'GET', url: `/api/projects/${project.id}`, cookies: { scg_session: sessionToken } });
+      expect(detail.json().events.map((event: { dueDate: string; displayState: string }) => [event.dueDate, event.displayState])).toEqual([
+        ['2026-08-31', 'upcoming'], ['2026-08-30', 'today'], ['2026-08-29', 'overdue']
+      ]);
+    } finally { await stateApp.app.close(); }
+  });
 });
 
 describe('비공개 체크리스트 증빙 API', () => {

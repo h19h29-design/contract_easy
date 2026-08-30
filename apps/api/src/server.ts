@@ -22,6 +22,8 @@ export interface AppContext {
   retriever: HybridRetriever | null;
   sessionSecret: string;
   privateRoot: string;
+  /** Server clock injection for deterministic date policy tests. */
+  now: () => Date;
 }
 
 type RuleAdminBody =
@@ -50,6 +52,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   const dirs = ensureDirs();
   const cfg = getConfig();
   const privateRoot = ctxIn?.privateRoot ?? dirs.privateProjects;
+  const now = ctxIn?.now ?? (() => new Date());
   if (process.env.NODE_ENV === 'production' && !cfg.webOrigin) {
     throw new Error('WEB_ORIGIN 환경변수가 필요합니다.');
   }
@@ -220,7 +223,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     if (!input || typeof input.estimatedPrice !== 'number' || !input.contractCategory) {
       return reply.code(400).send({ error: '입력값이 올바르지 않습니다.' });
     }
-    const asOfDate = input.contractPlannedDate ?? seoulDate(new Date());
+    const asOfDate = input.contractPlannedDate ?? seoulDate(now());
     const activeRules = await store.getActiveRules(asOfDate);
     const { result, conflicts } = evaluateWizard(input, activeRules, { asOfDate });
     return { ...result, conflicts };
@@ -354,7 +357,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     if (!p) {
       return reply.code(404).send({ error: '프로젝트가 없거나 접근 권한이 없습니다.' });
     }
-    const today = seoulDate(new Date());
+    const today = seoulDate(now());
     const documents = (await store.listProjectDocuments(p.id)).map(({ storedPath: _storedPath, ...document }) => document);
     const events = (await store.listProjectEvents(p.id)).map((event) => ({
       ...event,
@@ -604,7 +607,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       } else if (body?.action === 'hold') {
         result = await store.holdRule(req.params.id, version, user.id, body.comment);
       } else if (body?.action === 'activate') {
-        result = await store.activateReviewedRule(req.params.id, version, user.id, seoulDate(new Date()));
+        result = await store.activateReviewedRule(req.params.id, version, user.id, seoulDate(now()));
       }
       if (!result) return reply.code(400).send({ error: '유효하지 않은 규칙 작업입니다.' });
       if (!result.ok) return reply.code(RULE_STATUS[result.code]).send({ error: result.code });
@@ -630,7 +633,7 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       const conditions: RuleCondition[] = [];
       if (body.lower !== null) conditions.push({ field: 'estimated_price', operator: body.lowerInclusive ? 'gte' : 'gt', value: body.lower });
       if (body.upper !== null) conditions.push({ field: 'estimated_price', operator: body.upperInclusive ? 'lte' : 'lt', value: body.upper });
-      const now = new Date().toISOString();
+      const timestamp = now().toISOString();
       const revision: RuleDefinition = {
         ...prior,
         version: prior.version + 1,
@@ -640,8 +643,8 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
         source: { ...body.source, title: body.source.title.trim(), url: body.source.url.trim(), checkedAt: body.source.checkedAt.trim() },
         reviewedBy: null,
         supersededBy: null,
-        createdAt: now,
-        updatedAt: now
+        createdAt: timestamp,
+        updatedAt: timestamp
       };
       const result = await store.createRuleRevision(revision, user.id);
       if (!result.ok) return reply.code(RULE_STATUS[result.code]).send({ error: result.code });
