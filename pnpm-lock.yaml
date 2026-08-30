@@ -134,6 +134,9 @@ importers:
       '@sen/config':
         specifier: workspace:*
         version: link:../config
+      '@sen/rules':
+        specifier: workspace:*
+        version: link:../rules
       '@sen/shared':
         specifier: workspace:*
         version: link:../shared

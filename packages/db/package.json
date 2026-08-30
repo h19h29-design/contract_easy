@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@sen/rules": "workspace:*",
     "@sen/shared": "workspace:*",
     "drizzle-orm": "^0.34.0",
     "pg": "^8.13.0",

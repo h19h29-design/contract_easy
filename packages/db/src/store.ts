@@ -5,6 +5,7 @@ import {
   type Chunk, type RuleDefinition, type SourceVersion,
   type AttachmentRef, type WizardInput
 } from '@sen/shared';
+import { detectConflicts, validateActivatableRule } from '@sen/rules';
 import type { AppStore } from './app-store.js';
 
 /* 파일 기반 리포지토리(개발/MVP용). 운영은 PgStore(PostgreSQL) 사용(D-003). */
@@ -83,6 +84,25 @@ export interface AuditLogRecord {
   at: string;
 }
 
+export interface RuleReviewRecord {
+  id: string;
+  ruleVersionId: string;
+  actorUserId: string;
+  action: 'approve' | 'hold' | 'activate';
+  comment: string | null;
+  at: string;
+}
+
+export type RuleActionErrorCode =
+  | 'NOT_FOUND' | 'INVALID_STATE' | 'ROLE_REQUIRED'
+  | 'SOURCE_CONFIRMATION_REQUIRED' | 'MISSING_REVIEW'
+  | 'SAME_ACTOR' | 'RULE_INVALID' | 'RULE_CONFLICT'
+  | 'VERSION_CONFLICT';
+
+export type RuleActionResult =
+  | { ok: true; rule: RuleDefinition }
+  | { ok: false; code: RuleActionErrorCode };
+
 export interface CrawlRunRecord {
   id: string;
   mode: string;
@@ -116,6 +136,7 @@ export interface DbData {
   auditLogs: AuditLogRecord[];
   crawlRuns: CrawlRunRecord[];
   answerReports: AnswerReportRecord[];
+  ruleReviews: RuleReviewRecord[];
 }
 
 export const STAGES = [
@@ -133,7 +154,7 @@ export function emptyDb(): DbData {
   return {
     sources: {}, chunks: [], rules: [], users: [], sessions: {},
     projects: {}, steps: [], checklist: [], auditLogs: [], crawlRuns: [],
-    answerReports: []
+    answerReports: [], ruleReviews: []
   };
 }
 
@@ -145,7 +166,13 @@ export class FileStore implements AppStore {
     fs.mkdirSync(appStoreDir, { recursive: true });
     this.file = path.join(appStoreDir, 'db.json');
     if (fs.existsSync(this.file)) {
-      this.data = JSON.parse(fs.readFileSync(this.file, 'utf8')) as DbData;
+      const parsed = JSON.parse(fs.readFileSync(this.file, 'utf8')) as Partial<DbData>;
+      this.data = {
+        ...emptyDb(), ...parsed,
+        sessions: parsed.sessions ?? {},
+        projects: parsed.projects ?? {},
+        sources: parsed.sources ?? {}
+      };
     } else {
       this.data = emptyDb();
       this.flush();
@@ -156,6 +183,44 @@ export class FileStore implements AppStore {
     const tmp = `${this.file}.tmp`;
     fs.writeFileSync(tmp, JSON.stringify(this.data), 'utf8');
     fs.renameSync(tmp, this.file);
+  }
+
+  private findRule(ruleId: string, version: number): StoredRule | undefined {
+    return this.data.rules.find((rule) => rule.id === ruleId && rule.version === version);
+  }
+
+  private appendRuleReview(
+    rule: StoredRule,
+    actorUserId: string,
+    action: RuleReviewRecord['action'],
+    comment: string | null,
+    at: string
+  ): void {
+    this.data.ruleReviews.push({
+      id: stableId('rrv', ruleVersionId(rule), action, actorUserId, at),
+      ruleVersionId: ruleVersionId(rule),
+      actorUserId,
+      action,
+      comment,
+      at
+    });
+  }
+
+  private appendAudit(
+    actorUserId: string | null,
+    action: string,
+    targetType: string,
+    targetId: string | null,
+    detail?: Record<string, unknown> | null,
+    ip?: string | null
+  ): void {
+    const at = isoNow();
+    this.data.auditLogs.push({
+      id: stableId('aud', action, targetType, targetId ?? '', at),
+      actorUserId, action, targetType, targetId, detail: detail ?? null,
+      ip: ip ?? null, at
+    });
+    if (this.data.auditLogs.length > 10000) this.data.auditLogs = this.data.auditLogs.slice(-10000);
   }
 
   /* ---------- sources & versions ---------- */
@@ -280,18 +345,13 @@ export class FileStore implements AppStore {
     const now = isoNow();
     if (idx >= 0) {
       const prev = this.data.rules[idx]!;
-      // 상태 에스컬레이션 가드(D-011): 기존 reviewed/active를 draft로 되돌리지 않음
-      let effectiveStatus = def.status;
-      if (prev.status !== 'superseded') {
-        const rank: Record<string, number> = { draft: 0, reviewed: 1, active: 2 };
-        if ((rank[prev.status] ?? 0) > (rank[def.status] ?? 0)) effectiveStatus = prev.status;
-      }
+      if (prev.status !== 'draft') return;
       this.data.rules[idx] = {
-        ...prev, ...def, status: effectiveStatus,
+        ...prev, ...def, status: 'draft',
         createdAt: prev.createdAt, updatedAt: now
       };
     } else {
-      this.data.rules.push({ ...def, createdAt: def.createdAt ?? now, updatedAt: now });
+      this.data.rules.push({ ...def, status: 'draft', createdAt: def.createdAt ?? now, updatedAt: now });
     }
     this.flush();
   }
@@ -307,6 +367,92 @@ export class FileStore implements AppStore {
       if (eff && asOfIsoDate && eff > asOfIsoDate) return false;
       return true;
     });
+  }
+
+  createRuleRevision(def: RuleDefinition, actorUserId: string): RuleActionResult {
+    const actor = this.getUser(actorUserId);
+    if (actor?.role !== 'REVIEWER') return { ok: false, code: 'ROLE_REQUIRED' };
+    if (def.status !== 'draft') return { ok: false, code: 'INVALID_STATE' };
+    const versions = this.data.rules.filter((rule) => rule.id === def.id);
+    const maxVersion = versions.reduce((max, rule) => Math.max(max, rule.version), 0);
+    if (def.version !== maxVersion + 1 || versions.some((rule) => rule.version === def.version)) {
+      return { ok: false, code: 'VERSION_CONFLICT' };
+    }
+    const now = isoNow();
+    const rule: StoredRule = { ...def, status: 'draft', createdAt: def.createdAt || now, updatedAt: now };
+    this.data.rules.push(rule);
+    this.appendAudit(actorUserId, 'rule.revision.create', 'rule', ruleVersionId(rule), { version: rule.version });
+    this.flush();
+    return { ok: true, rule };
+  }
+
+  approveRuleReview(ruleId: string, version: number, reviewerId: string, comment: string, sourceConfirmed: boolean): RuleActionResult {
+    const reviewer = this.getUser(reviewerId);
+    if (reviewer?.role !== 'REVIEWER') return { ok: false, code: 'ROLE_REQUIRED' };
+    if (!sourceConfirmed || !comment.trim()) return { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' };
+    const rule = this.findRule(ruleId, version);
+    if (!rule) return { ok: false, code: 'NOT_FOUND' };
+    if (rule.status !== 'draft') return { ok: false, code: 'INVALID_STATE' };
+    if (validateActivatableRule(rule).length > 0) return { ok: false, code: 'RULE_INVALID' };
+    const at = isoNow();
+    rule.status = 'reviewed';
+    rule.reviewedBy = reviewerId;
+    rule.updatedAt = at;
+    this.appendRuleReview(rule, reviewerId, 'approve', comment.trim(), at);
+    this.appendAudit(reviewerId, 'rule.review.approve', 'rule', ruleVersionId(rule), { version });
+    this.flush();
+    return { ok: true, rule };
+  }
+
+  holdRule(ruleId: string, version: number, reviewerId: string, comment: string): RuleActionResult {
+    const reviewer = this.getUser(reviewerId);
+    if (reviewer?.role !== 'REVIEWER') return { ok: false, code: 'ROLE_REQUIRED' };
+    if (!comment.trim()) return { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' };
+    const rule = this.findRule(ruleId, version);
+    if (!rule) return { ok: false, code: 'NOT_FOUND' };
+    if (rule.status !== 'draft') return { ok: false, code: 'INVALID_STATE' };
+    const at = isoNow();
+    rule.updatedAt = at;
+    this.appendRuleReview(rule, reviewerId, 'hold', comment.trim(), at);
+    this.appendAudit(reviewerId, 'rule.review.hold', 'rule', ruleVersionId(rule), { version });
+    this.flush();
+    return { ok: true, rule };
+  }
+
+  activateReviewedRule(ruleId: string, version: number, adminId: string, asOfDate: string): RuleActionResult {
+    const admin = this.getUser(adminId);
+    if (admin?.role !== 'ADMIN') return { ok: false, code: 'ROLE_REQUIRED' };
+    const rule = this.findRule(ruleId, version);
+    if (!rule) return { ok: false, code: 'NOT_FOUND' };
+    if (rule.status !== 'reviewed') return { ok: false, code: 'INVALID_STATE' };
+    const reviews = this.listRuleReviews(ruleId, version);
+    const approval = reviews.filter((review) => review.action === 'approve').at(-1);
+    if (!approval) return { ok: false, code: 'MISSING_REVIEW' };
+    if (approval.actorUserId === adminId) return { ok: false, code: 'SAME_ACTOR' };
+    if (validateActivatableRule(rule, { asOfDate }).length > 0) return { ok: false, code: 'RULE_INVALID' };
+    const proposed = this.data.rules.map((candidate) =>
+      candidate === rule ? { ...candidate, status: 'active' as const } : candidate
+    );
+    if (detectConflicts(proposed).length > 0) return { ok: false, code: 'RULE_CONFLICT' };
+    const at = isoNow();
+    for (const candidate of this.data.rules) {
+      if (candidate.id === ruleId && candidate.version !== version && candidate.status === 'active') {
+        candidate.status = 'superseded';
+        candidate.supersededBy = ruleVersionId(rule);
+        candidate.updatedAt = at;
+      }
+    }
+    rule.status = 'active';
+    rule.updatedAt = at;
+    this.appendRuleReview(rule, adminId, 'activate', null, at);
+    this.appendAudit(adminId, 'rule.review.activate', 'rule', ruleVersionId(rule), { version, asOfDate });
+    this.flush();
+    return { ok: true, rule };
+  }
+
+  listRuleReviews(ruleId: string, version: number): RuleReviewRecord[] {
+    const id = `${ruleId}@${version}`;
+    return this.data.ruleReviews.filter((review) => review.ruleVersionId === id);
   }
 
   /** 규칙 승인: draft/reviewed → active (사람 검토 필수, 자동 활성화 없음) */
@@ -354,7 +500,12 @@ export class FileStore implements AppStore {
     const keep = new Set(currentIds);
     const before = this.data.rules.length;
     this.data.rules = this.data.rules.filter(
-      (r) => !(r.id.startsWith('candidate.') && r.status === 'draft' && !keep.has(r.id))
+      (r) => !(
+        r.id.startsWith('candidate.') &&
+        r.status === 'draft' &&
+        !keep.has(r.id) &&
+        !this.data.ruleReviews.some((review) => review.ruleVersionId === ruleVersionId(r))
+      )
     );
     const removed = before - this.data.rules.length;
     if (removed > 0) this.flush();
@@ -518,14 +669,7 @@ export class FileStore implements AppStore {
   /* ---------- audit ---------- */
 
   audit(actorUserId: string | null, action: string, targetType: string, targetId: string | null, detail?: Record<string, unknown> | null, ip?: string | null): void {
-    this.data.auditLogs.push({
-      id: stableId('aud', action, targetType, targetId ?? '', isoNow()),
-      actorUserId, action, targetType, targetId, detail: detail ?? null,
-      ip: ip ?? null, at: isoNow()
-    });
-    if (this.data.auditLogs.length > 10000) {
-      this.data.auditLogs = this.data.auditLogs.slice(-10000);
-    }
+    this.appendAudit(actorUserId, action, targetType, targetId, detail, ip);
     this.flush();
   }
 
@@ -585,4 +729,8 @@ export class FileStore implements AppStore {
 /** 콘텐츠 해시로 원문 중복 저장 방지용 경로 */
 export function contentPath(baseDir: string, url: string, sha: string): string {
   return path.join(baseDir, sha.slice(0, 2), `${stableId('page', url)}-${sha.slice(0, 12)}.html`);
+}
+
+function ruleVersionId(rule: Pick<RuleDefinition, 'id' | 'version'>): string {
+  return `${rule.id}@${rule.version}`;
 }

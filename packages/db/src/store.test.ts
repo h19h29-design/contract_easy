@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { FileStore } from './store.js';
+import { FileStore, type DbData } from './store.js';
 
 function tmp(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'scg-store-'));
@@ -52,6 +52,49 @@ describe('규칙 승인 플로우(draft → reviewed → active → superseded)'
   });
 });
 
+describe('엄격한 FileStore 규칙 검토 계약', () => {
+  it('재인제스트가 reviewed 정의를 덮어쓰지 않음', () => {
+    const { store, reviewer } = ruleStore();
+    store.upsertRule(baseRule('safe', 1, 'draft', '입찰'));
+    expect(store.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true).ok).toBe(true);
+    store.upsertRule(baseRule('safe', 1, 'draft', '수의계약'));
+    expect(store.listRules().find((r) => r.id === 'safe')?.output.method).toBe('입찰');
+  });
+
+  it('reviewer와 같은 사용자 ID는 admin이 되어도 activate 불가', () => {
+    const { store, dir, reviewer } = ruleStore();
+    store.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true);
+    const file = path.join(dir, 'db.json');
+    const db = JSON.parse(fs.readFileSync(file, 'utf8')) as DbData;
+    db.users.find((u) => u.id === reviewer.id)!.role = 'ADMIN';
+    fs.writeFileSync(file, JSON.stringify(db), 'utf8');
+    const reloaded = new FileStore(dir);
+    expect(reloaded.activateReviewedRule('safe', 1, reviewer.id, '2026-08-30')).toEqual({ ok: false, code: 'SAME_ACTOR' });
+  });
+
+  it('별도 ADMIN이 reviewed 규칙을 activate', () => {
+    const { store, reviewer, admin } = ruleStore();
+    store.approveRuleReview('safe', 1, reviewer.id, '원문 대조 완료', true);
+    expect(store.activateReviewedRule('safe', 1, admin.id, '2026-08-30')).toMatchObject({ ok: true, rule: { status: 'active' } });
+    expect(store.listRuleReviews('safe', 1).map((r) => r.action)).toEqual(['approve', 'activate']);
+  });
+
+  it('hold는 draft와 검토기록을 보존', () => {
+    const { store, reviewer } = ruleStore();
+    store.upsertRule(baseRule('candidate.held', 1, 'draft', '입찰'));
+    expect(store.holdRule('candidate.held', 1, reviewer.id, '경계 재확인').ok).toBe(true);
+    expect(store.listRules()).toContainEqual(expect.objectContaining({ id: 'candidate.held', status: 'draft' }));
+    expect(store.listRuleReviews('candidate.held', 1)[0]?.action).toBe('hold');
+    expect(store.purgeStaleCandidateDrafts([])).toBe(0);
+  });
+
+  it('upsert 입력 상태로 승인을 우회하지 못함', () => {
+    const { store } = ruleStore();
+    store.upsertRule(baseRule('candidate.injected', 1, 'active', '입찰'));
+    expect(store.listRules().find((r) => r.id === 'candidate.injected')?.status).toBe('draft');
+  });
+});
+
 describe('프로젝트 접근제어(RBAC)', () => {
   it('소유자와 ADMIN만 접근 가능', () => {
     const store = new FileStore(tmp());
@@ -91,14 +134,23 @@ describe('비밀번호 해시', () => {
 
 import type { RuleDefinition } from '@sen/shared';
 
-function baseRule(id: string, version: number, status: RuleDefinition['status']): RuleDefinition {
+function ruleStore(): { store: FileStore; dir: string; reviewer: { id: string }; admin: { id: string } } {
+  const dir = tmp();
+  const store = new FileStore(dir);
+  const reviewer = store.createUser({ username: 'reviewer', passwordHash: 's:h', displayName: 'Reviewer', role: 'REVIEWER' });
+  const admin = store.createUser({ username: 'admin', passwordHash: 's:h', displayName: 'Admin', role: 'ADMIN' });
+  store.upsertRule(baseRule('safe', 1, 'draft', '입찰'));
+  return { store, dir, reviewer, admin };
+}
+
+function baseRule(id: string, version: number, status: RuleDefinition['status'], method = '입찰'): RuleDefinition {
   return {
     id,
     version,
     status,
     scope: { contract_category: 'construction' },
     conditions: [{ field: 'estimated_price', operator: 'between', value: [0, 0] }],
-    output: { reviewRequired: true },
+    output: { method, reviewRequired: true },
     source: { title: 't', url: 'https://example.org', effectiveFrom: null, checkedAt: '2026-08-25' },
     reviewedBy: null,
     supersededBy: null,
