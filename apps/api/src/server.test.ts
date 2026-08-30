@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { buildApp } from './server.js';
 import { FileStore } from '@sen/db';
+import { getConfig } from '@sen/config';
 import { HybridRetriever } from '@sen/retrieval';
 import type { Chunk, RuleDefinition } from '@sen/shared';
 
@@ -187,6 +188,35 @@ describe('규칙 관리자 API의 엄격한 승인 흐름', () => {
     }
   });
 
+  it('malformed review와 hold 증거를 항상 400으로 거부한다', async () => {
+    const malformedReviews: unknown[] = [
+      { action: 'review', comment: '확인', sourceConfirmed: 1 },
+      { action: 'review', comment: '확인', sourceConfirmed: 'yes' },
+      { action: 'review', comment: '확인', sourceConfirmed: null },
+      { action: 'review', comment: '확인', sourceConfirmed: [] },
+      { action: 'review', comment: '확인', sourceConfirmed: {} },
+      { action: 'review', comment: '확인' },
+      { action: 'review', comment: null, sourceConfirmed: true },
+      { action: 'review', comment: 1, sourceConfirmed: true },
+      { action: 'review', comment: [], sourceConfirmed: true },
+      { action: 'review', comment: {}, sourceConfirmed: true },
+      { action: 'review', sourceConfirmed: true }
+    ];
+    const malformedHolds: unknown[] = [
+      { action: 'hold', comment: null }, { action: 'hold', comment: 1 },
+      { action: 'hold', comment: [] }, { action: 'hold', comment: {} }, { action: 'hold' }
+    ];
+    for (const payload of [...malformedReviews, ...malformedHolds]) {
+      const fixture = await createRuleAdminFixture();
+      try {
+        const res = await fixture.injectAs(fixture.reviewer, 'POST', '/api/admin/rules/strict/1', payload);
+        expect(res.statusCode).toBe(400);
+      } finally {
+        await fixture.close();
+      }
+    }
+  });
+
   it('규칙 작업 본문이 없으면 400으로 거부', async () => {
     const fixture = await createRuleAdminFixture();
     try {
@@ -239,6 +269,42 @@ describe('운영 기동 안전장치', () => {
       if (originalInitialPassword === undefined) delete process.env.ADMIN_INITIAL_PASSWORD;
       else process.env.ADMIN_INITIAL_PASSWORD = originalInitialPassword;
       fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('production은 단일 HTTP(S) origin만 credentialed CORS에 허용한다', async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalWebOrigin = process.env.WEB_ORIGIN;
+    const originalInitialPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    const invalidOrigins = [
+      '*', 'null', 'file:///tmp/app', 'https://user:pass@example.test',
+      'https://example.test/path', 'https://example.test?x=1', 'https://example.test#fragment'
+    ];
+    const tempDirs: string[] = [];
+    const tempStore = () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scg-api-origin-'));
+      tempDirs.push(dir);
+      return new FileStore(dir);
+    };
+    try {
+      process.env.NODE_ENV = 'production';
+      process.env.ADMIN_INITIAL_PASSWORD = 'test-only-initial-password';
+      for (const origin of invalidOrigins) {
+        process.env.WEB_ORIGIN = origin;
+        await expect(buildApp({ store: tempStore() }))
+          .rejects.toThrow('WEB_ORIGIN');
+      }
+
+      process.env.WEB_ORIGIN = 'https://example.test/';
+      expect(getConfig().webOrigin).toBe('https://example.test');
+    } finally {
+      if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = originalNodeEnv;
+      if (originalWebOrigin === undefined) delete process.env.WEB_ORIGIN;
+      else process.env.WEB_ORIGIN = originalWebOrigin;
+      if (originalInitialPassword === undefined) delete process.env.ADMIN_INITIAL_PASSWORD;
+      else process.env.ADMIN_INITIAL_PASSWORD = originalInitialPassword;
+      for (const dir of tempDirs) fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 });

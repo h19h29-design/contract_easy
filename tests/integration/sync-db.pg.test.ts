@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { FileStore, PgStore } from '@sen/db';
-import type { Chunk } from '@sen/shared';
+import type { Chunk, RuleDefinition } from '@sen/shared';
 import { syncDatabase } from '../../workers/ingest/src/sync-db.js';
 
 let pg: PgStore;
@@ -34,9 +34,13 @@ beforeAll(async () => {
     [{ url: 'https://x/file.pdf', fileName: 'f.pdf', ext: 'pdf', robotsDisallowed: true }]
   );
 
-  // 규칙: candidate draft / 사람이 관리하는 draft
+  // 규칙: candidate draft / source-side active (strict final workflow only)
   await fileStore.upsertRule(baseRule('candidate.amount.k1', 1, 'draft'));
-  await fileStore.upsertRule(baseRule('manual.rule.r1', 1, 'draft'));
+  await fileStore.upsertRule(activeSourceRule());
+  const reviewer = fileStore.createUser({ username: 'sync-source-reviewer', passwordHash: 's:fixture', displayName: '원본 검토자', role: 'REVIEWER' });
+  const admin = fileStore.createUser({ username: 'sync-source-admin', passwordHash: 's:fixture', displayName: '원본 관리자', role: 'ADMIN' });
+  expect(fileStore.approveRuleReview('manual.rule.r1', 1, reviewer.id, '원문 확인', true).ok).toBe(true);
+  expect(fileStore.activateReviewedRule('manual.rule.r1', 1, admin.id, '2026-08-30').ok).toBe(true);
 
   // 청크 파일
   const chunks: Chunk[] = [
@@ -69,6 +73,16 @@ function baseRule(id: string, version: number, status: RuleDefinition['status'])
   } as import('@sen/shared').RuleDefinition;
 }
 
+function activeSourceRule(): RuleDefinition {
+  return {
+    id: 'manual.rule.r1', version: 1, status: 'draft', scope: { contract_category: 'construction' },
+    conditions: [{ field: 'estimated_price', operator: 'gte', value: 0 }], output: { method: '일반경쟁' },
+    source: { title: 'source active rule', url: 'https://example.org/source-active', effectiveFrom: null, checkedAt: '2026-08-30' },
+    reviewedBy: null, supersededBy: null,
+    createdAt: '2026-08-30T00:00:00Z', updatedAt: '2026-08-30T00:00:00Z'
+  };
+}
+
 function chunk(id: string, type: Chunk['type'], meta: Record<string, unknown>): Chunk {
   return {
     id, sourceVersionId: 'sv-sync', url: 'https://x/fus/s1',
@@ -96,7 +110,7 @@ describe('syncDatabase (파일 → PostgreSQL)', () => {
 
     const rules = await pg.listRules();
     const active = rules.find((r) => r.id === 'manual.rule.r1');
-    expect(active?.status).toBe('draft'); // 동기화는 승인 상태를 이식하지 않음
+    expect(active?.status).toBe('draft'); // source-side active도 동기화는 승인 상태를 이식하지 않음
     expect(rules.find((r) => r.id === 'candidate.amount.k1')).toBeTruthy();
 
     const storedChunks = await pg.getChunks();

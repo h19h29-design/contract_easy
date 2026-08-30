@@ -174,5 +174,5 @@
 - REVIEWER review/hold와 ADMIN activate를 정확히 분리하고, Store의 오류 코드를 HTTP 상태로 보존한다. activation 기준일은 서버의 서울 날짜만 사용한다.
 - 임의 condition JSON 없이 method-band 입력만으로 다음 draft revision을 생성한다. legacy rule action API는 제거했다.
 - production에서 WEB_ORIGIN과 빈 사용자 테이블의 ADMIN_INITIAL_PASSWORD를 강제하고, credential CORS를 단일 origin으로 잠근다.
-- 검증: API 16/16, PG 통합 39/39, api/web/db typecheck PASS.
+- 검증: API+FileStore 44/44, PG 통합 40/40, api/web/db typecheck PASS. malformed 직접 호출 fail-closed, source-side active→target draft sync proof, 단일 HTTP(S) CORS origin 검증 포함.
 - 증거: `.superpowers/sdd/2026-08-30-contract-workspace-implementation/task-8-report.md`, `docs/harness/TEST_RESULTS.md`

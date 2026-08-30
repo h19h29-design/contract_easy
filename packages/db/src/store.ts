@@ -479,7 +479,9 @@ export class FileStore implements AppStore {
   approveRuleReview(ruleId: string, version: number, reviewerId: string, comment: string, sourceConfirmed: boolean): RuleActionResult {
     const reviewer = this.getUser(reviewerId);
     if (reviewer?.role !== 'REVIEWER') return { ok: false, code: 'ROLE_REQUIRED' };
-    if (!sourceConfirmed || !comment.trim()) return { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' };
+    if (sourceConfirmed !== true || typeof comment !== 'string' || !comment.trim()) {
+      return { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' };
+    }
     const rule = this.findRule(ruleId, version);
     if (!rule) return { ok: false, code: 'NOT_FOUND' };
     if (rule.status !== 'draft') return { ok: false, code: 'INVALID_STATE' };
@@ -497,7 +499,9 @@ export class FileStore implements AppStore {
   holdRule(ruleId: string, version: number, reviewerId: string, comment: string): RuleActionResult {
     const reviewer = this.getUser(reviewerId);
     if (reviewer?.role !== 'REVIEWER') return { ok: false, code: 'ROLE_REQUIRED' };
-    if (!comment.trim()) return { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' };
+    if (typeof comment !== 'string' || !comment.trim()) {
+      return { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' };
+    }
     const rule = this.findRule(ruleId, version);
     if (!rule) return { ok: false, code: 'NOT_FOUND' };
     if (rule.status !== 'draft') return { ok: false, code: 'INVALID_STATE' };

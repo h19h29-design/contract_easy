@@ -96,6 +96,17 @@ describe('PgStore 원문 버전 관리', () => {
 });
 
 describe('PgStore 규칙 플로우', () => {
+  it('직접 호출한 malformed review와 hold 증거를 예외 없이 거부한다', async () => {
+    const reviewer = await store.createUser(user('reviewer-malformed', 'REVIEWER'));
+    await store.upsertRule(baseRule('pg.malformed-review', 1, 'draft'));
+    await store.upsertRule(baseRule('pg.malformed-hold', 1, 'draft'));
+
+    await expect(store.approveRuleReview('pg.malformed-review', 1, reviewer.id, '원문 확인', 'yes' as unknown as boolean))
+      .resolves.toEqual({ ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' });
+    await expect(store.holdRule('pg.malformed-hold', 1, reviewer.id, null as unknown as string))
+      .resolves.toEqual({ ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' });
+  });
+
   it('REVIEWER와 다른 ADMIN만 reviewed 규칙을 activate할 수 있음', async () => {
     const reviewer = await store.createUser(user('reviewer-rule', 'REVIEWER'));
     const admin = await store.createUser(user('admin-rule', 'ADMIN'));

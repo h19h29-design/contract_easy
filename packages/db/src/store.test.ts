@@ -56,6 +56,16 @@ describe('규칙 승인 플로우(draft → reviewed → active → superseded)'
 });
 
 describe('엄격한 FileStore 규칙 검토 계약', () => {
+  it('직접 호출한 malformed review와 hold 증거를 예외 없이 거부한다', () => {
+    const review = ruleStore();
+    expect(review.store.approveRuleReview('safe', 1, review.reviewer.id, '원문 대조 완료', 1 as unknown as boolean))
+      .toEqual({ ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' });
+
+    const hold = ruleStore();
+    expect(hold.store.holdRule('safe', 1, hold.reviewer.id, null as unknown as string))
+      .toEqual({ ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' });
+  });
+
   it('재인제스트가 reviewed 정의를 덮어쓰지 않음', () => {
     const { store, reviewer } = ruleStore();
     store.upsertRule(baseRule('safe', 1, 'draft', '입찰'));

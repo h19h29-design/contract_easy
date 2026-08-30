@@ -408,6 +408,12 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
       const version = Number(req.params.version);
       const body = req.body;
       const action = body?.action;
+      if (action === 'review' && !isReviewAction(body)) {
+        return reply.code(400).send({ error: '검토 증거가 올바르지 않습니다.' });
+      }
+      if (action === 'hold' && !isHoldAction(body)) {
+        return reply.code(400).send({ error: '보류 사유가 올바르지 않습니다.' });
+      }
       if ((action === 'review' || action === 'hold') && user.role !== 'REVIEWER') {
         return reply.code(403).send({ error: '권한이 없습니다.' });
       }
@@ -500,6 +506,25 @@ function isMethodBandRevision(body: MethodBandRevisionBody | undefined): body is
     typeof source.url === 'string' && source.url.trim() &&
     typeof source.checkedAt === 'string' && source.checkedAt.trim() &&
     (source.effectiveFrom === null || typeof source.effectiveFrom === 'string')
+  );
+}
+
+function isReviewAction(body: unknown): body is Extract<RuleAdminBody, { action: 'review' }> {
+  return Boolean(
+    body && typeof body === 'object' &&
+    (body as { action?: unknown }).action === 'review' &&
+    (body as { sourceConfirmed?: unknown }).sourceConfirmed === true &&
+    typeof (body as { comment?: unknown }).comment === 'string' &&
+    (body as { comment: string }).comment.trim()
+  );
+}
+
+function isHoldAction(body: unknown): body is Extract<RuleAdminBody, { action: 'hold' }> {
+  return Boolean(
+    body && typeof body === 'object' &&
+    (body as { action?: unknown }).action === 'hold' &&
+    typeof (body as { comment?: unknown }).comment === 'string' &&
+    (body as { comment: string }).comment.trim()
   );
 }
 

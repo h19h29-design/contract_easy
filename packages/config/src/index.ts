@@ -35,14 +35,34 @@ function envStr(name: string, def = ''): string {
   return process.env[name] ?? def;
 }
 
+/** Credentialed CORS에는 정확히 하나의 HTTP(S) origin만 허용한다. */
+export function normalizeWebOrigin(value: string): string {
+  if (!value || value !== value.trim()) throw new Error('WEB_ORIGIN은 단일 HTTP(S) origin이어야 합니다.');
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error('WEB_ORIGIN은 단일 HTTP(S) origin이어야 합니다.');
+  }
+  if (
+    (url.protocol !== 'http:' && url.protocol !== 'https:') ||
+    url.origin === 'null' || url.username || url.password ||
+    url.pathname !== '/' || url.search || url.hash
+  ) {
+    throw new Error('WEB_ORIGIN은 단일 HTTP(S) origin이어야 합니다.');
+  }
+  return url.origin;
+}
+
 export function getConfig(): AppConfig {
+  const rawWebOrigin = envStr('WEB_ORIGIN', process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000');
   return {
     dataRoot: path.resolve(REPO_ROOT, envStr('SEN_CONTRACT_DATA_ROOT', './data')),
     databaseUrl: envStr('DATABASE_URL') || null,
     qdrantUrl: envStr('QDRANT_URL', 'http://localhost:16333'),
     valkeyUrl: envStr('VALKEY_URL', 'redis://localhost:16379'),
     sessionSecret: envStr('SESSION_SECRET'),
-    webOrigin: envStr('WEB_ORIGIN', process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000'),
+    webOrigin: rawWebOrigin ? normalizeWebOrigin(rawWebOrigin) : '',
     crawler: {
       userAgent: envStr('CRAWLER_USER_AGENT', 'sen-contract-guide-crawler/0.1 (+contact: unset)'),
       contact: envStr('CRAWLER_CONTACT', 'unset'),

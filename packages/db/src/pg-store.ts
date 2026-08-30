@@ -345,7 +345,7 @@ export class PgStore {
       await lockRuleReviews(client);
       const reviewer = await findEnabledUser(client, reviewerId);
       if (reviewer?.role !== 'REVIEWER') return commitResult(client, { ok: false, code: 'ROLE_REQUIRED' } as const);
-      if (!sourceConfirmed || !comment.trim()) {
+      if (sourceConfirmed !== true || typeof comment !== 'string' || !comment.trim()) {
         return commitResult(client, { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' } as const);
       }
       const target = await findRuleVersion(client, ruleId, version);
@@ -378,7 +378,9 @@ export class PgStore {
       await lockRuleReviews(client);
       const reviewer = await findEnabledUser(client, reviewerId);
       if (reviewer?.role !== 'REVIEWER') return commitResult(client, { ok: false, code: 'ROLE_REQUIRED' } as const);
-      if (!comment.trim()) return commitResult(client, { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' } as const);
+      if (typeof comment !== 'string' || !comment.trim()) {
+        return commitResult(client, { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' } as const);
+      }
       const target = await findRuleVersion(client, ruleId, version);
       if (!target) return commitResult(client, { ok: false, code: 'NOT_FOUND' } as const);
       if (target.status !== 'draft') return commitResult(client, { ok: false, code: 'INVALID_STATE' } as const);
