@@ -174,7 +174,7 @@ describe('PgStore 규칙 플로우', () => {
     )).toBe(false);
   });
 
-  it('activation rolls back earlier supersession when a later transaction write throws', async () => {
+  it('activation rolls back completed supersession when target activation write throws', async () => {
     const reviewer = await store.createUser(user('reviewer-rollback', 'REVIEWER'));
     const admin = await store.createUser(user('admin-rollback', 'ADMIN'));
     await store.createRuleRevision(baseRule('pg.rollback', 1, 'draft'), reviewer.id);
@@ -184,19 +184,19 @@ describe('PgStore 규칙 플로우', () => {
     await store.approveRuleReview('pg.rollback', 2, reviewer.id, 'v2 원문 확인', true);
 
     const pool = poolForTest();
-    await pool.query(`CREATE OR REPLACE FUNCTION pg_test_fail_after_supersede() RETURNS trigger AS $$
+    await pool.query(`CREATE OR REPLACE FUNCTION pg_test_fail_after_target_activation() RETURNS trigger AS $$
       BEGIN RAISE EXCEPTION 'forced activation rollback'; END;
       $$ LANGUAGE plpgsql`);
-    await pool.query(`CREATE TRIGGER pg_test_fail_after_supersede
+    await pool.query(`CREATE TRIGGER pg_test_fail_after_target_activation
       AFTER UPDATE OF status ON rule_versions
-      FOR EACH ROW WHEN (NEW.status = 'superseded')
-      EXECUTE FUNCTION pg_test_fail_after_supersede()`);
+      FOR EACH ROW WHEN (NEW.rule_id = 'pg.rollback' AND NEW.version = 2 AND NEW.status = 'active')
+      EXECUTE FUNCTION pg_test_fail_after_target_activation()`);
     try {
       await expect(store.activateReviewedRule('pg.rollback', 2, admin.id, '2026-08-30'))
         .rejects.toThrow('forced activation rollback');
     } finally {
-      await pool.query('DROP TRIGGER IF EXISTS pg_test_fail_after_supersede ON rule_versions');
-      await pool.query('DROP FUNCTION IF EXISTS pg_test_fail_after_supersede()');
+      await pool.query('DROP TRIGGER IF EXISTS pg_test_fail_after_target_activation ON rule_versions');
+      await pool.query('DROP FUNCTION IF EXISTS pg_test_fail_after_target_activation()');
     }
 
     expect(Object.fromEntries(
