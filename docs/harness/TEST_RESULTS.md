@@ -16,6 +16,19 @@
 - 집중 RED→GREEN 증거와 최종 root-cause 요약: `.superpowers/sdd/2026-08-30-contract-workspace-implementation/final-fix-report.md`.
 - 운영 `DATABASE_URL`은 구성되지 않아 legacy `project_checklist_items.evidence_path` non-null 조회를 실행하지 않았다. 배포 전 0건을 확인하고, 0건이 아니면 보존 migration을 설계할 때까지 중단한다.
 
+## 2026-08-30 Residual corrective round
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm lint` | PASS | ESLint exit 0 |
+| `pnpm typecheck` | PASS | 9/10 workspace projects |
+| `pnpm test` | PASS | 10 files, 147 tests |
+| `pnpm test:pg` | PASS | 3 files, 43 tests |
+| `pnpm build` | PASS | workspace build exit 0 |
+| `pnpm test:e2e` | PASS | Playwright Chromium, 7 tests (direct run completed) |
+
+- Windows에서는 POSIX mode와 hard-link semantics를 이 환경에서 검증하지 않았다. 배포 전 NTFS ACL과 no-replace publication 동작을 확인한다. 운영 PostgreSQL legacy evidence-path 점검은 operational `DATABASE_URL` 부재로 실행하지 않았다.
+
 ## 2026-08-30 공사계약 업무공간 최종 회귀
 
 | 명령 | 결과 | 핵심 |
