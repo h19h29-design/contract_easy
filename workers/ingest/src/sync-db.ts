@@ -74,12 +74,12 @@ export async function syncDatabase(opts: {
     report.chunks = chunks.length;
   }
 
-  // 3) 규칙(draft/reviewed/active 전부, 가드는 스토어가 담당)
+  // 3) 규칙(동기화는 원문 후보만 옮기며 승인 상태는 이식하지 않음)
   const rules = await fileStore.listRules();
   const candidateIds = rules.filter((r) => r.id.startsWith('candidate.')).map((r) => `${r.id}@${r.version}`);
   report.staleDraftsRemoved = await pg.purgeStaleCandidateDrafts(candidateIds);
   for (const r of rules) {
-    await pg.upsertRule(r);
+    await pg.upsertRule({ ...r, status: 'draft' });
     report.rules++;
   }
 

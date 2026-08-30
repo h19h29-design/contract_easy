@@ -20,13 +20,17 @@ function baseRule(id: string, version: number, status: RuleDefinition['status'])
     status,
     scope: { contract_category: 'construction' },
     conditions: [{ field: 'estimated_price', operator: 'between', value: [0, 0] }],
-    output: { reviewRequired: true },
+    output: { method: '입찰', reviewRequired: true },
     source: { title: 't', url: 'https://example.org', effectiveFrom: null, checkedAt: '2026-08-25' },
     reviewedBy: null,
     supersededBy: null,
     createdAt: '2026-08-25T00:00:00Z',
     updatedAt: '2026-08-25T00:00:00Z'
   };
+}
+
+function user(username: string, role: 'USER' | 'REVIEWER' | 'ADMIN') {
+  return { username, passwordHash: 's:h', displayName: username, role };
 }
 
 describe('PgStore 마이그레이션', () => {
@@ -73,6 +77,32 @@ describe('PgStore 원문 버전 관리', () => {
 });
 
 describe('PgStore 규칙 플로우', () => {
+  it('REVIEWER와 다른 ADMIN만 reviewed 규칙을 activate할 수 있음', async () => {
+    const reviewer = await store.createUser(user('reviewer-rule', 'REVIEWER'));
+    const admin = await store.createUser(user('admin-rule', 'ADMIN'));
+    await store.upsertRule(baseRule('pg.strict', 1, 'draft'));
+
+    expect((await store.approveRuleReview('pg.strict', 1, reviewer.id, '원문 확인', true)).ok).toBe(true);
+    expect(await store.activateReviewedRule('pg.strict', 1, reviewer.id, '2026-08-30'))
+      .toEqual({ ok: false, code: 'ROLE_REQUIRED' });
+    expect((await store.activateReviewedRule('pg.strict', 1, admin.id, '2026-08-30')).ok).toBe(true);
+  });
+
+  it('hold는 rule_version을 삭제하지 않고 검토기록을 남김', async () => {
+    const reviewer = await store.createUser(user('reviewer-hold', 'REVIEWER'));
+    await store.upsertRule(baseRule('pg.hold', 1, 'draft'));
+
+    await store.holdRule('pg.hold', 1, reviewer.id, '추가 확인');
+
+    expect((await store.listRules()).some((r) => r.id === 'pg.hold')).toBe(true);
+    expect((await store.listRuleReviews('pg.hold', 1))[0]?.action).toBe('hold');
+  });
+
+  it('upsert는 active 상태를 직접 주입하지 않음', async () => {
+    await store.upsertRule(baseRule('pg.injected', 1, 'active'));
+    expect((await store.listRules()).find((r) => r.id === 'pg.injected')?.status).toBe('draft');
+  });
+
   it('draft→activate 불가 / review 후 activate 가능 / 신규 active 시 구버전 superseded', async () => {
     await store.upsertRule(baseRule('pg.rule', 1, 'draft'));
     expect(await store.activateRule('pg.rule', 1, 'admin')).toBeNull();
@@ -95,7 +125,8 @@ describe('PgStore 규칙 플로우', () => {
 
   it('purgeStaleCandidateDrafts는 candidate draft만 제거', async () => {
     await store.upsertRule(baseRule('candidate.amount.x', 1, 'draft'));
-    await store.upsertRule(baseRule('candidate.ratio.y', 1, 'reviewed'));
+    await store.upsertRule(baseRule('candidate.ratio.y', 1, 'draft'));
+    await store.reviewRule('candidate.ratio.y', 1, 'reviewed');
     const removed = await store.purgeStaleCandidateDrafts(['candidate.ratio.candidate.ratio.y'.slice(0, 10) + 'y@1']);
     void removed;
     const ids = (await store.listRules()).map((r) => `${r.id}@${r.version}`);

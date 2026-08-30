@@ -34,7 +34,7 @@ beforeAll(async () => {
     [{ url: 'https://x/file.pdf', fileName: 'f.pdf', ext: 'pdf', robotsDisallowed: true }]
   );
 
-  // 규칙: candidate draft / reviewed / active
+  // 규칙: candidate draft / source-side active
   await fileStore.upsertRule(baseRule('candidate.amount.k1', 1, 'draft'));
   await fileStore.upsertRule(baseRule('manual.rule.r1', 1, 'draft'));
   await fileStore.reviewRule('manual.rule.r1', 1, 'reviewed');
@@ -98,7 +98,7 @@ describe('syncDatabase (파일 → PostgreSQL)', () => {
 
     const rules = await pg.listRules();
     const active = rules.find((r) => r.id === 'manual.rule.r1');
-    expect(active?.status).toBe('active'); // 가드에 의해 active 유지(D-011)
+    expect(active?.status).toBe('draft'); // 동기화는 승인 상태를 이식하지 않음
     expect(rules.find((r) => r.id === 'candidate.amount.k1')).toBeTruthy();
 
     const storedChunks = await pg.getChunks();
@@ -113,10 +113,15 @@ describe('syncDatabase (파일 → PostgreSQL)', () => {
     expect(report.versionsChanged).toBe(0);
   });
 
-  it('없는 candidate draft는 정리되고 reviewed/active는 보존', async () => {
+  it('없는 candidate draft는 정리하지만 held draft는 보존', async () => {
+    const reviewer = await pg.createUser({
+      username: 'sync-reviewer', passwordHash: 's:h', displayName: '동기화 검토자', role: 'REVIEWER'
+    });
+    expect((await pg.holdRule('candidate.amount.k1', 1, reviewer.id, '추가 원문 확인')).ok).toBe(true);
+
     // 파일스토어에서 candidate 하나를 제거한 뒤 재동기화
     const fileStore = new FileStore(tmpDir);
-    fileStore.rejectRule('candidate.amount.k1', 1);
+    fileStore.purgeStaleCandidateDrafts([]);
     const before = (await pg.listRules()).map((r) => r.id);
     expect(before).toContain('candidate.amount.k1');
 
@@ -126,7 +131,7 @@ describe('syncDatabase (파일 → PostgreSQL)', () => {
     });
     void report;
     const after = (await pg.listRules()).map((r) => r.id);
-    expect(after).not.toContain('candidate.amount.k1');
+    expect(after).toContain('candidate.amount.k1');
     expect(after).toContain('manual.rule.r1');
   });
 });

@@ -1,7 +1,8 @@
 import type { AttachmentRef, Chunk, RuleDefinition, SourceVersion } from '@sen/shared';
 import type {
   AnswerReportRecord, AuditLogRecord, ChecklistItemRecord,
-  CrawlRunRecord, ProjectRecord, SessionRecord, StepRecord, UserRecord
+  CrawlRunRecord, ProjectRecord, RuleActionResult, RuleReviewRecord,
+  SessionRecord, StepRecord, UserRecord
 } from './store.js';
 
 /** 동기(FileStore) 또는 비동기(PgStore) 반환을 허용 */
@@ -36,6 +37,11 @@ export interface AppStore {
   upsertRule(def: RuleDefinition): MaybeP<void>;
   listRules(): MaybeP<RuleDefinition[]>;
   getActiveRules(asOfIsoDate?: string): MaybeP<RuleDefinition[]>;
+  createRuleRevision(def: RuleDefinition, actorUserId: string): MaybeP<RuleActionResult>;
+  approveRuleReview(ruleId: string, version: number, reviewerId: string, comment: string, sourceConfirmed: boolean): MaybeP<RuleActionResult>;
+  holdRule(ruleId: string, version: number, reviewerId: string, comment: string): MaybeP<RuleActionResult>;
+  activateReviewedRule(ruleId: string, version: number, adminId: string, asOfDate: string): MaybeP<RuleActionResult>;
+  listRuleReviews(ruleId: string, version: number): MaybeP<RuleReviewRecord[]>;
   activateRule(ruleId: string, version: number, reviewer: string): MaybeP<RuleDefinition | null>;
   reviewRule(ruleId: string, version: number, next: 'reviewed'): MaybeP<RuleDefinition | null>;
   rejectRule(ruleId: string, version: number): MaybeP<boolean>;

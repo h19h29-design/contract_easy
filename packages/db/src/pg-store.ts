@@ -6,11 +6,12 @@ import {
   stableId, isoNow,
   type AttachmentRef, type Chunk, type RuleDefinition, type SourceVersion
 } from '@sen/shared';
+import { detectConflicts, validateActivatableRule } from '@sen/rules';
 import { STAGES } from './store.js';
 import type {
   AnswerReportRecord, AuditLogRecord, ChecklistItemRecord,
   CrawlRunRecord, ProjectRecord, SessionRecord,
-  StepRecord, UserRecord
+  RuleActionResult, RuleReviewRecord, StepRecord, UserRecord
 } from './store.js';
 import type { SourceListItem } from './app-store.js';
 
@@ -254,33 +255,32 @@ export class PgStore {
 
   async upsertRule(def: RuleDefinition): Promise<void> {
     const now = isoNow();
-    await this.pool.query(
-      `INSERT INTO rules (id, scope, current_status, created_at, updated_at)
-       VALUES ($1,$2::jsonb,$3,$4,$4)
-       ON CONFLICT (id) DO UPDATE SET scope=EXCLUDED.scope, updated_at=EXCLUDED.updated_at`,
-      [def.id, JSON.stringify(def.scope ?? {}), def.status, now]
-    );
-    // 상태 에스컬레이션 가드(D-011): 기존 reviewed/active를 draft로 되돌리지 않음
-    const existing = await this.pool.query<{ status: string }>(
-      'SELECT status FROM rule_versions WHERE rule_id=$1 AND version=$2',
+    const existing = await this.pool.query<{ definition: RuleDefinition; status: string }>(
+      'SELECT definition, status FROM rule_versions WHERE rule_id=$1 AND version=$2',
       [def.id, def.version]
     );
-    let effectiveStatus: RuleDefinition['status'] = def.status;
-    const prevStatus = existing.rows[0]?.status;
-    if (prevStatus && prevStatus !== 'superseded') {
-      const rank: Record<string, number> = { draft: 0, reviewed: 1, active: 2 };
-      if ((rank[prevStatus] ?? 0) > (rank[def.status] ?? 0)) {
-        effectiveStatus = asRuleStatus(prevStatus);
-      }
-    }
+    const previous = existing.rows[0];
+    if (previous && previous.status !== 'draft') return;
+    const draft: RuleDefinition = {
+      ...def,
+      status: 'draft',
+      createdAt: previous?.definition.createdAt ?? def.createdAt ?? now,
+      updatedAt: now
+    };
+    await this.pool.query(
+      `INSERT INTO rules (id, scope, current_status, created_at, updated_at)
+       VALUES ($1,$2::jsonb,'draft',$3,$3)
+       ON CONFLICT (id) DO UPDATE SET scope=EXCLUDED.scope, updated_at=EXCLUDED.updated_at`,
+      [draft.id, JSON.stringify(draft.scope ?? {}), now]
+    );
     await this.pool.query(
       `INSERT INTO rule_versions (id, rule_id, version, definition, status, created_at)
        VALUES ($1,$2,$3,$4::jsonb,$5,$6)
        ON CONFLICT (rule_id, version) DO UPDATE SET definition=EXCLUDED.definition, status=EXCLUDED.status`,
-      [`${def.id}@${def.version}`, def.id, def.version, JSON.stringify(def), effectiveStatus, now]
+      [`${draft.id}@${draft.version}`, draft.id, draft.version, JSON.stringify(draft), 'draft', now]
     );
     await this.pool.query("UPDATE rules SET current_status=$2, updated_at=$3 WHERE id=$1",
-      [def.id, effectiveStatus, now]);
+      [draft.id, 'draft', now]);
   }
 
   async listRules(): Promise<RuleDefinition[]> {
@@ -298,6 +298,164 @@ export class PgStore {
       if (eff && asOfIsoDate && eff > asOfIsoDate) return false;
       return true;
     });
+  }
+
+  async createRuleRevision(def: RuleDefinition, actorUserId: string): Promise<RuleActionResult> {
+    const client = await this.beginTx();
+    try {
+      await lockRuleReviews(client);
+      const actor = await findEnabledUser(client, actorUserId);
+      if (actor?.role !== 'REVIEWER') return commitResult(client, { ok: false, code: 'ROLE_REQUIRED' } as const);
+      if (def.status !== 'draft') return commitResult(client, { ok: false, code: 'INVALID_STATE' } as const);
+      const versions = await client.query<{ version: number }>(
+        'SELECT version FROM rule_versions WHERE rule_id=$1 ORDER BY version DESC', [def.id]
+      );
+      if (def.version !== (versions.rows[0]?.version ?? 0) + 1) {
+        return commitResult(client, { ok: false, code: 'VERSION_CONFLICT' } as const);
+      }
+      const now = isoNow();
+      const rule: RuleDefinition = { ...def, status: 'draft', createdAt: def.createdAt || now, updatedAt: now };
+      await client.query(
+        `INSERT INTO rules (id, scope, current_status, created_at, updated_at)
+         VALUES ($1,$2::jsonb,'draft',$3,$3)
+         ON CONFLICT (id) DO UPDATE SET scope=EXCLUDED.scope, updated_at=EXCLUDED.updated_at`,
+        [rule.id, JSON.stringify(rule.scope ?? {}), now]
+      );
+      await client.query(
+        `INSERT INTO rule_versions (id, rule_id, version, definition, status, created_at)
+         VALUES ($1,$2,$3,$4::jsonb,'draft',$5)`,
+        [ruleVersionId(rule), rule.id, rule.version, JSON.stringify(rule), now]
+      );
+      await insertAudit(client, actorUserId, 'rule.revision.create', 'rule', ruleVersionId(rule), { version: rule.version }, now);
+      return commitResult(client, { ok: true, rule });
+    } catch (err) {
+      await rollback(client);
+      throw err;
+    }
+  }
+
+  async approveRuleReview(ruleId: string, version: number, reviewerId: string, comment: string, sourceConfirmed: boolean): Promise<RuleActionResult> {
+    const client = await this.beginTx();
+    try {
+      await lockRuleReviews(client);
+      const reviewer = await findEnabledUser(client, reviewerId);
+      if (reviewer?.role !== 'REVIEWER') return commitResult(client, { ok: false, code: 'ROLE_REQUIRED' } as const);
+      if (!sourceConfirmed || !comment.trim()) {
+        return commitResult(client, { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' } as const);
+      }
+      const target = await findRuleVersion(client, ruleId, version);
+      if (!target) return commitResult(client, { ok: false, code: 'NOT_FOUND' } as const);
+      if (target.status !== 'draft') return commitResult(client, { ok: false, code: 'INVALID_STATE' } as const);
+      if (validateActivatableRule(target.rule).length > 0) {
+        return commitResult(client, { ok: false, code: 'RULE_INVALID' } as const);
+      }
+      const at = isoNow();
+      const rule = { ...target.rule, status: 'reviewed' as const, reviewedBy: reviewerId, updatedAt: at };
+      await client.query(
+        `UPDATE rule_versions SET status='reviewed',
+           definition=jsonb_set(jsonb_set(jsonb_set(definition, '{status}', '"reviewed"'::jsonb), '{reviewedBy}', to_jsonb($2::text)), '{updatedAt}', to_jsonb($3::text))
+         WHERE id=$1`,
+        [target.id, reviewerId, at]
+      );
+      await client.query("UPDATE rules SET current_status='reviewed', updated_at=$2 WHERE id=$1", [ruleId, at]);
+      await insertRuleReview(client, target.id, reviewerId, 'approve', comment.trim(), at);
+      await insertAudit(client, reviewerId, 'rule.review.approve', 'rule', target.id, { version }, at);
+      return commitResult(client, { ok: true, rule });
+    } catch (err) {
+      await rollback(client);
+      throw err;
+    }
+  }
+
+  async holdRule(ruleId: string, version: number, reviewerId: string, comment: string): Promise<RuleActionResult> {
+    const client = await this.beginTx();
+    try {
+      await lockRuleReviews(client);
+      const reviewer = await findEnabledUser(client, reviewerId);
+      if (reviewer?.role !== 'REVIEWER') return commitResult(client, { ok: false, code: 'ROLE_REQUIRED' } as const);
+      if (!comment.trim()) return commitResult(client, { ok: false, code: 'SOURCE_CONFIRMATION_REQUIRED' } as const);
+      const target = await findRuleVersion(client, ruleId, version);
+      if (!target) return commitResult(client, { ok: false, code: 'NOT_FOUND' } as const);
+      if (target.status !== 'draft') return commitResult(client, { ok: false, code: 'INVALID_STATE' } as const);
+      const at = isoNow();
+      const rule = { ...target.rule, status: 'draft' as const, updatedAt: at };
+      await client.query(
+        "UPDATE rule_versions SET definition=jsonb_set(definition, '{updatedAt}', to_jsonb($2::text)) WHERE id=$1",
+        [target.id, at]
+      );
+      await insertRuleReview(client, target.id, reviewerId, 'hold', comment.trim(), at);
+      await insertAudit(client, reviewerId, 'rule.review.hold', 'rule', target.id, { version }, at);
+      return commitResult(client, { ok: true, rule });
+    } catch (err) {
+      await rollback(client);
+      throw err;
+    }
+  }
+
+  async activateReviewedRule(ruleId: string, version: number, adminId: string, asOfDate: string): Promise<RuleActionResult> {
+    const client = await this.beginTx();
+    try {
+      await lockRuleReviews(client);
+      const admin = await findEnabledUser(client, adminId);
+      if (admin?.role !== 'ADMIN') return commitResult(client, { ok: false, code: 'ROLE_REQUIRED' } as const);
+      const target = await findRuleVersion(client, ruleId, version);
+      if (!target) return commitResult(client, { ok: false, code: 'NOT_FOUND' } as const);
+      if (target.status !== 'reviewed') return commitResult(client, { ok: false, code: 'INVALID_STATE' } as const);
+      const approval = await client.query<{ reviewer: string }>(
+        `SELECT reviewer FROM rule_reviews
+         WHERE rule_version_id=$1 AND action='approve' ORDER BY at DESC LIMIT 1`,
+        [target.id]
+      );
+      const reviewerId = approval.rows[0]?.reviewer;
+      if (!reviewerId) return commitResult(client, { ok: false, code: 'MISSING_REVIEW' } as const);
+      if (reviewerId === adminId) return commitResult(client, { ok: false, code: 'SAME_ACTOR' } as const);
+      if (validateActivatableRule(target.rule, { asOfDate }).length > 0) {
+        return commitResult(client, { ok: false, code: 'RULE_INVALID' } as const);
+      }
+      const all = await client.query<{ id: string; rule_id: string; definition: RuleDefinition; status: string }>(
+        'SELECT id, rule_id, definition, status FROM rule_versions'
+      );
+      const proposed = all.rows.map((candidate) => {
+        const rule = { ...candidate.definition, status: asRuleStatus(candidate.status) };
+        if (candidate.id === target.id) return { ...rule, status: 'active' as const };
+        if (candidate.rule_id === ruleId && candidate.status === 'active') return { ...rule, status: 'superseded' as const };
+        return rule;
+      });
+      if (detectConflicts(proposed).length > 0) {
+        return commitResult(client, { ok: false, code: 'RULE_CONFLICT' } as const);
+      }
+      const at = isoNow();
+      await client.query(
+        `UPDATE rule_versions SET status='superseded',
+           definition=jsonb_set(jsonb_set(jsonb_set(definition, '{status}', '"superseded"'::jsonb), '{supersededBy}', to_jsonb($3::text)), '{updatedAt}', to_jsonb($4::text))
+         WHERE rule_id=$1 AND version<>$2 AND status='active'`,
+        [ruleId, version, target.id, at]
+      );
+      const rule = { ...target.rule, status: 'active' as const, updatedAt: at };
+      await client.query(
+        `UPDATE rule_versions SET status='active',
+           definition=jsonb_set(jsonb_set(definition, '{status}', '"active"'::jsonb), '{updatedAt}', to_jsonb($2::text))
+         WHERE id=$1`,
+        [target.id, at]
+      );
+      await client.query("UPDATE rules SET current_status='active', updated_at=$2 WHERE id=$1", [ruleId, at]);
+      await insertRuleReview(client, target.id, adminId, 'activate', null, at);
+      await insertAudit(client, adminId, 'rule.review.activate', 'rule', target.id, { version, asOfDate }, at);
+      return commitResult(client, { ok: true, rule });
+    } catch (err) {
+      await rollback(client);
+      throw err;
+    }
+  }
+
+  async listRuleReviews(ruleId: string, version: number): Promise<RuleReviewRecord[]> {
+    const { rows } = await this.pool.query<Row>(
+      'SELECT * FROM rule_reviews WHERE rule_version_id=$1 ORDER BY at ASC', [`${ruleId}@${version}`]
+    );
+    return rows.map((row) => ({
+      id: String(row.id), ruleVersionId: String(row.rule_version_id), actorUserId: String(row.reviewer),
+      action: row.action as RuleReviewRecord['action'], comment: (row.comment as string | null) ?? null, at: iso(row.at)
+    }));
   }
 
   async activateRule(ruleId: string, version: number, reviewer: string): Promise<RuleDefinition | null> {
@@ -366,7 +524,8 @@ export class PgStore {
     const del = await this.pool.query(
       `DELETE FROM rule_versions
        WHERE status='draft' AND id LIKE 'candidate.%'
-         AND NOT (id = ANY($1::text[]))`,
+         AND NOT (id = ANY($1::text[]))
+         AND NOT EXISTS (SELECT 1 FROM rule_reviews WHERE rule_version_id=rule_versions.id)`,
       [keep]
     );
     await this.pool.query(
@@ -701,6 +860,70 @@ export class PgStore {
 }
 
 /* helpers */
+
+function ruleVersionId(rule: Pick<RuleDefinition, 'id' | 'version'>): string {
+  return `${rule.id}@${rule.version}`;
+}
+
+async function lockRuleReviews(client: pg.PoolClient): Promise<void> {
+  await client.query('LOCK TABLE rule_versions, rule_reviews IN SHARE ROW EXCLUSIVE MODE');
+}
+
+async function findEnabledUser(client: pg.PoolClient, userId: string): Promise<UserRecord | null> {
+  const { rows } = await client.query<Row>('SELECT * FROM users WHERE id=$1 AND disabled=false LIMIT 1', [userId]);
+  return rows[0] ? mapUserRow(rows[0]) : null;
+}
+
+async function findRuleVersion(
+  client: pg.PoolClient,
+  ruleId: string,
+  version: number
+): Promise<{ id: string; status: RuleDefinition['status']; rule: RuleDefinition } | null> {
+  const { rows } = await client.query<{ id: string; definition: RuleDefinition; status: string }>(
+    'SELECT id, definition, status FROM rule_versions WHERE rule_id=$1 AND version=$2 FOR UPDATE',
+    [ruleId, version]
+  );
+  const row = rows[0];
+  if (!row) return null;
+  const status = asRuleStatus(row.status);
+  return { id: row.id, status, rule: { ...row.definition, status } };
+}
+
+async function insertRuleReview(
+  client: pg.PoolClient,
+  ruleVersionId: string,
+  actorUserId: string,
+  action: RuleReviewRecord['action'],
+  comment: string | null,
+  at: string
+): Promise<void> {
+  await client.query(
+    `INSERT INTO rule_reviews (id, rule_version_id, reviewer, action, comment, at)
+     VALUES ($1,$2,$3,$4,$5,$6)`,
+    [stableId('rrv', ruleVersionId, action, actorUserId, at), ruleVersionId, actorUserId, action, comment, at]
+  );
+}
+
+async function insertAudit(
+  client: pg.PoolClient,
+  actorUserId: string,
+  action: string,
+  targetType: string,
+  targetId: string,
+  detail: Record<string, unknown>,
+  at: string
+): Promise<void> {
+  await client.query(
+    `INSERT INTO audit_logs (id, actor_user_id, action, target_type, target_id, detail, ip, at)
+     VALUES ($1,$2,$3,$4,$5,$6::jsonb,NULL,$7)`,
+    [stableId('aud', action, targetType, targetId, at), actorUserId, action, targetType, targetId, JSON.stringify(detail), at]
+  );
+}
+
+async function commitResult<T>(client: pg.PoolClient, result: T): Promise<T> {
+  await commit(client);
+  return result;
+}
 
 function iso(v: unknown): string {
   if (v == null) return isoNow();
