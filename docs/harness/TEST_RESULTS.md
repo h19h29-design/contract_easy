@@ -22,9 +22,9 @@
 | --- | --- | --- |
 | `pnpm lint` | PASS | ESLint exit 0 |
 | `pnpm typecheck` | PASS | 9/10 workspace projects |
-| `pnpm test` | PASS | 10 files, 147 tests |
+| `pnpm test` | PASS | 10 files, 152 tests |
 | `pnpm test:pg` | PASS | 3 files, 43 tests |
-| `pnpm build` | PASS | workspace build exit 0 |
+| `pnpm build` | PASS | workspace build process exited 0 after Next.js compilation/type validation; terminal summary clipped |
 | `pnpm test:e2e` | PASS | Playwright Chromium, 7 tests (direct run completed) |
 
 - Windows에서는 POSIX mode와 hard-link semantics를 이 환경에서 검증하지 않았다. 배포 전 NTFS ACL과 no-replace publication 동작을 확인한다. 운영 PostgreSQL legacy evidence-path 점검은 operational `DATABASE_URL` 부재로 실행하지 않았다.
