@@ -147,6 +147,54 @@ describe('프로젝트 접근제어(RBAC)', () => {
   });
 });
 
+describe('체크리스트 증빙 메타데이터', () => {
+  it('증빙 교체가 이전 document를 보존', () => {
+    const store = new FileStore(tmp());
+    const owner = store.createUser({ username: 'evidence-owner', passwordHash: 's:h', displayName: 'Owner', role: 'USER' });
+    const project = store.createProject({
+      ownerId: owner.id, name: '증빙 교체', contractCategory: 'construction',
+      estimatedPrice: 0, organizationType: 'school', status: 'planning', wizardInput: null
+    }, { plan: ['증빙 제출'] });
+    const item = store.checklistOf(project.id)[0]!;
+
+    const first = store.saveChecklistEvidence(documentInput(project.id, item.id, 'a'.repeat(64)));
+    const second = store.saveChecklistEvidence(documentInput(project.id, item.id, 'b'.repeat(64)));
+
+    expect(second?.previousDocumentId).toBe(first?.document.id);
+    expect(store.listProjectDocuments(project.id)).toHaveLength(2);
+    expect(store.checklistOf(project.id)[0]?.evidencePath).toBe(second?.document.id);
+    expect(store.listAudit().at(0)).toMatchObject({
+      action: 'checklist.evidence.save',
+      detail: {
+        checklistItemId: item.id,
+        previousDocumentId: first?.document.id,
+        newDocumentId: second?.document.id,
+        sha256: 'b'.repeat(64)
+      }
+    });
+    expect(store.listAudit().at(0)?.detail).not.toHaveProperty('storedPath');
+  });
+
+  it('다른 프로젝트 item에 document를 연결하지 않음', () => {
+    const store = new FileStore(tmp());
+    const owner = store.createUser({ username: 'evidence-cross-owner', passwordHash: 's:h', displayName: 'Owner', role: 'USER' });
+    const projectA = store.createProject({
+      ownerId: owner.id, name: '프로젝트 A', contractCategory: 'construction',
+      estimatedPrice: 0, organizationType: 'school', status: 'planning', wizardInput: null
+    }, { plan: ['증빙 A'] });
+    const projectB = store.createProject({
+      ownerId: owner.id, name: '프로젝트 B', contractCategory: 'construction',
+      estimatedPrice: 0, organizationType: 'school', status: 'planning', wizardInput: null
+    }, { plan: ['증빙 B'] });
+    const itemB = store.checklistOf(projectB.id)[0]!;
+
+    expect(store.saveChecklistEvidence(documentInput(projectA.id, itemB.id, 'c'.repeat(64)))).toBeNull();
+    expect(store.checklistOf(projectB.id)[0]?.evidencePath).toBeNull();
+    expect(store.listProjectDocuments(projectA.id)).toEqual([]);
+    expect(store.listAudit()).toEqual([]);
+  });
+});
+
 describe('프로젝트 상태·변경·일정 이력', () => {
   it('공개 프로젝트 반환값과 wizardInput 변경은 저장된 프로젝트를 바꾸지 않는다', () => {
     const store = new FileStore(tmp());
@@ -354,6 +402,19 @@ function projectStore(): { store: FileStore; project: ReturnType<FileStore['crea
     wizardInput: null
   }, {});
   return { store, project, owner };
+}
+
+function documentInput(projectId: string, checklistItemId: string, sha256: string) {
+  return {
+    projectId,
+    checklistItemId,
+    uploadedBy: 'evidence-uploader',
+    originalName: '검사조서.pdf',
+    storedPath: '/private/evidence/검사조서.pdf',
+    mimeType: 'application/pdf',
+    sizeBytes: 1234,
+    sha256
+  };
 }
 
 function baseRule(id: string, version: number, status: RuleDefinition['status'], method = '입찰'): RuleDefinition {

@@ -106,7 +106,27 @@ export interface ChecklistItemRecord {
   label: string;
   done: boolean;
   required: boolean;
+  /** 현재 연결된 project_documents.id (파일 경로가 아님) */
+  evidencePath: string | null;
   updatedAt: string;
+}
+
+export interface ProjectDocumentRecord {
+  id: string;
+  projectId: string;
+  uploadedBy: string;
+  originalName: string;
+  storedPath: string;
+  mimeType: string;
+  sizeBytes: number;
+  sha256: string;
+  isPrivate: true;
+  uploadedAt: string;
+}
+
+export interface EvidenceLinkResult {
+  document: ProjectDocumentRecord;
+  previousDocumentId: string | null;
 }
 
 export interface AuditLogRecord {
@@ -171,6 +191,7 @@ export interface DbData {
   projectEvents: ProjectEventRecord[];
   steps: StepRecord[];
   checklist: ChecklistItemRecord[];
+  projectDocuments: ProjectDocumentRecord[];
   auditLogs: AuditLogRecord[];
   crawlRuns: CrawlRunRecord[];
   answerReports: AnswerReportRecord[];
@@ -191,7 +212,7 @@ export const STAGE_LABELS: Record<string, string> = {
 export function emptyDb(): DbData {
   return {
     sources: {}, chunks: [], rules: [], users: [], sessions: {},
-    projects: {}, projectChanges: [], projectEvents: [], steps: [], checklist: [], auditLogs: [], crawlRuns: [],
+    projects: {}, projectChanges: [], projectEvents: [], steps: [], checklist: [], projectDocuments: [], auditLogs: [], crawlRuns: [],
     answerReports: [], ruleReviews: []
   };
 }
@@ -219,6 +240,10 @@ function cloneProjectChange(change: ProjectChangeRecord): ProjectChangeRecord {
   };
 }
 
+function cloneProjectDocument(document: ProjectDocumentRecord): ProjectDocumentRecord {
+  return { ...document };
+}
+
 export class FileStore implements AppStore {
   private file: string;
   private data: DbData;
@@ -234,7 +259,9 @@ export class FileStore implements AppStore {
         projects: parsed.projects ?? {},
         sources: parsed.sources ?? {},
         projectChanges: parsed.projectChanges ?? [],
-        projectEvents: parsed.projectEvents ?? []
+        projectEvents: parsed.projectEvents ?? [],
+        checklist: (parsed.checklist ?? []).map((item) => ({ ...item, evidencePath: item.evidencePath ?? null })),
+        projectDocuments: parsed.projectDocuments ?? []
       };
     } else {
       this.data = emptyDb();
@@ -663,7 +690,7 @@ export class FileStore implements AppStore {
       for (const label of checklistTemplates[stage] ?? []) {
         this.data.checklist.push({
           id: stableId('chk', stepId, label),
-          stepId, projectId: id, label, done: false, required: true, updatedAt: isoNow()
+          stepId, projectId: id, label, done: false, required: true, evidencePath: null, updatedAt: isoNow()
         });
       }
     });
@@ -703,6 +730,56 @@ export class FileStore implements AppStore {
 
   checklistOf(projectId: string): ChecklistItemRecord[] {
     return this.data.checklist.filter((c) => c.projectId === projectId);
+  }
+
+  saveChecklistEvidence(input: {
+    projectId: string; checklistItemId: string; uploadedBy: string;
+    originalName: string; storedPath: string; mimeType: string;
+    sizeBytes: number; sha256: string;
+  }): EvidenceLinkResult | null {
+    const item = this.data.checklist.find(
+      (candidate) => candidate.id === input.checklistItemId && candidate.projectId === input.projectId
+    );
+    if (!item) return null;
+
+    const uploadedAt = isoNow();
+    const document: ProjectDocumentRecord = {
+      id: stableId('pdoc', input.projectId, input.checklistItemId, input.sha256, uploadedAt),
+      projectId: input.projectId,
+      uploadedBy: input.uploadedBy,
+      originalName: input.originalName,
+      storedPath: input.storedPath,
+      mimeType: input.mimeType,
+      sizeBytes: input.sizeBytes,
+      sha256: input.sha256,
+      isPrivate: true,
+      uploadedAt
+    };
+    const previousDocumentId = item.evidencePath;
+    this.data.projectDocuments.push(document);
+    item.evidencePath = document.id;
+    item.updatedAt = uploadedAt;
+    this.appendAudit(input.uploadedBy, 'checklist.evidence.save', 'project_document', document.id, {
+      checklistItemId: item.id,
+      previousDocumentId,
+      newDocumentId: document.id,
+      sha256: document.sha256
+    });
+    this.flush();
+    return { document: cloneProjectDocument(document), previousDocumentId };
+  }
+
+  listProjectDocuments(projectId: string): ProjectDocumentRecord[] {
+    return this.data.projectDocuments
+      .filter((document) => document.projectId === projectId)
+      .map(cloneProjectDocument);
+  }
+
+  getProjectDocument(projectId: string, documentId: string): ProjectDocumentRecord | null {
+    const document = this.data.projectDocuments.find(
+      (candidate) => candidate.projectId === projectId && candidate.id === documentId
+    );
+    return document ? cloneProjectDocument(document) : null;
   }
 
   toggleChecklist(itemId: string, done: boolean): ChecklistItemRecord | null {

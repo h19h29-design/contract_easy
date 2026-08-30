@@ -9,7 +9,7 @@ import {
 import { detectConflicts, validateActivatableRule } from '@sen/rules';
 import { NEXT_PROJECT_STATUS, STAGES } from './store.js';
 import type {
-  AnswerReportRecord, AuditLogRecord, ChecklistItemRecord,
+  AnswerReportRecord, AuditLogRecord, ChecklistItemRecord, EvidenceLinkResult, ProjectDocumentRecord,
   CrawlRunRecord, ProjectChangeRecord, ProjectEventKind, ProjectEventRecord,
   ProjectRecord, ProjectStatus, ProjectTransitionResult, SessionRecord,
   RuleActionResult, RuleReviewRecord, StepRecord, UserRecord
@@ -722,8 +722,80 @@ export class PgStore {
     return rows.map((r) => ({
       id: String(r.id), stepId: String(r.step_id), projectId: String(r.project_id),
       label: String(r.label), done: Boolean(r.done), required: Boolean(r.required),
+      evidencePath: (r.evidence_path as string | null) ?? null,
       updatedAt: iso(r.updated_at)
     }));
+  }
+
+  async saveChecklistEvidence(input: {
+    projectId: string; checklistItemId: string; uploadedBy: string;
+    originalName: string; storedPath: string; mimeType: string;
+    sizeBytes: number; sha256: string;
+  }): Promise<EvidenceLinkResult | null> {
+    const client = await this.beginTx();
+    try {
+      const locked = await client.query<{ evidence_path: string | null }>(
+        `SELECT evidence_path FROM project_checklist_items
+         WHERE id=$1 AND project_id=$2 FOR UPDATE`,
+        [input.checklistItemId, input.projectId]
+      );
+      const item = locked.rows[0];
+      if (!item) {
+        await rollback(client);
+        return null;
+      }
+
+      const uploadedAt = isoNow();
+      const document: ProjectDocumentRecord = {
+        id: stableId('pdoc', input.projectId, input.checklistItemId, input.sha256, uploadedAt),
+        projectId: input.projectId,
+        uploadedBy: input.uploadedBy,
+        originalName: input.originalName,
+        storedPath: input.storedPath,
+        mimeType: input.mimeType,
+        sizeBytes: input.sizeBytes,
+        sha256: input.sha256,
+        isPrivate: true,
+        uploadedAt
+      };
+      const previousDocumentId = item.evidence_path;
+      await client.query(
+        `INSERT INTO project_documents
+           (id, project_id, uploaded_by, original_name, stored_path, mime_type, size_bytes, sha256, is_private, uploaded_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,$9)`,
+        [document.id, document.projectId, document.uploadedBy, document.originalName,
+          document.storedPath, document.mimeType, document.sizeBytes, document.sha256, document.uploadedAt]
+      );
+      await client.query(
+        `UPDATE project_checklist_items SET evidence_path=$3, updated_at=$4
+         WHERE id=$1 AND project_id=$2`,
+        [input.checklistItemId, input.projectId, document.id, uploadedAt]
+      );
+      await insertAudit(client, input.uploadedBy, 'checklist.evidence.save', 'project_document', document.id, {
+        checklistItemId: input.checklistItemId,
+        previousDocumentId,
+        newDocumentId: document.id,
+        sha256: document.sha256
+      }, uploadedAt);
+      return await commitResult(client, { document, previousDocumentId });
+    } catch (err) {
+      await rollback(client);
+      throw err;
+    }
+  }
+
+  async listProjectDocuments(projectId: string): Promise<ProjectDocumentRecord[]> {
+    const { rows } = await this.pool.query<Row>(
+      'SELECT * FROM project_documents WHERE project_id=$1 ORDER BY uploaded_at ASC, id ASC', [projectId]
+    );
+    return rows.map(mapProjectDocumentRow);
+  }
+
+  async getProjectDocument(projectId: string, documentId: string): Promise<ProjectDocumentRecord | null> {
+    const { rows } = await this.pool.query<Row>(
+      'SELECT * FROM project_documents WHERE project_id=$1 AND id=$2', [projectId, documentId]
+    );
+    return rows[0] ? mapProjectDocumentRow(rows[0]) : null;
   }
 
   async toggleChecklist(itemId: string, done: boolean): Promise<ChecklistItemRecord | null> {
@@ -744,6 +816,7 @@ export class PgStore {
     return {
       id: String(item.id), stepId: String(item.step_id), projectId: String(item.project_id),
       label: String(item.label), done: Boolean(item.done), required: Boolean(item.required),
+      evidencePath: (item.evidence_path as string | null) ?? null,
       updatedAt: iso(item.updated_at)
     };
   }
@@ -1121,6 +1194,21 @@ function mapProjectRow(r: Row): ProjectRecord {
       ? String(r.status) : 'planning') as ProjectRecord['status'],
     wizardInput: cloneJson((r.wizard_input as ProjectRecord['wizardInput'] | null) ?? null),
     createdAt: iso(r.created_at), updatedAt: iso(r.updated_at)
+  };
+}
+
+function mapProjectDocumentRow(r: Row): ProjectDocumentRecord {
+  return {
+    id: String(r.id),
+    projectId: String(r.project_id),
+    uploadedBy: String(r.uploaded_by),
+    originalName: String(r.original_name),
+    storedPath: String(r.stored_path),
+    mimeType: String(r.mime_type),
+    sizeBytes: Number(r.size_bytes),
+    sha256: String(r.sha256),
+    isPrivate: true,
+    uploadedAt: iso(r.uploaded_at)
   };
 }
 

@@ -33,6 +33,19 @@ function user(username: string, role: 'USER' | 'REVIEWER' | 'ADMIN') {
   return { username, passwordHash: 's:h', displayName: username, role };
 }
 
+function documentInput(projectId: string, checklistItemId: string, sha256: string) {
+  return {
+    projectId,
+    checklistItemId,
+    uploadedBy: 'evidence-uploader',
+    originalName: '검사조서.pdf',
+    storedPath: '/private/evidence/검사조서.pdf',
+    mimeType: 'application/pdf',
+    sizeBytes: 1234,
+    sha256
+  };
+}
+
 type TestPool = { query: (text: string, values?: unknown[]) => Promise<unknown> };
 
 function poolForTest(): TestPool {
@@ -308,6 +321,52 @@ describe('PgStore 사용자·세션·프로젝트', () => {
     expect((await store.getSession(token))?.csrfToken).toBe('csrf-1');
     await store.deleteSession(token);
     expect(await store.getSession(token)).toBeNull();
+  });
+});
+
+describe('PgStore 체크리스트 증빙 메타데이터', () => {
+  it('증빙 교체가 이전 document를 보존', async () => {
+    const owner = await store.createUser(user('pg-evidence-owner', 'USER'));
+    const project = await store.createProject({
+      ownerId: owner.id, name: 'PG 증빙 교체', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, { plan: ['증빙 제출'] });
+    const item = (await store.checklistOf(project.id))[0]!;
+
+    const first = await store.saveChecklistEvidence(documentInput(project.id, item.id, 'a'.repeat(64)));
+    const second = await store.saveChecklistEvidence(documentInput(project.id, item.id, 'b'.repeat(64)));
+
+    expect(second?.previousDocumentId).toBe(first?.document.id);
+    expect(await store.listProjectDocuments(project.id)).toHaveLength(2);
+    expect((await store.checklistOf(project.id))[0]?.evidencePath).toBe(second?.document.id);
+    expect((await store.listAudit()).find((entry) => entry.targetId === second?.document.id)).toMatchObject({
+      action: 'checklist.evidence.save',
+      detail: {
+        checklistItemId: item.id,
+        previousDocumentId: first?.document.id,
+        newDocumentId: second?.document.id,
+        sha256: 'b'.repeat(64)
+      }
+    });
+    expect((await store.listAudit()).find((entry) => entry.targetId === second?.document.id)?.detail)
+      .not.toHaveProperty('storedPath');
+  });
+
+  it('다른 프로젝트 item에 document를 연결하지 않음', async () => {
+    const owner = await store.createUser(user('pg-evidence-cross-owner', 'USER'));
+    const projectA = await store.createProject({
+      ownerId: owner.id, name: 'PG 프로젝트 A', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, { plan: ['증빙 A'] });
+    const projectB = await store.createProject({
+      ownerId: owner.id, name: 'PG 프로젝트 B', contractCategory: 'construction',
+      estimatedPrice: 1000, organizationType: 'school', status: 'planning', wizardInput: null
+    }, { plan: ['증빙 B'] });
+    const itemB = (await store.checklistOf(projectB.id))[0]!;
+
+    expect(await store.saveChecklistEvidence(documentInput(projectA.id, itemB.id, 'c'.repeat(64)))).toBeNull();
+    expect((await store.checklistOf(projectB.id))[0]?.evidencePath).toBeNull();
+    expect(await store.listProjectDocuments(projectA.id)).toEqual([]);
   });
 });
 

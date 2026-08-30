@@ -1,6 +1,6 @@
 import type { AttachmentRef, Chunk, RuleDefinition, SourceVersion } from '@sen/shared';
 import type {
-  AnswerReportRecord, AuditLogRecord, ChecklistItemRecord,
+  AnswerReportRecord, AuditLogRecord, ChecklistItemRecord, EvidenceLinkResult, ProjectDocumentRecord,
   CrawlRunRecord, ProjectChangeRecord, ProjectEventKind, ProjectEventRecord,
   ProjectRecord, ProjectStatus, ProjectTransitionResult, RuleActionResult, RuleReviewRecord,
   SessionRecord, StepRecord, UserRecord
@@ -69,6 +69,13 @@ export interface AppStore {
   stepsOf(projectId: string): MaybeP<StepRecord[]>;
   checklistOf(projectId: string): MaybeP<ChecklistItemRecord[]>;
   toggleChecklist(itemId: string, done: boolean): MaybeP<ChecklistItemRecord | null>;
+  saveChecklistEvidence(input: {
+    projectId: string; checklistItemId: string; uploadedBy: string;
+    originalName: string; storedPath: string; mimeType: string;
+    sizeBytes: number; sha256: string;
+  }): MaybeP<EvidenceLinkResult | null>;
+  listProjectDocuments(projectId: string): MaybeP<ProjectDocumentRecord[]>;
+  getProjectDocument(projectId: string, documentId: string): MaybeP<ProjectDocumentRecord | null>;
   setStepStatus(stepId: string, status: StepRecord['status']): MaybeP<StepRecord | null>;
   transitionProjectStatus(projectId: string, next: ProjectStatus, actorUserId: string, reason: string): MaybeP<ProjectTransitionResult>;
   addProjectChange(projectId: string, changeType: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string): MaybeP<string>;
