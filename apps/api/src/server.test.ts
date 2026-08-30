@@ -296,15 +296,15 @@ describe('프로젝트 생명주기 API', () => {
   });
 
   it('Seoul literal dates return exact overdue/today/upcoming display states', async () => {
-    const stateApp = await buildApp({ store, retriever: new HybridRetriever({ chunks: [], versions: [] }), now: () => new Date('2026-08-30T03:00:00.000Z') });
+    const stateApp = await buildApp({ store, retriever: new HybridRetriever({ chunks: [], versions: [] }), now: () => new Date('2035-08-30T03:00:00.000Z') });
     try {
       const project = await createProject('Seoul state');
-      for (const dueDate of ['2026-08-29', '2026-08-30', '2026-08-31']) {
+      for (const dueDate of ['2035-08-29', '2035-08-30', '2035-08-31']) {
         expect((await projectRequest('POST', `/api/projects/${project.id}/events`, { kind: 'inspection', title: dueDate, dueDate })).statusCode).toBe(200);
       }
       const detail = await stateApp.app.inject({ method: 'GET', url: `/api/projects/${project.id}`, cookies: { scg_session: sessionToken } });
       expect(detail.json().events.map((event: { dueDate: string; displayState: string }) => [event.dueDate, event.displayState])).toEqual([
-        ['2026-08-31', 'upcoming'], ['2026-08-30', 'today'], ['2026-08-29', 'overdue']
+        ['2035-08-31', 'upcoming'], ['2035-08-30', 'today'], ['2035-08-29', 'overdue']
       ]);
     } finally { await stateApp.app.close(); }
   });
@@ -395,6 +395,14 @@ describe('비공개 체크리스트 증빙 API', () => {
     expect(evidenceStore.listProjectDocuments(projectA.id)).toEqual(docsBefore);
     expect(evidenceStore.listAudit()).toEqual(auditsBefore);
     expect(evidenceStore.checklistOf(projectA.id).every((item) => item.evidencePath === null)).toBe(true);
+    const privateBefore = fs.existsSync(path.join(privateRoot, projectA.id)) ? fs.readdirSync(path.join(privateRoot, projectA.id)).sort() : [];
+    expect((await ownerRequest('POST', `/api/projects/${projectA.id}/checklist/unknown/evidence`, Buffer.from('bad'), {
+      'content-type': 'application/octet-stream', 'x-file-name': '%E0%A4%A', 'x-file-mime': 'text/plain'
+    })).statusCode).toBe(404);
+    const privateAfter = fs.existsSync(path.join(privateRoot, projectA.id)) ? fs.readdirSync(path.join(privateRoot, projectA.id)).sort() : [];
+    expect(privateAfter).toEqual(privateBefore);
+    expect(evidenceStore.listProjectDocuments(projectA.id)).toEqual(docsBefore);
+    expect(evidenceStore.listAudit()).toEqual(auditsBefore);
   });
 
   it('다운로드 MIME은 저장된 메타데이터가 아니라 허용된 파일 확장자로 정한다', async () => {

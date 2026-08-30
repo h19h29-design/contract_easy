@@ -135,7 +135,7 @@ describe('API PostgreSQL 모드', () => {
     expect(upload.json().document.storedPath).toBeUndefined();
     const audits = await store.listAudit();
     expect(audits).toHaveLength(beforeAudits + 1);
-    expect(audits[0]).toMatchObject({ action: 'checklist.evidence.save', detail: { checklistItemId: itemA.id, sha256: expect.any(String) } });
+    expect(audits[0]).toMatchObject({ actorUserId: (await store.getUserByUsername('admin'))!.id, action: 'checklist.evidence.save', detail: { checklistItemId: itemA.id, sha256: expect.any(String) } });
     expect(audits[0]?.detail).not.toHaveProperty('storedPath');
 
     const documentId = upload.json().document.id as string;
