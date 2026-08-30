@@ -19,6 +19,8 @@ const EVIDENCE_TYPES = {
   png: { mimeType: 'image/png', kind: 'png' }
 } as const;
 
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
 export function detectFileKind(bytes: Buffer, hintName?: string): DetectedFileKind | null {
   const head = bytes.subarray(0, 8);
   const hex = head.toString('hex');
@@ -53,7 +55,10 @@ export function validateEvidenceFile(bytes: Buffer, originalName: string, declar
   const evidenceType = EVIDENCE_TYPES[extension as keyof typeof EVIDENCE_TYPES];
   if (!evidenceType) return { ok: false, code: 'UNSUPPORTED_EXTENSION' };
   if (declaredMime !== evidenceType.mimeType) return { ok: false, code: 'MIME_MISMATCH' };
-  if (detectFileKind(bytes, normalizedName) !== evidenceType.kind) return { ok: false, code: 'MAGIC_MISMATCH' };
+  if (
+    detectFileKind(bytes, normalizedName) !== evidenceType.kind
+    || (evidenceType.kind === 'png' && !hasPngSignature(bytes))
+  ) return { ok: false, code: 'MAGIC_MISMATCH' };
 
   return {
     ok: true,
@@ -63,4 +68,9 @@ export function validateEvidenceFile(bytes: Buffer, originalName: string, declar
     sizeBytes: bytes.length,
     originalName: normalizedName
   };
+}
+
+function hasPngSignature(bytes: Buffer): boolean {
+  return bytes.length >= PNG_SIGNATURE.length
+    && bytes.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE);
 }

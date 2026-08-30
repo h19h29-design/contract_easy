@@ -88,6 +88,15 @@ describe('비공개 증빙 파일 형식 검증', () => {
     expect(validateEvidenceFile(bytes, name, mime)).toMatchObject({ ok: true, ext });
   });
 
+  it('PNG는 전체 8바이트 signature가 일치해야 승인', () => {
+    expect(validateEvidenceFile(Buffer.from([0x89, 0x50, 0x4e, 0x47]), 'scan.png', 'image/png'))
+      .toEqual({ ok: false, code: 'MAGIC_MISMATCH' });
+    expect(validateEvidenceFile(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x00]), 'scan.png', 'image/png'))
+      .toEqual({ ok: false, code: 'MAGIC_MISMATCH' });
+    expect(validateEvidenceFile(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), 'scan.png', 'image/png'))
+      .toMatchObject({ ok: true, ext: 'png' });
+  });
+
   it('이중 확장자 실행파일은 거부', () => {
     expect(validateEvidenceFile(Buffer.from('%PDF-1.4\n'), 'proof.pdf.exe', 'application/pdf'))
       .toEqual({ ok: false, code: 'UNSUPPORTED_EXTENSION' });
