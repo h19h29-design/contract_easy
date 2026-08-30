@@ -128,7 +128,7 @@ export default function ProjectDetailPage() {
       <label className="field">변경 유형<select value={changeType} onChange={(e) => setChangeType(e.target.value)}><option value="design">설계</option><option value="duration">기간</option><option value="amount">금액</option><option value="other">기타</option></select></label>
       <div className="form-grid"><label className="field">변경 전 JSON<textarea value={before} onChange={(e) => setBefore(e.target.value)} /></label><label className="field">변경 후 JSON<textarea value={after} onChange={(e) => setAfter(e.target.value)} /></label></div>
       <label className="field">변경 사유<input value={changeReason} onChange={(e) => setChangeReason(e.target.value)} /></label><button disabled={submitting === 'change' || !changeReason.trim()} onClick={addChange}>변경 기록 추가</button>
-      <ul className="history-list" data-testid="project-history">{data.changes.map((change) => <li key={change.id}><strong>{change.changeType}</strong> · {change.reason} <span className="muted">({change.at.slice(0, 10)})</span></li>)}</ul>
+      <ul className="history-list" data-testid="project-history">{data.changes.map((change) => <li key={change.id} data-testid={change.changeType === 'status' ? 'status-transition-history' : undefined}><strong>{change.changeType}</strong> · {change.changeType === 'status' ? <span data-testid="status-transition-reason">{change.reason}</span> : change.reason} <span className="muted">({change.at.slice(0, 10)})</span></li>)}</ul>
     </section>
 
     <section className="card"><h2>일정</h2>

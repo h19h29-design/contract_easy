@@ -97,24 +97,38 @@ test('상태·변경·일정·증빙을 한 상세 화면에서 관리', async (
   await page.getByLabel('상태 변경 사유').fill('계약 절차 시작');
   await page.getByRole('button', { name: 'contracting으로 이동' }).click();
   await expect(page.getByTestId('current-status')).toHaveText('contracting');
-  await expect(page.getByTestId('project-history')).toContainText('계약 절차 시작');
+  const transitionHistory = page.getByTestId('status-transition-history');
+  await expect(transitionHistory).toHaveCount(1);
+  await expect(transitionHistory.getByTestId('status-transition-reason')).toHaveText('계약 절차 시작');
 
+  const firstBytes = Buffer.from('%PDF-1.4\nfirst');
   await page.getByLabel('증빙 파일').first().setInputFiles({
-    name: '증빙-1.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\nfirst')
+    name: '증빙-1.pdf', mimeType: 'application/pdf', buffer: firstBytes
   });
   const currentEvidence = page.getByTestId('evidence-current').first();
   await expect(currentEvidence).toContainText('증빙-1.pdf');
   await expect(currentEvidence).toContainText(/업로드:/);
   const firstDownload = await currentEvidence.getByRole('link', { name: '증빙-1.pdf' }).getAttribute('href');
   expect(firstDownload).toBeTruthy();
-  expect((await page.request.get(firstDownload!)).ok()).toBeTruthy();
+  const firstResponse = await page.request.get(firstDownload!);
+  expect(firstResponse.ok()).toBeTruthy();
+  expect(await firstResponse.body()).toEqual(firstBytes);
 
+  const secondBytes = Buffer.from('%PDF-1.4\nsecond');
   await page.getByLabel('증빙 파일').first().setInputFiles({
-    name: '증빙-2.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\nsecond')
+    name: '증빙-2.pdf', mimeType: 'application/pdf', buffer: secondBytes
   });
   await expect(currentEvidence).toContainText('증빙-2.pdf');
   await expect(currentEvidence).not.toContainText('증빙-1.pdf');
-  expect((await page.request.get(firstDownload!)).ok()).toBeTruthy();
+  const secondDownload = await currentEvidence.getByRole('link', { name: '증빙-2.pdf' }).getAttribute('href');
+  expect(secondDownload).toBeTruthy();
+  expect(secondDownload).not.toBe(firstDownload);
+  const secondResponse = await page.request.get(secondDownload!);
+  expect(secondResponse.ok()).toBeTruthy();
+  expect(await secondResponse.body()).toEqual(secondBytes);
+  const originalResponse = await page.request.get(firstDownload!);
+  expect(originalResponse.ok()).toBeTruthy();
+  expect(await originalResponse.body()).toEqual(firstBytes);
 
   await page.getByLabel('변경 사유', { exact: true }).fill('사용자 입력 변경 기록');
   await page.getByRole('button', { name: '변경 기록 추가' }).click();
