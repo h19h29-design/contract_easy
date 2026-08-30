@@ -95,3 +95,46 @@ Relevant output: `tsc --noEmit` exited 0.
   this change.
 - This task intentionally provides validation for the upcoming FileStore/PgStore
   approval paths; it does not alter those store activation methods yet.
+
+## Fix round 1 — activation/date/auxiliary conflict review
+
+### Changes
+
+- Invalid `asOfDate` values now emit an `INVALID_SOURCE` validation issue. The
+  existing approved issue-code contract has no separate reference-date code.
+- Activation validation now requires finite numeric scalar operands and a valid
+  `between` tuple. A bounded interval must have an upper bound greater than its
+  lower bound; a non-positive upper bound retains the existing unbounded-range
+  meaning.
+- Runtime condition evaluation reuses the safe range validation and returns
+  `false` for malformed `between` data instead of destructuring and throwing.
+- Conflict detection now compares only two non-empty contract methods, so a
+  document-only auxiliary rule cannot manufacture a method conflict.
+
+### TDD evidence
+
+RED command:
+
+```bash
+pnpm exec vitest run packages/rules/src/engine.test.ts
+```
+
+Relevant output: 4 failures and 20 passes. The failures demonstrated the
+missing invalid-reference-date issue, malformed and reversed `between`
+acceptance, unsafe scalar destructuring, and the false auxiliary-rule conflict.
+
+GREEN command:
+
+```bash
+pnpm exec vitest run packages/rules/src/engine.test.ts
+```
+
+Relevant output: 1 test file passed; 24 tests passed.
+
+Typecheck command:
+
+```bash
+pnpm --filter @sen/rules typecheck
+```
+
+Relevant output: `tsc --noEmit` exited 0.

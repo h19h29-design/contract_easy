@@ -39,12 +39,13 @@ export function validateActivatableRule(
   if (!rule.output.method?.trim()) {
     issues.push({ code: 'MISSING_METHOD', message: '계약방법 출력이 필요합니다.' });
   }
-  if (options.asOfDate && rule.source.effectiveFrom &&
-    isIsoDate(options.asOfDate) && rule.source.effectiveFrom > options.asOfDate) {
+  if (options.asOfDate && !isIsoDate(options.asOfDate)) {
+    issues.push({ code: 'INVALID_SOURCE', message: '기준일은 엄격한 yyyy-mm-dd 날짜여야 합니다.' });
+  } else if (options.asOfDate && rule.source.effectiveFrom && rule.source.effectiveFrom > options.asOfDate) {
     issues.push({ code: 'FUTURE_EFFECTIVE_DATE', message: '기준일 이후 시행 규칙입니다.' });
   }
   if (rule.conditions.length === 0 || rule.conditions.some(
-    (condition) => condition.field !== 'estimated_price' || !ALLOWED_PRICE_OPERATORS.has(condition.operator)
+    (condition) => !isValidActivatablePriceCondition(condition)
   )) {
     issues.push({ code: 'INVALID_CONDITION', message: '지원되는 추정가격 조건이 필요합니다.' });
   }
@@ -71,14 +72,17 @@ export function evaluateCondition(cond: RuleCondition, input: WizardInput, asOfD
       const p = Number(input.estimatedPrice);
       if (!Number.isFinite(p) || p < 0) return false;
       if (cond.operator === 'between') {
-        const [lo, hi] = cond.value as [number, number];
+        const range = priceRange(cond.value);
+        if (!range) return false;
+        const [lo, hi] = range;
         return p >= lo && (hi <= 0 ? true : p < hi); // hi<=0 → 상한 없음
       }
-      if (cond.operator === 'lt') return p < Number(cond.value);
-      if (cond.operator === 'lte') return p <= Number(cond.value);
-      if (cond.operator === 'gt') return p > Number(cond.value);
-      if (cond.operator === 'gte') return p >= Number(cond.value);
-      if (cond.operator === 'eq') return p === Number(cond.value);
+      if (!isFiniteNumber(cond.value)) return false;
+      if (cond.operator === 'lt') return p < cond.value;
+      if (cond.operator === 'lte') return p <= cond.value;
+      if (cond.operator === 'gt') return p > cond.value;
+      if (cond.operator === 'gte') return p >= cond.value;
+      if (cond.operator === 'eq') return p === cond.value;
       return false;
     }
     case 'effective_from_satisfied': {
@@ -231,12 +235,14 @@ export function detectConflicts(rules: RuleDefinition[]): RuleConflict[] {
   for (let i = 0; i < actives.length; i++) {
     for (let j = i + 1; j < actives.length; j++) {
       const a = actives[i]!, b = actives[j]!;
+      const aMethod = a.output.method?.trim();
+      const bMethod = b.output.method?.trim();
+      if (!aMethod || !bMethod || aMethod === bMethod) continue;
       const aInterval = normalizedPriceInterval(a.conditions);
       const bInterval = normalizedPriceInterval(b.conditions);
       if (!aInterval || !bInterval) continue;
       if (scopeKey(a.scope) !== scopeKey(b.scope)) continue;
-      if (rangesOverlap(aInterval, bInterval) &&
-          a.output.method !== b.output.method) {
+      if (rangesOverlap(aInterval, bInterval)) {
         out.push({
           ruleVersionIdA: `${a.id}@${a.version}`,
           ruleVersionIdB: `${b.id}@${b.version}`,
@@ -273,12 +279,10 @@ function normalizedPriceInterval(conditions: RuleCondition[]): PriceInterval | n
 }
 
 function intervalFor(condition: RuleCondition): PriceInterval | null {
-  const value = Number(condition.value);
   if (condition.operator === 'between') {
-    if (!Array.isArray(condition.value) || condition.value.length !== 2 ||
-      !condition.value.every((item) => typeof item === 'number' && Number.isFinite(item))) return null;
-    const [lower, upper] = condition.value;
-    if (typeof lower !== 'number' || typeof upper !== 'number') return null;
+    const range = priceRange(condition.value);
+    if (!range) return null;
+    const [lower, upper] = range;
     return {
       lower,
       lowerInclusive: true,
@@ -286,7 +290,8 @@ function intervalFor(condition: RuleCondition): PriceInterval | null {
       upperInclusive: false
     };
   }
-  if (!Number.isFinite(value)) return null;
+  if (!isFiniteNumber(condition.value)) return null;
+  const value = condition.value;
   switch (condition.operator) {
     case 'gt': return { lower: value, lowerInclusive: false, upper: Infinity, upperInclusive: true };
     case 'gte': return { lower: value, lowerInclusive: true, upper: Infinity, upperInclusive: true };
@@ -295,6 +300,23 @@ function intervalFor(condition: RuleCondition): PriceInterval | null {
     case 'eq': return { lower: value, lowerInclusive: true, upper: value, upperInclusive: true };
     default: return null;
   }
+}
+
+function isValidActivatablePriceCondition(condition: RuleCondition): boolean {
+  if (condition.field !== 'estimated_price' || !ALLOWED_PRICE_OPERATORS.has(condition.operator)) return false;
+  return condition.operator === 'between' ? priceRange(condition.value) !== null : isFiniteNumber(condition.value);
+}
+
+function priceRange(value: RuleCondition['value']): [number, number] | null {
+  if (!Array.isArray(value) || value.length !== 2) return null;
+  const [lower, upper] = value;
+  if (!isFiniteNumber(lower) || !isFiniteNumber(upper)) return null;
+  if (upper > 0 && upper <= lower) return null;
+  return [lower, upper];
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }
 
 function intersectIntervals(a: PriceInterval, b: PriceInterval): PriceInterval {

@@ -144,6 +144,16 @@ describe('detectConflicts(관리자용 사전탐지)', () => {
     ], output: { method: 'B' } });
     expect(detectConflicts([a, b])).toHaveLength(1);
   });
+
+  it('계약방법 없는 보조 규칙은 충돌로 보고하지 않음', () => {
+    const methodRule = rule({ id: 'method', conditions: [
+      { field: 'estimated_price', operator: 'between', value: [0, 0] }
+    ], output: { method: 'A' } });
+    const auxiliaryRule = rule({ id: 'auxiliary', conditions: [
+      { field: 'estimated_price', operator: 'between', value: [0, 0] }
+    ], output: { documents: ['plan|검토서'] } });
+    expect(detectConflicts([methodRule, auxiliaryRule])).toHaveLength(0);
+  });
 });
 
 describe('활성화 검증과 fail-closed 판정', () => {
@@ -183,6 +193,29 @@ describe('활성화 검증과 fail-closed 판정', () => {
     });
     expect(validateActivatableRule(future, { asOfDate: '2026-08-30' }).map((x) => x.code))
       .toContain('FUTURE_EFFECTIVE_DATE');
+  });
+
+  it('잘못된 기준일은 활성화 검증에서 거부', () => {
+    expect(validateActivatableRule(rule({}), { asOfDate: '2026-02-30' }).map((x) => x.code))
+      .toContain('INVALID_SOURCE');
+  });
+
+  it('형식이 잘못되었거나 역전된 추정가격 조건은 활성화 검증에서 거부', () => {
+    const scalarBetween = rule({ conditions: [
+      { field: 'estimated_price', operator: 'between', value: 100 }
+    ] });
+    const reversedBetween = rule({ conditions: [
+      { field: 'estimated_price', operator: 'between', value: [200, 100] }
+    ] });
+    expect(validateActivatableRule(scalarBetween).map((x) => x.code)).toContain('INVALID_CONDITION');
+    expect(validateActivatableRule(reversedBetween).map((x) => x.code)).toContain('INVALID_CONDITION');
+  });
+
+  it('형식이 잘못된 between 조건은 평가 중 false로 끝남', () => {
+    expect(evaluateCondition(
+      { field: 'estimated_price', operator: 'between', value: 100 },
+      input()
+    )).toBe(false);
   });
 
   it('실재하지 않는 원문 확인일은 활성화 검증에서 거부', () => {
