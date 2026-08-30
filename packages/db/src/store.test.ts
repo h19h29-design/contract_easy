@@ -147,6 +147,75 @@ describe('프로젝트 접근제어(RBAC)', () => {
   });
 });
 
+describe('프로젝트 상태·변경·일정 이력', () => {
+  it('프로젝트 상태는 바로 다음 상태로만 전이', () => {
+    const { store, project, owner } = projectStore();
+    expect(store.transitionProjectStatus(project.id, 'working', owner.id, '착공')).toEqual({
+      ok: false,
+      code: 'INVALID_TRANSITION'
+    });
+
+    const result = store.transitionProjectStatus(project.id, 'contracting', owner.id, '계약 절차 시작');
+    expect(result).toMatchObject({
+      ok: true,
+      project: { status: 'contracting' },
+      change: {
+        projectId: project.id,
+        changeType: 'status',
+        before: { status: 'planning' },
+        after: { status: 'contracting' },
+        approvedBy: owner.id,
+        reason: '계약 절차 시작'
+      }
+    });
+    expect(store.listProjectChanges(project.id)).toHaveLength(1);
+  });
+
+  it('변경과 이벤트를 append-only로 조회', () => {
+    const { store, project, owner } = projectStore();
+    const first = store.addProjectChange(
+      project.id,
+      'amount',
+      { amount: 10 },
+      { amount: 11 },
+      '사용자 입력 변경',
+      owner.id
+    );
+    const event = store.addProjectEvent(project.id, 'inspection', '준공검사 예정', '2026-12-20', owner.id);
+    const second = store.addProjectChange(
+      project.id,
+      'duration',
+      { days: 10 },
+      { days: 11 },
+      '기간 변경',
+      owner.id
+    );
+
+    expect(first).toMatchObject({ approvedBy: owner.id, reason: '사용자 입력 변경' });
+    expect(second).toMatchObject({ approvedBy: owner.id, reason: '기간 변경' });
+    expect(store.listProjectChanges(project.id)).toMatchObject([
+      { id: first?.id, changeType: 'amount' },
+      { id: second?.id, changeType: 'duration' }
+    ]);
+    expect(event).toMatchObject({ projectId: project.id, dueDate: '2026-12-20' });
+    expect(store.listProjectEvents(project.id)).toMatchObject([{ id: event?.id, dueDate: '2026-12-20' }]);
+  });
+
+  it('기존 JSON은 변경 및 이벤트 배열 없이도 로드한다', () => {
+    const dir = tmp();
+    new FileStore(dir);
+    const file = path.join(dir, 'db.json');
+    const db = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>;
+    delete db.projectChanges;
+    delete db.projectEvents;
+    fs.writeFileSync(file, JSON.stringify(db), 'utf8');
+
+    const reloaded = new FileStore(dir);
+    expect(reloaded.listProjectChanges('unknown')).toEqual([]);
+    expect(reloaded.listProjectEvents('unknown')).toEqual([]);
+  });
+});
+
 describe('비밀번호 해시', () => {
   it('scrypt 검증 성공/실패', async () => {
     const { hashPassword, verifyPassword } = await import('./password.js');
@@ -165,6 +234,21 @@ function ruleStore(): { store: FileStore; dir: string; reviewer: { id: string };
   const admin = store.createUser({ username: 'admin', passwordHash: 's:h', displayName: 'Admin', role: 'ADMIN' });
   store.upsertRule(baseRule('safe', 1, 'draft', '입찰'));
   return { store, dir, reviewer, admin };
+}
+
+function projectStore(): { store: FileStore; project: ReturnType<FileStore['createProject']>; owner: { id: string } } {
+  const store = new FileStore(tmp());
+  const owner = store.createUser({ username: 'project-owner', passwordHash: 's:h', displayName: 'Owner', role: 'USER' });
+  const project = store.createProject({
+    ownerId: owner.id,
+    name: '프로젝트 상태 이력',
+    contractCategory: 'construction',
+    estimatedPrice: 0,
+    organizationType: 'school',
+    status: 'planning',
+    wizardInput: null
+  }, {});
+  return { store, project, owner };
 }
 
 function baseRule(id: string, version: number, status: RuleDefinition['status'], method = '입찰'): RuleDefinition {

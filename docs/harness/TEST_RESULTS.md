@@ -2,6 +2,15 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-08-30 FileStore 프로젝트 생명주기
+
+| 명령 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm exec vitest run packages/shared/src/shared.test.ts packages/db/src/store.test.ts` | PASS | 2 files, 32 tests — 엄격 ISO 날짜, 서울 기준 마일스톤, 순방향 상태 전이, append-only 변경·이벤트 이력 |
+| `pnpm --filter @sen/db typecheck` | PASS | `tsc --noEmit` 성공; AppStore 계약은 변경하지 않고 FileStore 메서드만 추가 |
+
+- TDD RED 확인: 같은 focused Vitest 명령은 구현 전 4개 실패(`milestoneState`, 상태 전이·이벤트·변경 목록 메서드 부재)였다.
+
 ## 2026-08-27 macOS Codex 재개 환경
 
 | 명령 | 결과 | 핵심 |

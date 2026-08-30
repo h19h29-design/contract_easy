@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { normalizeUrl, isAllowedByPolicy, robotsAllows, ATTACHMENT_ROBOTS_DISALLOWED_EXTS } from './url.js';
 import { sha256Hex, safeFileName, extOf } from './hash.js';
-import { isIsoDate, parseKoreanDate, seoulDate } from './date.js';
+import { isIsoDate, milestoneState, parseKoreanDate, seoulDate } from './date.js';
 
 const policy = {
   allowDomains: ['contract.sen.go.kr'],
@@ -81,9 +81,16 @@ describe('엄격한 ISO 날짜와 서울 기준일', () => {
     expect(isIsoDate('2026-02-28')).toBe(true);
     expect(isIsoDate('2026-02-30')).toBe(false);
     expect(isIsoDate('2026-2-28')).toBe(false);
+    expect(isIsoDate('2026-02-28extra')).toBe(false);
   });
 
   it('UTC 경계를 서울 날짜로 변환', () => {
     expect(seoulDate(new Date('2026-08-30T15:30:00.000Z'))).toBe('2026-08-31');
+  });
+
+  it('마일스톤을 서울 기준일과 비교한다', () => {
+    expect(milestoneState('2026-08-29', '2026-08-30')).toBe('overdue');
+    expect(milestoneState('2026-08-30', '2026-08-30')).toBe('today');
+    expect(milestoneState('2026-08-31', '2026-08-30')).toBe('upcoming');
   });
 });

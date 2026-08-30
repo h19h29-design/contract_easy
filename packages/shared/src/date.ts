@@ -46,6 +46,11 @@ export function seoulDate(value: Date): string {
   return `${part('year')}-${part('month')}-${part('day')}`;
 }
 
+/** ISO 날짜 문자열을 기준일과 비교한 마일스톤 표시 상태. */
+export function milestoneState(dueDate: string, today: string): 'upcoming' | 'today' | 'overdue' {
+  return dueDate < today ? 'overdue' : dueDate === today ? 'today' : 'upcoming';
+}
+
 export function isoNow(): string {
   return new Date().toISOString();
 }

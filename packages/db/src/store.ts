@@ -49,11 +49,47 @@ export interface ProjectRecord {
   contractCategory: string;
   estimatedPrice: number;
   organizationType: string;
-  status: 'planning' | 'contracting' | 'working' | 'completed' | 'warranty';
+  status: ProjectStatus;
   wizardInput: WizardInput | null;
   createdAt: string;
   updatedAt: string;
 }
+
+export type ProjectStatus = 'planning' | 'contracting' | 'working' | 'completed' | 'warranty';
+export type ProjectChangeType = 'design' | 'duration' | 'amount' | 'other' | 'status';
+export type ProjectEventKind = 'deadline' | 'milestone' | 'inspection' | 'payment' | 'other';
+
+export interface ProjectChangeRecord {
+  id: string;
+  projectId: string;
+  changeType: ProjectChangeType;
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  reason: string;
+  approvedBy: string;
+  at: string;
+}
+
+export interface ProjectEventRecord {
+  id: string;
+  projectId: string;
+  kind: ProjectEventKind;
+  title: string;
+  dueDate: string;
+  createdAt: string;
+}
+
+export type ProjectTransitionResult =
+  | { ok: true; project: ProjectRecord; change: ProjectChangeRecord }
+  | { ok: false; code: 'NOT_FOUND' | 'INVALID_TRANSITION' };
+
+export const NEXT_PROJECT_STATUS: Record<ProjectStatus, ProjectStatus | null> = {
+  planning: 'contracting',
+  contracting: 'working',
+  working: 'completed',
+  completed: 'warranty',
+  warranty: null
+};
 
 export interface StepRecord {
   id: string;
@@ -131,6 +167,8 @@ export interface DbData {
   users: UserRecord[];
   sessions: Record<string, SessionRecord>;
   projects: Record<string, ProjectRecord>;
+  projectChanges: ProjectChangeRecord[];
+  projectEvents: ProjectEventRecord[];
   steps: StepRecord[];
   checklist: ChecklistItemRecord[];
   auditLogs: AuditLogRecord[];
@@ -153,7 +191,7 @@ export const STAGE_LABELS: Record<string, string> = {
 export function emptyDb(): DbData {
   return {
     sources: {}, chunks: [], rules: [], users: [], sessions: {},
-    projects: {}, steps: [], checklist: [], auditLogs: [], crawlRuns: [],
+    projects: {}, projectChanges: [], projectEvents: [], steps: [], checklist: [], auditLogs: [], crawlRuns: [],
     answerReports: [], ruleReviews: []
   };
 }
@@ -171,7 +209,9 @@ export class FileStore implements AppStore {
         ...emptyDb(), ...parsed,
         sessions: parsed.sessions ?? {},
         projects: parsed.projects ?? {},
-        sources: parsed.sources ?? {}
+        sources: parsed.sources ?? {},
+        projectChanges: parsed.projectChanges ?? [],
+        projectEvents: parsed.projectEvents ?? []
       };
     } else {
       this.data = emptyDb();
@@ -662,12 +702,87 @@ export class FileStore implements AppStore {
     return step;
   }
 
-  addProjectChange(projectId: string, changeType: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string): string {
-    const id = stableId('chg', projectId, changeType, isoNow());
-    this.audit('system', 'project.change', 'project_change', id, { projectId, changeType, reason });
-    // project_changes는 감사로그로 축약 저장(MVP)
+  transitionProjectStatus(projectId: string, next: ProjectStatus, actorUserId: string, reason: string): ProjectTransitionResult {
+    const project = this.data.projects[projectId];
+    if (!project) return { ok: false, code: 'NOT_FOUND' };
+    if (NEXT_PROJECT_STATUS[project.status] !== next) return { ok: false, code: 'INVALID_TRANSITION' };
+
+    const previousStatus = project.status;
+    const at = isoNow();
+    const change: ProjectChangeRecord = {
+      id: stableId('chg', projectId, 'status', at),
+      projectId,
+      changeType: 'status',
+      before: { status: previousStatus },
+      after: { status: next },
+      reason,
+      approvedBy: actorUserId,
+      at
+    };
+    project.status = next;
+    project.updatedAt = at;
+    this.data.projectChanges.push(change);
+    this.appendAudit(actorUserId, 'project.status.transition', 'project', projectId, {
+      previousStatus,
+      nextStatus: next,
+      changeId: change.id,
+      reason
+    });
     this.flush();
-    return id;
+    return { ok: true, project, change };
+  }
+
+  addProjectChange(projectId: string, changeType: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string): string;
+  addProjectChange(projectId: string, changeType: Exclude<ProjectChangeType, 'status'>, before: Record<string, unknown> | null, after: Record<string, unknown> | null, reason: string, actorUserId: string): ProjectChangeRecord | null;
+  addProjectChange(
+    projectId: string,
+    changeType: string,
+    before: Record<string, unknown> | null,
+    after: Record<string, unknown> | null,
+    reason: string,
+    actorUserId?: string
+  ): string | ProjectChangeRecord | null {
+    if (!this.data.projects[projectId]) return actorUserId === undefined ? '' : null;
+    const at = isoNow();
+    const change: ProjectChangeRecord = {
+      id: stableId('chg', projectId, changeType, at),
+      projectId,
+      changeType: changeType as ProjectChangeType,
+      before,
+      after,
+      reason,
+      approvedBy: actorUserId ?? 'system',
+      at
+    };
+    this.data.projectChanges.push(change);
+    this.appendAudit(change.approvedBy, 'project.change', 'project_change', change.id, { projectId, changeType, reason });
+    this.flush();
+    return actorUserId === undefined ? change.id : change;
+  }
+
+  listProjectChanges(projectId: string): ProjectChangeRecord[] {
+    return this.data.projectChanges.filter((change) => change.projectId === projectId);
+  }
+
+  addProjectEvent(projectId: string, kind: ProjectEventKind, title: string, dueDate: string, actorUserId: string): ProjectEventRecord | null {
+    if (!this.data.projects[projectId]) return null;
+    const createdAt = isoNow();
+    const event: ProjectEventRecord = {
+      id: stableId('evt', projectId, kind, title, dueDate, createdAt),
+      projectId,
+      kind,
+      title,
+      dueDate,
+      createdAt
+    };
+    this.data.projectEvents.push(event);
+    this.appendAudit(actorUserId, 'project.event.create', 'project_event', event.id, { projectId, kind, title, dueDate });
+    this.flush();
+    return event;
+  }
+
+  listProjectEvents(projectId: string): ProjectEventRecord[] {
+    return this.data.projectEvents.filter((event) => event.projectId === projectId);
   }
 
   /* ---------- audit ---------- */

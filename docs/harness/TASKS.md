@@ -163,3 +163,8 @@
 - 현재 API의 `loadRetriever()`는 키워드 인덱스만 생성하며 vectorSearch를 주입하지 않는다.
 - 완료조건: 설정된 provider/store를 API에서 생성, 벡터 실패 시 키워드 폴백, 검색 필터 유지, 단위/API 테스트 추가.
 - 검증: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, hash+local API 검색 스모크.
+
+## T-202 FileStore 프로젝트 생명주기 기록 — DONE
+- 상태 전이(planning→contracting→working→completed→warranty), 변경·이벤트 append-only JSON 기록, 이전 JSON 로드 호환을 추가했다. AppStore/PgStore 계약 승격은 후속 Task 5 범위다.
+- 검증: `pnpm exec vitest run packages/shared/src/shared.test.ts packages/db/src/store.test.ts` (32/32), `pnpm --filter @sen/db typecheck`.
+- 증거: `packages/db/src/store.ts`, `.superpowers/sdd/2026-08-30-contract-workspace-implementation/task-4-report.md`
