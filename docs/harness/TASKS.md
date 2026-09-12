@@ -2,6 +2,14 @@
 
 상태: NOT_STARTED | IN_PROGRESS | BLOCKED | DONE
 
+## T-214 계약 문서 작성 — IN_PROGRESS(자료 대조·설계)
+- 사용자 우선순위: 검색/배포보다 실제 계약 문서 작성부터. OCR·AI 답변·SSH 설정 변경 제외.
+- Mac에 원본 첨부가 이전되지 않았음을 확인하고 Windows 원본 보존 및 manifest 해시 일치를 확인했다.
+- 2026.5 수정 배포 ZIP 내부 공사서류 XLSM의 데이터입력/공사표준계약서 구조를 매크로 실행 없이 확인했다.
+- 첫 작성 대상은 공사표준계약서. 다운로드 형식(한글 필수 여부)을 사용자에게 질문한 상태다.
+- 완료조건: 원본 필드 매핑, 비공개 입력/초안 저장, 미리보기/수정/다운로드, 권한·출력·E2E 검증. 현재 구현 완료 항목으로 간주하지 않는다.
+- 증거: `docs/harness/CONTRACT_FORMS_AUDIT.md`.
+
 ## T-010 하니스 문서 — DONE
 - 완료조건: AGENTS/DECISIONS/SECURITY/IMPLEMENTATION_PLAN/docs/harness/* 존재
 - 증거: 본 폴더 전체, `DECISIONS.md`
