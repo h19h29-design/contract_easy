@@ -2,6 +2,35 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-12 공사표준계약서 HWPX 시험 작성 구현(T-214)
+
+범위: 공사표준계약서 1종, 33항목 입력/비공개 저장/수정/항목 미리보기/텍스트·표 HWPX 다운로드. 원본 XLSM은 읽기 전용 대조만 했으며 매크로 실행·운영 DB 변경·NAS 배포·외부 모델 전송·자동 push 없음.
+
+| 검증 | 결과 | 근거 |
+| --- | --- | --- |
+| `pnpm lint`, `pnpm typecheck` | PASS | 전체 workspace, exit 0 |
+| `pnpm test` | PASS | 15 files, 178 tests |
+| `pnpm test:pg` | PASS | 4 files, 44 tests; 격리 embedded PostgreSQL |
+| `pnpm build` | PASS | 전체 workspace, 계약서 동적 경로 포함 |
+| `NEXT_STANDALONE=1 pnpm --filter web build` | PASS | 배포용 standalone 빌드 성공; 실제 Docker/NAS 배포 아님 |
+| `pnpm test:e2e` | PASS | Chromium 8/8; 기존 7흐름 + 계약서 저장/재조회/수정/다운로드 |
+| `pnpm compose:validate`, `git diff --check` | PASS | 정적 구조/공백 확인; 운영 Compose 실행 아님 |
+| HWPX ZIP/XML 독립 확인 | PASS | 최종 E2E 다운로드 15,613 bytes, 12 ZIP entries, CRC 정상, Python ElementTree로 XML/HPF/RDF 8개 strict parse |
+| 실제 한컴 한글 열기/편집/인쇄 | NOT RUN | Mac/Windows 표준 설치 경로와 Windows 제거 프로그램 등록정보에서 한글 미발견; 다른 경로 설치 여부는 불명 |
+
+검증 내용:
+- 빈 초안 허용, 필수 미입력 다운로드 422, 날짜/음수/지수/쉼표/NULL/XML 금지 문자 거부. 33개 전체 입력값·긴 한글·줄바꿈 왕복, `9007199254740993` 문자열 정확도 보존.
+- 로그인 401, 타 사용자 404, CSRF 403, 동시/오래된 revision 저장 409, 명시한 저장 버전 다운로드, `Cache-Control: no-store`, 감사와 공개 청크에 개인 입력값 제외.
+- JSON 과거 버전 보존/재로딩/복사본 격리/600 파일 권한, PG 동시 최초 저장 중 1개만 성공, additive migration 재실행 멱등성.
+- 초기 RED: 신규 모듈/라우트/작성 링크 없음으로 테스트 실패 확인 후 구현. PG 첫 실행은 잘못된 `projects` 참조 때문에 실패해 실제 `contract_projects`로 수정하고 전체 44개 통과. `null`·revision 상한·파일 644 권한의 실패 테스트를 확인한 뒤 수정. 초기 lint는 의도한 XML 제어문자 검사 정규식의 경고였으며 해당 줄에 이유를 명시해 해결.
+- UI: Chromium 데스크톱 1280×720와 모바일 390×844. 제목/경로와 저장 버전 표시 확인, pageerror 0, 모바일 가로 넘침 없음. 화면은 항목 확인용이지 한글 인쇄 배치가 아니다. 기존 Playwright 사용(전용 Browser 스킬 부재).
+- 합성 증거 디렉터리: `/var/folders/j3/pvwfggzs74qfc1bkh1vyscqr0000gn/T/contract-e2e-yrnozU` (`desktop.png`, `mobile.png`, `공사표준계약서-초안-v2.hwpx`). 임시 파일이므로 OS 정리 대상이며 개인정보/운영 데이터는 없음.
+- 콘솔/모바일 증거 보완 후 작성 E2E 재실행 PASS(1/1): 작성 화면 진입 후 console error 0, 전체 pageerror 0, 모바일 상단 화면/가로 넘침 확인. 최신 합성 파일·스크린샷: `/var/folders/j3/pvwfggzs74qfc1bkh1vyscqr0000gn/T/contract-e2e-lkHIXN`.
+
+남음: 실제 한글 호환성/출력 배치 검증, 원본 재사용 조건의 외부 공개 범위 확인. 첫 버전은 공종 1행·계약서 1종으로 제한하며 붙임 목록만 출력한다. DOCX/PDF/다른 서식/일괄 생성/AI 답변/OCR은 이번 완료 항목이 아니다. GitLab 보안검사 거부 및 NAS 접속 승인 대기는 해결하지 않았다.
+
+독립 읽기 전용 검토: 네이티브 `gpt-daybreak-blue-latest`가 인증/저장/생성기 및 관련 테스트를 검토해 Critical/Important 신규 결함 없음으로 보고했다. 생성 표의 `editable="0"`/`protect="0"` 속성의 실제 한글 동작은 자동 XML 검사로 증명되지 않으므로 기존 native acceptance 미완료를 유지한다. 이 평가는 시험 프로토타입 커밋에 한정하며 배포/정식 사용 승인 증거가 아니다.
+
 ## 2026-09-12 계약서 작성 원본 조사(T-214)
 
 - Mac 원본/정규화 디렉터리 확인: 비어 있음. 검색 청크 11,259개, form 유형 0개.

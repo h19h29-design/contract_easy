@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  stableId, randomToken, isoNow, isIsoDate,
+  stableId, randomToken, isoNow, isIsoDate, validateContractFields, CONTRACT_TEMPLATE_VERSION,
+  type ContractDraft, type ContractFields, type ContractSaveResult,
   type Chunk, type RuleDefinition, type SourceVersion,
   type AttachmentRef, type WizardInput
 } from '@sen/shared';
@@ -181,6 +182,7 @@ export interface AnswerReportRecord {
 }
 
 export interface DbData {
+  contractDrafts: ContractDraft[];
   sources: Record<string, SourceRecord>;
   chunks: Chunk[];
   rules: StoredRule[];
@@ -211,6 +213,7 @@ export const STAGE_LABELS: Record<string, string> = {
 
 export function emptyDb(): DbData {
   return {
+    contractDrafts: [],
     sources: {}, chunks: [], rules: [], users: [], sessions: {},
     projects: {}, projectChanges: [], projectEvents: [], steps: [], checklist: [], projectDocuments: [], auditLogs: [], crawlRuns: [],
     answerReports: [], ruleReviews: []
@@ -255,6 +258,7 @@ export class FileStore implements AppStore {
       const parsed = JSON.parse(fs.readFileSync(this.file, 'utf8')) as Partial<DbData>;
       this.data = {
         ...emptyDb(), ...parsed,
+        contractDrafts: parsed.contractDrafts ?? [],
         sessions: parsed.sessions ?? {},
         projects: parsed.projects ?? {},
         sources: parsed.sources ?? {},
@@ -271,8 +275,26 @@ export class FileStore implements AppStore {
 
   private flush(): void {
     const tmp = `${this.file}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(this.data), 'utf8');
+    fs.writeFileSync(tmp, JSON.stringify(this.data), { encoding: 'utf8', mode: 0o600 });
+    fs.chmodSync(tmp, 0o600);
     fs.renameSync(tmp, this.file);
+  }
+
+  getContractDraft(projectId: string, revision?: number): ContractDraft | null {
+    const matches = this.data.contractDrafts.filter((d) => d.projectId === projectId && (revision === undefined || d.revision === revision));
+    const draft = matches.sort((a, b) => b.revision - a.revision)[0];
+    return draft ? cloneJson(draft) : null;
+  }
+
+  saveContractDraft(projectId: string, fields: ContractFields, expectedRevision: number, actorUserId: string): ContractSaveResult {
+    const validated = validateContractFields(fields);
+    if (!validated.ok || !Number.isSafeInteger(expectedRevision) || expectedRevision < 0 || expectedRevision >= 2147483647) return { ok: false, code: 'INVALID' };
+    if (!this.getProject(projectId) || !this.getUser(actorUserId)) return { ok: false, code: 'NOT_FOUND' };
+    if ((this.getContractDraft(projectId)?.revision ?? 0) !== expectedRevision) return { ok: false, code: 'CONFLICT' };
+    const draft: ContractDraft = { projectId, revision: expectedRevision + 1, templateVersion: CONTRACT_TEMPLATE_VERSION, fields: validated.fields, savedBy: actorUserId, savedAt: isoNow() };
+    this.data.contractDrafts.push(draft);
+    this.flush();
+    return { ok: true, draft: cloneJson(draft) };
   }
 
   private findRule(ruleId: string, version: number): StoredRule | undefined {

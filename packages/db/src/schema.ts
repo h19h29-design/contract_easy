@@ -5,6 +5,15 @@ import {
 
 /* ============ 자료 수집 ============ */
 
+export const projectContractDrafts = pgTable('project_contract_drafts', {
+  projectId: text('project_id').notNull(),
+  revision: integer('revision').notNull(),
+  templateVersion: text('template_version').notNull(),
+  fields: jsonb('fields').notNull(),
+  savedBy: text('saved_by').notNull(),
+  savedAt: timestamp('saved_at', { withTimezone: true }).notNull()
+}, (t) => ({ pk: primaryKey({ columns: [t.projectId, t.revision] }) }));
+
 export const crawlRuns = pgTable('crawl_runs', {
   id: text('id').primaryKey(),
   mode: text('mode').notNull(), // preflight|sample|full|incremental

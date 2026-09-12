@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import {
-  stableId, randomToken, isoNow, isIsoDate, seoulDate,
+  stableId, randomToken, isoNow, isIsoDate, seoulDate, validateContractFields, CONTRACT_TEMPLATE_VERSION,
+  type ContractDraft, type ContractFields, type ContractSaveResult,
   type AttachmentRef, type Chunk, type RuleDefinition, type SourceVersion
 } from '@sen/shared';
 import { detectConflicts, validateActivatableRule } from '@sen/rules';
@@ -52,6 +53,40 @@ export class PgStore {
 
   async close(): Promise<void> {
     await this.pool.end();
+  }
+
+  async getContractDraft(projectId: string, revision?: number): Promise<ContractDraft | null> {
+    const { rows } = await this.pool.query(
+      `SELECT project_id AS "projectId", revision, template_version AS "templateVersion", fields,
+              saved_by AS "savedBy", saved_at AS "savedAt" FROM project_contract_drafts
+       WHERE project_id=$1 AND ($2::integer IS NULL OR revision=$2) ORDER BY revision DESC LIMIT 1`,
+      [projectId, revision ?? null]
+    );
+    return rows[0] ? { ...rows[0], savedAt: new Date(rows[0].savedAt).toISOString() } as ContractDraft : null;
+  }
+
+  async saveContractDraft(projectId: string, fields: ContractFields, expectedRevision: number, actorUserId: string): Promise<ContractSaveResult> {
+    const validated = validateContractFields(fields);
+    if (!validated.ok || !Number.isSafeInteger(expectedRevision) || expectedRevision < 0 || expectedRevision >= 2147483647) return { ok: false, code: 'INVALID' };
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      // Serializes both first saves and updates for the same project without discarding history.
+      const project = await client.query('SELECT id FROM contract_projects WHERE id=$1 FOR UPDATE', [projectId]);
+      const actor = await client.query('SELECT id FROM users WHERE id=$1 AND disabled=false', [actorUserId]);
+      if (!project.rowCount || !actor.rowCount) { await client.query('ROLLBACK'); return { ok: false, code: 'NOT_FOUND' }; }
+      const latest = await client.query('SELECT revision FROM project_contract_drafts WHERE project_id=$1 ORDER BY revision DESC LIMIT 1', [projectId]);
+      if ((latest.rows[0]?.revision ?? 0) !== expectedRevision) { await client.query('ROLLBACK'); return { ok: false, code: 'CONFLICT' }; }
+      const draft: ContractDraft = { projectId, revision: expectedRevision + 1, templateVersion: CONTRACT_TEMPLATE_VERSION, fields: validated.fields, savedBy: actorUserId, savedAt: isoNow() };
+      await client.query('INSERT INTO project_contract_drafts(project_id, revision, template_version, fields, saved_by, saved_at) VALUES ($1,$2,$3,$4::jsonb,$5,$6)',
+        [projectId, draft.revision, draft.templateVersion, JSON.stringify(draft.fields), actorUserId, draft.savedAt]);
+      await client.query('COMMIT');
+      return { ok: true, draft };
+    } catch {
+      await client.query('ROLLBACK').catch(() => undefined);
+      // Database errors can contain private field values. Do not propagate raw driver errors.
+      throw new Error('계약서 초안 저장에 실패했습니다.');
+    } finally { client.release(); }
   }
 
   /** drizzle/*.sql 을 파일명 순으로 멱등 적용 */

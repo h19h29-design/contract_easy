@@ -2,13 +2,14 @@
 
 상태: NOT_STARTED | IN_PROGRESS | BLOCKED | DONE
 
-## T-214 계약 문서 작성 — IN_PROGRESS(자료 대조·설계)
+## T-214 계약 문서 작성 — IN_PROGRESS(1종 구현, 실제 한글 검증 대기)
 - 사용자 우선순위: 검색/배포보다 실제 계약 문서 작성부터. OCR·AI 답변·SSH 설정 변경 제외.
 - Mac에 원본 첨부가 이전되지 않았음을 확인하고 Windows 원본 보존 및 manifest 해시 일치를 확인했다.
 - 2026.5 수정 배포 ZIP 내부 공사서류 XLSM의 데이터입력/공사표준계약서 구조를 매크로 실행 없이 확인했다.
-- 첫 작성 대상은 공사표준계약서. 사용자가 **HWPX 필수**를 확정했다. 서버 직접 생성/비공개 초안/입력형 편집 설계 제안 중이며 실제 한글 검증 환경은 미확인이다.
-- 완료조건: 원본 필드 매핑, 비공개 입력/초안 저장, 미리보기/수정/다운로드, 권한·출력·E2E 검증. 현재 구현 완료 항목으로 간주하지 않는다.
-- 증거: `docs/harness/CONTRACT_FORMS_AUDIT.md`.
+- 사용자 승인 흐름대로 공사표준계약서 33항목 입력, FileStore/PgStore append-only 초안, 충돌 방지, 항목 미리보기, HWPX 생성/다운로드를 구현했다. 원본 XLSM 수식과 판단값은 자동 채우지 않는다.
+- 저장/다운로드 USER 이상 및 owner/ADMIN, CSRF, 입력 길이/날짜/금액/XML 문자 검증, private no-store와 감사 입력값 제외를 적용했다.
+- 남은 완료조건: 실제 한글에서 표/문구/긴 입력/페이지 나눔을 확인하고 수정·재저장·재열기. 다른 계약서·착공/준공/대금청구 서식 및 일괄 생성은 후속이다. NAS 배포는 별도 승인 전 미실행.
+- 증거: `docs/harness/CONTRACT_FORMS_AUDIT.md`, `TEST_RESULTS.md`, `docs/superpowers/plans/2026-09-12-contract-hwpx.md`, 새 contract 관련 코드/테스트.
 
 ## T-010 하니스 문서 — DONE
 - 완료조건: AGENTS/DECISIONS/SECURITY/IMPLEMENTATION_PLAN/docs/harness/* 존재
@@ -210,7 +211,8 @@
 - 증거: `docker-compose.yml`, `.env.example`, `infra/docker/web.Dockerfile`,
   `apps/api/src/server.ts`, `scripts/validate-compose.mjs`, `docs/harness/RUNBOOK.md`.
 
-## T-212 GitHub/GitLab 원격 동기화 — DONE(현재 Mac 기준)
+## T-212 GitHub/GitLab 원격 동기화 — BLOCKED(2026-09-12 정정)
+- 현재 GitHub `1f51fc4`, GitLab `320cc45`. GitLab pre-receive 보안검사 거부로 불일치. 아래는 과거 동기화 성공 기록이며 현재 완료 근거가 아니다.
 - GitHub `h19h29-design/contract_easy`와 공개 GitLab `h19h19/contract_easy`의 `main`을 동일 커밋으로 맞췄다.
 - GitLab 서버의 pull mirror 방향은 현재 계정에서 제공되지 않아, 현재 Mac의 `origin` push URL을 GitHub와 GitLab 두 곳으로 구성했다.
 - `git push origin`은 두 원격에 순차 push한다. GitHub 웹이나 다른 checkout에서 GitHub만 갱신한 변경은 자동 추종하지 않으므로, 해당 환경에도 다중 push 설정 또는 별도 최소권한 자동화가 필요하다.

@@ -1,6 +1,57 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 const API = process.env.API_URL ?? 'http://localhost:8787';
+
+test('공사표준계약서 입력·저장·재조회·수정·HWPX 다운로드', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await loginExistingPage(page, 'admin', 'ChangeMe!2026');
+  await createAndOpenProject(page, 'HWPX 합성 테스트 공사');
+  await page.getByRole('link', { name: '공사표준계약서 작성' }).click();
+  await expect(page.getByRole('heading', { name: '공사표준계약서 작성' })).toBeVisible();
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  await expect(page.getByLabel('공사명', { exact: true })).toHaveValue('HWPX 합성 테스트 공사');
+  await expect(page.getByLabel('계약금액(원)', { exact: true })).toHaveValue('');
+  const data: Record<string, string> = {
+    '공사명': '교실 & <보수> 공사', '현장': '합성 학교 교실', '계약금액(원)': '9007199254740993',
+    '계약일': '2026-09-12', '착공일': '2026-09-13', '준공일': '2026-10-01',
+    '발주기관명': '가상학교', '발주기관 주소': '합성 주소', '계약담당자 직위': '계약담당자', '계약담당자 성명': '가상담당',
+    '업체명': '가상시공', '사업자등록번호': '000-00-00000', '업체 주소': '테스트 주소', '업체 대표자': '가상대표'
+  };
+  for (const [label, value] of Object.entries(data)) await page.getByLabel(label, { exact: true }).fill(value);
+  await expect(page.getByRole('button', { name: 'HWPX 다운로드' })).toBeDisabled();
+  await page.getByRole('button', { name: '초안 저장', exact: true }).click();
+  await expect(page.getByTestId('contract-save-status')).toContainText('저장된 버전: 1');
+  await page.reload();
+  await expect(page.getByLabel('계약금액(원)', { exact: true })).toHaveValue('9007199254740993');
+  await page.getByLabel('공사명', { exact: true }).fill('수정된 공사명');
+  await page.getByRole('button', { name: '초안 저장', exact: true }).click();
+  await expect(page.getByTestId('contract-save-status')).toContainText('저장된 버전: 2');
+  await page.getByRole('button', { name: '미리보기', exact: true }).click();
+  await expect(page.getByTestId('contract-preview')).toContainText('수정된 공사명');
+  const artifacts = fs.mkdtempSync(path.join(os.tmpdir(), 'contract-e2e-'));
+  await page.screenshot({ path: path.join(artifacts, 'desktop.png') });
+  await page.getByLabel('검토 필요 항목을 확인했으며 이 문서는 초안임을 이해합니다.').check();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'HWPX 다운로드' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('공사표준계약서-초안-v2.hwpx');
+  const output = path.join(artifacts, download.suggestedFilename());
+  await download.saveAs(output);
+  expect(fs.readFileSync(output).subarray(0, 4)).toEqual(Buffer.from([80, 75, 3, 4]));
+  expect(fs.statSync(output).size).toBeGreaterThan(2000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('heading', { name: '공사표준계약서 작성' }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: path.join(artifacts, 'mobile.png') });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
+  expect(consoleErrors).toEqual([]);
+  console.log(`Synthetic contract evidence: ${artifacts}`);
+});
 
 async function login(browser: Browser, username: string, password: string): Promise<Page> {
   const page = await browser.newPage();

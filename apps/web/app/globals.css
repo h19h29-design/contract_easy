@@ -241,3 +241,7 @@ table.data th { background: #f0f3f7; }
   .container { padding: 12px; }
   table.data { font-size: 12px; }
 }
+.contract-preview-row { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(0, 2fr); border-bottom: 1px solid #ddd; padding: 8px 0; gap: 12px; }
+.contract-preview-row dt { font-weight: 600; }
+.contract-preview-row dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+fieldset.card { min-width: 0; }

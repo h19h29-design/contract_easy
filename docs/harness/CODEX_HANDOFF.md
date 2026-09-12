@@ -4,8 +4,10 @@
 
 **2026-09-12 사용자 우선순위 변경:** 실제 계약 문서 작성 T-214부터 진행한다.
 `CONTRACT_FORMS_AUDIT.md`에 Windows 원클릭 XLSM 원본의 위치·해시·시트 구조를 기록했다.
-Mac 원본 첨부 폴더는 비어 있고 서식 검색 청크도 0개다. 공사표준계약서 작성 흐름은 미구현이다.
-사용자가 **HWPX 필수**를 확정했다. `CONTRACT_FORMS_AUDIT.md`의 HWPX 작성 흐름 제안을 기준으로 원본 필드 매핑과 설계를 확정한다. 실제 한글의 열기·편집·재저장 검증 환경은 아직 확인하지 못했다.
+Mac 원본 첨부 폴더는 비어 있고 서식 검색 청크도 0개다. 원본을 읽기 전용으로 대조한 뒤 공사표준계약서 1종 작성 흐름을 구현했다.
+사용자가 **HWPX 필수**를 확정하고 입력→비공개 저장/수정→미리보기→다운로드를 승인했다. 현재 `codex/contract-hwpx` 브랜치. 실제 한글의 열기·편집·재저장·인쇄 검증 환경은 아직 확인하지 못했으며 정식 사용 가능 완료로 표시하지 않는다.
+즉시 다음 검증: 생성한 합성 HWPX를 한글에서 열고 표/본문/금액·페이지 나눔 확인, 수정 후 저장·재열기. 브라우저 미리보기는 실제 인쇄 레이아웃이 아니다.
+신규 migration은 `packages/db/drizzle/0002_contract_drafts.sql`이며 격리 테스트에서만 실행했다. NAS 배포/운영 DB/SSH 변경/자동 push는 이번 범위 밖이다.
 T-213 SSH 변경 승인은 여전히 받지 않았다. GitHub는 `1f51fc4`, GitLab은 보안검사 거부로 `320cc45`다.
 아래 배포 중심 재개 안내 및 원격 일치 설명은 이전 상태다.
 
@@ -45,7 +47,7 @@ T-213 SSH 변경 승인은 여전히 받지 않았다. GitHub는 `1f51fc4`, GitL
 
 ## Git 상태 메모
 
-- 브랜치: `main`
+- 브랜치: `codex/contract-hwpx` (분기 기준 로컬 main `eced3f1`)
 - 최근 배포 안전장치 커밋: (이번 최종 감사 커밋으로 갱신)
 - GitHub: `https://github.com/h19h29-design/contract_easy.git`
 - GitLab: `https://gitlab.aigov.go.kr/h19h19/contract_easy.git`

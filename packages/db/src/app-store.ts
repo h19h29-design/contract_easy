@@ -1,4 +1,4 @@
-import type { AttachmentRef, Chunk, RuleDefinition, SourceVersion } from '@sen/shared';
+import type { AttachmentRef, Chunk, ContractDraft, ContractFields, ContractSaveResult, RuleDefinition, SourceVersion } from '@sen/shared';
 import type {
   AnswerReportRecord, AuditLogRecord, ChecklistItemRecord, EvidenceLinkResult, ProjectDocumentRecord,
   CrawlRunRecord, ProjectChangeRecord, ProjectEventKind, ProjectEventRecord,
@@ -60,6 +60,8 @@ export interface AppStore {
     checklistTemplates: Record<string, string[]>
   ): MaybeP<ProjectRecord>;
   listProjects(ownerId?: string): MaybeP<ProjectRecord[]>;
+  getContractDraft(projectId: string, revision?: number): MaybeP<ContractDraft | null>;
+  saveContractDraft(projectId: string, fields: ContractFields, expectedRevision: number, actorUserId: string): MaybeP<ContractSaveResult>;
   getProject(id: string): MaybeP<ProjectRecord | null>;
   canAccessProject(projectId: string, userId: string, role: UserRecord['role']): MaybeP<boolean>;
   updateProject(id: string, patch: Partial<ProjectRecord>): MaybeP<ProjectRecord | null>;

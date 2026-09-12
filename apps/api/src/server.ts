@@ -14,6 +14,7 @@ import { EVIDENCE_MAX_BYTES, isIsoDate, milestoneState, seoulDate, validateEvide
 import { HybridRetriever } from '@sen/retrieval';
 import { evaluateWizard, detectConflicts } from '@sen/rules';
 import { attachmentDisposition, resolveEvidenceDownload, writeEvidenceFile } from './project-files.js';
+import { registerContractRoutes } from './contract-routes.js';
 
 const SESSION_COOKIE = 'scg_session';
 
@@ -165,6 +166,8 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
   });
 
   /* ---------- 공개 API ---------- */
+
+  registerContractRoutes(app, store, (req, reply) => requireAuth(req, reply, 'USER'));
 
   app.get('/api/health', async () => ({
     status: 'ok',
