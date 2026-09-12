@@ -1,11 +1,11 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AppStore, UserRecord } from '@sen/db';
-import { CONTRACT_TEMPLATE_VERSION, contractMissingFields, emptyContractFields, validateContractFields } from '@sen/shared';
+import { CONTRACT_FORMS, CONTRACT_TEMPLATE_VERSION, CONTRACT_TEMPLATE_VERSIONS, contractMissingFields, emptyContractFields, isContractFormKind, validateContractFields } from '@sen/shared';
 import { generateContractHwpx } from './contract-hwpx.js';
 import { attachmentDisposition } from './project-files.js';
 
 type Params = { id: string };
-type Query = { revision?: string; reviewed?: string };
+type Query = { revision?: string; reviewed?: string; form?: string };
 const validRevision = (value: unknown): value is string => typeof value === 'string' && /^[1-9]\d{0,9}$/.test(value) && Number(value) <= 2147483647;
 
 export function registerContractRoutes(app: FastifyInstance, store: AppStore, requireUser: (req: FastifyRequest, reply: FastifyReply) => Promise<UserRecord | null>) {
@@ -23,9 +23,12 @@ export function registerContractRoutes(app: FastifyInstance, store: AppStore, re
     if (req.query.revision !== undefined && !validRevision(req.query.revision)) return reply.code(400).send({ error: '버전이 올바르지 않습니다.' });
     const draft = await store.getContractDraft(req.params.id, req.query.revision ? Number(req.query.revision) : undefined);
     if (req.query.revision && !draft) return reply.code(404).send({ error: '초안 버전이 없습니다.' });
+    const parsed = draft ? validateContractFields(draft.fields) : null;
+    if (draft && (!parsed?.ok || !CONTRACT_TEMPLATE_VERSIONS.some((version) => version === draft.templateVersion))) return reply.code(409).send({ error: '이 초안의 서식 버전 또는 입력값을 지원하지 않습니다.' });
     const project = await store.getProject(req.params.id);
     const initialFields = { ...emptyContractFields(), workName: project?.name ?? '' };
-    return { draft, initialFields, templateVersion: CONTRACT_TEMPLATE_VERSION };
+    // Fill new fields only in the response; existing revision records remain unchanged.
+    return { draft: draft && parsed?.ok ? { ...draft, fields: parsed.fields } : null, initialFields, templateVersion: CONTRACT_TEMPLATE_VERSION };
   });
   app.put<{ Params: Params; Body: { fields?: unknown; expectedRevision?: unknown } }>('/api/projects/:id/contract', { bodyLimit: 65536 }, async (req, reply) => {
     const user = await authorized(req, reply);
@@ -40,12 +43,15 @@ export function registerContractRoutes(app: FastifyInstance, store: AppStore, re
   });
   app.get<{ Params: Params; Querystring: Query }>('/api/projects/:id/contract.hwpx', async (req, reply) => {
     if (!(await authorized(req, reply))) return;
+    const form = req.query.form ?? 'contract';
+    if (!isContractFormKind(form)) return reply.code(400).send({ error: '지원하지 않는 서식입니다.' });
     if (!validRevision(req.query.revision)) return reply.code(400).send({ error: '저장된 버전을 지정하세요.' });
     const draft = await store.getContractDraft(req.params.id, Number(req.query.revision));
     if (!draft) return reply.code(404).send({ error: '초안 버전이 없습니다.' });
-    if (draft.templateVersion !== CONTRACT_TEMPLATE_VERSION) return reply.code(409).send({ error: '이 초안의 서식 버전을 지원하지 않습니다.' });
-    const missing = contractMissingFields(draft.fields);
+    const parsed = validateContractFields(draft.fields);
+    if (!parsed.ok || !CONTRACT_TEMPLATE_VERSIONS.some((version) => version === draft.templateVersion)) return reply.code(409).send({ error: '이 초안의 서식 버전 또는 입력값을 지원하지 않습니다.' });
+    const missing = contractMissingFields(parsed.fields, form);
     if (missing.length || req.query.reviewed !== 'true') return reply.code(422).send({ error: missing.length ? '필수 항목을 입력하고 저장하세요.' : '검토 필요 항목과 초안임을 확인하세요.', missing });
-    return reply.type('application/hwp+zip').header('Content-Disposition', attachmentDisposition(`공사표준계약서-초안-v${draft.revision}.hwpx`)).send(generateContractHwpx(draft.fields));
+    return reply.type('application/hwp+zip').header('Content-Disposition', attachmentDisposition(`${CONTRACT_FORMS[form].label}-초안-v${draft.revision}.hwpx`)).send(generateContractHwpx(parsed.fields, form));
   });
 }

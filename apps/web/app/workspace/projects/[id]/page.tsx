@@ -99,7 +99,7 @@ export default function ProjectDetailPage() {
 
   return <div className="container">
     <h1>{data.project.name}</h1>
-    <section className="card"><h2>계약 문서 작성</h2><p>프로젝트 정보를 바탕으로 공사표준계약서 초안을 작성하고 HWPX로 내려받습니다.</p><Link href={`/workspace/projects/${id}/contract`}>공사표준계약서 작성</Link></section>
+    <section className="card"><h2>계약 문서 작성</h2><p>공통정보를 재사용해 공사표준계약서·착공계·준공계·대금청구서 초안을 작성하고 HWPX로 내려받습니다.</p><Link href={`/workspace/projects/${id}/contract`}>공사표준계약서 작성</Link></section>
     <p>추정가격: {data.project.estimatedPrice.toLocaleString()}원 · 전체 진행률 {data.progress}%</p>
     <div className="progressbar" aria-label={`전체 진행률 ${data.progress}%`}><div style={{ width: `${data.progress}%` }} /></div>
     <div className="notice-review" aria-live="polite" hidden={!error}>{error}</div>

@@ -1,8 +1,9 @@
 import { isIsoDate } from './date.js';
 
 /** Source: 2026.5 배포 원클릭 XLSM / 3.공사표준계약서. No legal defaults. */
-export const CONTRACT_TEMPLATE_VERSION = 'sen-construction-2026-04-v1';
-export const CONTRACT_FIELD_DEFS = [
+export const CONTRACT_TEMPLATE_VERSION = 'sen-construction-2026-04-v2';
+export const CONTRACT_TEMPLATE_VERSIONS = ['sen-construction-2026-04-v1', CONTRACT_TEMPLATE_VERSION] as const;
+const STANDARD_CONTRACT_FIELD_DEFS = [
   ['contractNumber', '계약번호', '계약정보', 'text', false],
   ['noticeNumber', '공고번호', '계약정보', 'text', false],
   ['workName', '공사명', '계약정보', 'text', true],
@@ -36,6 +37,24 @@ export const CONTRACT_FIELD_DEFS = [
   ['warrantyPeriod', '하자담보책임기간', '하자담보책임', 'text', false],
   ['notes', '기타사항', '기타', 'multiline', false],
   ['attachments', '붙임서류 목록', '기타', 'multiline', false]
+] as const;
+
+export const CONTRACT_FIELD_DEFS = [
+  ...STANDARD_CONTRACT_FIELD_DEFS,
+  ['recipientTitle', '수신인 직위', '발주기관', 'text', false],
+  ['actualStartDate', '실제 착공일', '착공·준공', 'date', false],
+  ['actualEndDate', '실제 준공일', '착공·준공', 'date', false],
+  ['startReportDate', '착공계 제출일', '착공 신고', 'date', false],
+  ['startAttachments', '착공계 붙임서류 목록', '착공 신고', 'multiline', false],
+  ['completionReportDate', '준공계 제출일', '준공 신고', 'date', false],
+  ['completionAmount', '준공금액(원)', '대금 청구', 'amount', false],
+  ['paidAmount', '기지급액(원)', '대금 청구', 'amount', false],
+  ['claimAmount', '청구금액(원)', '대금 청구', 'amount', false],
+  ['deductionAmount', '공제금액(원)', '대금 청구', 'amount', false],
+  ['claimDate', '청구일', '대금 청구', 'date', false],
+  ['bankName', '은행명', '지급계좌', 'text', false],
+  ['bankAccount', '계좌번호', '지급계좌', 'text', false],
+  ['bankHolder', '예금주', '지급계좌', 'text', false]
 ] as const;
 
 export type ContractFieldKey = typeof CONTRACT_FIELD_DEFS[number][0];
@@ -74,11 +93,52 @@ export function validateContractFields(value: unknown): { ok: true; fields: Cont
     fields[key] = text;
   }
   if (fields.startDate && fields.endDate && fields.startDate > fields.endDate) return fail('준공일은 착공일보다 빠를 수 없습니다.');
+  if (fields.actualStartDate && fields.actualEndDate && fields.actualStartDate > fields.actualEndDate) return fail('실제 준공일은 실제 착공일보다 빠를 수 없습니다.');
   return { ok: true, fields };
 }
 
-export function contractMissingFields(fields: ContractFields): string[] {
-  return CONTRACT_FIELD_DEFS.filter(([key, , , , required]) => required && !fields[key]).map(([, label]) => label);
+export function contractMissingFields(fields: ContractFields, form: ContractFormKind = 'contract'): string[] {
+  const required: readonly ContractFieldKey[] = CONTRACT_FORMS[form].requiredKeys;
+  return CONTRACT_FIELD_DEFS.filter(([key]) => required.includes(key) && !fields[key]).map(([, label]) => label);
 }
 
 export const CONTRACT_REVIEW_KEYS: ContractFieldKey[] = ['contractBond', 'delayRate', 'priceAdjustment', 'warrantyWorkType', 'warrantyAmount', 'warrantyRate', 'warrantyBond', 'warrantyPeriod', 'attachments'];
+
+const REPORT_PARTY_KEYS = ['agencyName', 'recipientTitle', 'companyName', 'companyRegistration', 'companyAddress', 'companyRepresentative'] as const;
+const REPORT_WORK_KEYS = ['workName', 'contractAmount', 'contractDate', 'actualStartDate', 'endDate'] as const;
+export const CONTRACT_FORMS = {
+  contract: {
+    label: '공사표준계약서',
+    fieldKeys: STANDARD_CONTRACT_FIELD_DEFS.map(([key]) => key),
+    requiredKeys: STANDARD_CONTRACT_FIELD_DEFS.filter(([, , , , required]) => required).map(([key]) => key),
+    reviewKeys: CONTRACT_REVIEW_KEYS
+  },
+  commencement: {
+    label: '착공계',
+    fieldKeys: [...REPORT_WORK_KEYS, ...REPORT_PARTY_KEYS, 'startReportDate', 'startAttachments'],
+    requiredKeys: [...REPORT_WORK_KEYS, ...REPORT_PARTY_KEYS, 'startReportDate'],
+    reviewKeys: ['startAttachments']
+  },
+  completion: {
+    label: '준공계',
+    fieldKeys: [...REPORT_WORK_KEYS, ...REPORT_PARTY_KEYS, 'actualEndDate', 'completionReportDate'],
+    requiredKeys: [...REPORT_WORK_KEYS, ...REPORT_PARTY_KEYS, 'actualEndDate', 'completionReportDate'],
+    reviewKeys: []
+  },
+  payment: {
+    label: '대금청구서',
+    fieldKeys: ['workName', 'contractAmount', 'agencyName', 'recipientTitle', 'companyName', 'companyAddress', 'companyRepresentative', 'completionAmount', 'paidAmount', 'claimAmount', 'deductionAmount', 'claimDate', 'bankName', 'bankAccount', 'bankHolder'],
+    requiredKeys: ['workName', 'contractAmount', 'agencyName', 'recipientTitle', 'companyName', 'companyAddress', 'companyRepresentative', 'completionAmount', 'paidAmount', 'claimAmount', 'deductionAmount', 'claimDate', 'bankName', 'bankAccount', 'bankHolder'],
+    reviewKeys: []
+  }
+} as const satisfies Record<string, { label: string; fieldKeys: readonly ContractFieldKey[]; requiredKeys: readonly ContractFieldKey[]; reviewKeys: readonly ContractFieldKey[] }>;
+
+export type ContractFormKind = keyof typeof CONTRACT_FORMS;
+export function isContractFormKind(value: unknown): value is ContractFormKind {
+  return typeof value === 'string' && Object.hasOwn(CONTRACT_FORMS, value);
+}
+
+export function contractFormFields(form: ContractFormKind) {
+  const keys: readonly ContractFieldKey[] = CONTRACT_FORMS[form].fieldKeys;
+  return CONTRACT_FIELD_DEFS.filter(([key]) => keys.includes(key));
+}

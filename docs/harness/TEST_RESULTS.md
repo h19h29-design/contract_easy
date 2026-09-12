@@ -2,6 +2,34 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-12 후속 서식 3종 작성(T-215)
+
+범위: 기존 공사표준계약서 + 착공계·준공계·대금청구서 선택, 47항목 공통 번들, 서식별 필수입력/미리보기/HWPX. 원본 XLSM은 읽기 전용 대조만 수행했다. OCR/AI/RAG·운영 DB·배포·push 제외.
+
+| 검증 | 결과 | 근거 |
+| --- | --- | --- |
+| `pnpm lint`, `pnpm typecheck` | PASS | 전체 workspace, exit 0; 검토 후 테스트 보완 뒤에도 재통과 |
+| `pnpm test` | PASS | 15 files, 187 tests |
+| `pnpm test:pg` | PASS | 4 files, 44 tests; 격리 embedded PostgreSQL |
+| `pnpm build` | PASS | 전체 workspace, 후속 서식 선택 동적 경로 포함 |
+| `NEXT_STANDALONE=1 pnpm --filter web build` | PASS | standalone 빌드, 실제 배포 아님 |
+| `pnpm compose:validate`, `git diff --check` | PASS | 정적 구조/공백 검증 |
+| `pnpm exec vitest run apps/api/src/contract-routes.test.ts` | PASS | 5/5, DeepSeek 제안 대조 후 v1 후속 서식 필수값 거부 보완 |
+| `pnpm test:e2e` | PASS | 최종 Chromium 9/9, 23.5초; 숨은 계좌 필드 저장/재조회/재출력 포함 |
+| 후속 HWPX ZIP/XML | PASS | 착공계14,457B·준공계14,389B·대금청구서v3/v4 각14,617B, 각12 ZIP entries/8 XML·HPF·RDF strict parse 및 CRC |
+| 실제 한컴 한글 열기/편집/인쇄 | DEFERRED | 사용자가 Mac에서 확인 불가하므로 건너뛰도록 지시; 미검증 유지 |
+
+- TDD: 신규 필드/서식별 필수값/출력 선택/브라우저 서식 선택 부재의 RED 확인 후 구현. 신규 생성기 테스트는 계좌정보의 내부 미리보기 누출을 검출했고 선택 필드만 출력하도록 수정했다. 초기 lint의 부정 숫자 입력 테스트에서 정밀도 손실 리터럴 경고를 발견해 명시적 문자열→Number 변환으로 의도를 드러냈다.
+- FileStore/PG: 대형 금액 문자열과 계좌 필드 왕복/이전 revision 보존. API: owner/ADMIN, 익명401·타사용자404, 서식/버전 검증, 기존 v1 응답 정규화 후 저장 파일 byte 불변, 후속 필수값 없는 v1 출력422.
+- HWPX 생성기: 예정/실제 날짜 분리, 수동 금액 유지, 계좌정보는 대금청구서 본문과 내부 preview에만 포함. 다른 서식의 모든 압축 해제 ZIP part에 계좌정보가 없는지 검사한다.
+- 환경 이슈: 최초 E2E 준비 시 disk I/O/ENOSPC(여유 약111MB)로 막혔다. 이 작업에서 원본·DB·캐시를 삭제하지 않았다. 이후 외부 환경의 공간이 회복됐다. 이어서 기존 브라우저 실행 파일 부재로 재검증 실패(8개 시작 불가, 비브라우저1개 통과); `pnpm exec playwright install chromium`으로 해당 테스트 의존성을 설치했다.
+- DeepSeek: 사용자 요청으로 `opencode-go/deepseek-v4.1-flash`의 새 모델 목록·격리 smoke `DEEPSEEK_SMOKE_OK`·독립 설계 검토 응답을 확인했다(exit0). 합성 설계 설명만 전송했으며 프로젝트 코드/원본/개인정보/secret은 전송하지 않았다. 제공자의 내부 모델 신원은 별도 입증하지 않는다. 원본 코드 검토를 수행했다고 주장하지 않는다.
+- DeepSeek 지적 대조: required는 trim 후 빈 문자열 검사, planned 날짜 순서 검증, projectId+revision 조회, 고정 키 allowlist, 금액 정규식, actor/action/project/time을 갖춘 감사 구조가 이미 존재한다. 불필요한 날짜 교차 제한이나 export POST 전환은 적용하지 않았다. 제안 중 v1의 후속 필수값 거부 및 서식 전환 후 숨은 필드 저장/재조회/출력 회귀만 보완했다. 최종 코드 판단은 Codex가 수행했다.
+- UI QA: 기존 Playwright 사용(전용 Browser 스킬 부재). 후속 작성 경로/제목·서식 선택·버전 표시 확인, 작성 화면 console/pageerror 0, 데스크톱1280×720 및 모바일390×844 스크린샷 직접 확인, 모바일 가로 넘침 없음. 이는 한글 출력 배치 검증이 아니다.
+- 최신 합성 산출물: `/var/folders/j3/pvwfggzs74qfc1bkh1vyscqr0000gn/T/contract-followups-7sOdXH` (`payment-desktop.png`, `payment-mobile.png`, 3종 HWPX/대금청구서 두 버전). 임시 경로로 OS 정리 가능. 원본/운영정보 없음. DeepSeek 실행 증거 `/tmp/contract-deepseek.m1bFG6/smoke.json`, `review.json`은 합성 설명에 대한 응답이며 비밀값 제외.
+
+남음: 실제 한글 렌더링/편집·인쇄, 외부 공개 시 원본 재사용 조건 확인, 일괄 생성·현장대리인계/공정표/도급내역서 자동 작성. 새 기능은 아직 NAS에 배포하지 않았다.
+
 ## 2026-09-12 공사표준계약서 HWPX 시험 작성 구현(T-214)
 
 범위: 공사표준계약서 1종, 33항목 입력/비공개 저장/수정/항목 미리보기/텍스트·표 HWPX 다운로드. 원본 XLSM은 읽기 전용 대조만 했으며 매크로 실행·운영 DB 변경·NAS 배포·외부 모델 전송·자동 push 없음.

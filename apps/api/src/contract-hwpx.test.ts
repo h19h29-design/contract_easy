@@ -39,6 +39,30 @@ describe('editable HWPX output', () => {
     const zip = unzipSync(generateContractHwpx(fields));
     const $ = load(strFromU8(zip['Contents/section0.xml']), { xmlMode: true });
     const text = $('hp\\:t').map((_, el) => $(el).text()).get().join('\n');
-    for (const value of Object.values(fields)) expect(text).toContain(value);
+    const originalKeys = ['contractNumber', 'noticeNumber', 'workName', 'site', 'contractAmount', 'totalAmount', 'contractDate', 'startDate', 'endDate', 'agencyName', 'agencyAddress', 'agencyOfficerTitle', 'agencyOfficerName', 'companyName', 'companyRegistration', 'companyAddress', 'companyPhone', 'companyRepresentative', 'guarantorName', 'guarantorRegistration', 'guarantorAddress', 'guarantorPhone', 'guarantorRepresentative', 'contractBond', 'delayRate', 'priceAdjustment', 'warrantyWorkType', 'warrantyAmount', 'warrantyRate', 'warrantyBond', 'warrantyPeriod', 'notes', 'attachments'] as const;
+    for (const key of originalKeys) expect(text).toContain(fields[key]);
+  });
+  it.each([
+    ['commencement', '착공신고서', '2026-09-13', '2026-09-14'],
+    ['completion', '준공계', '2026-10-02', '2026-10-03'],
+    ['payment', '대금청구서', '9007199254740881', '2026-10-04']
+  ] as const)('creates %s using its actual dates/amounts and no unrelated private fields', (form, title, value, reportDate) => {
+    const fields = { ...emptyContractFields(), workName: '합성 & <공사>', startDate: '2026-09-01', actualStartDate: '2026-09-13', endDate: '2026-09-30', actualEndDate: '2026-10-02', startReportDate: '2026-09-14', completionReportDate: '2026-10-03', claimDate: '2026-10-04', claimAmount: '9007199254740881', paidAmount: '0', deductionAmount: '0', bankAccount: '000-SYNTHETIC-001', bankHolder: '합성예금주', bankName: '합성은행', notes: '계약서 전용 메모', startAttachments: '합성 붙임\n둘째 서류', recipientTitle: '학교장', agencyName: '가상학교' };
+    const zip = unzipSync(generateContractHwpx(fields, form));
+    const $ = load(strFromU8(zip['Contents/section0.xml']), { xmlMode: true });
+    const text = $('hp\\:t').map((_, el) => $(el).text()).get().join('\n');
+    expect(text).toContain(title); expect(text).toContain(value); expect(text).toContain(reportDate);
+    expect(text).toContain('합성 & <공사>'); expect(text).toContain('가상학교 학교장 귀하');
+    const packageText = Object.values(zip).map((bytes) => strFromU8(bytes)).join('\n');
+    expect(packageText).not.toContain('계약서 전용 메모');
+    expect(packageText).not.toContain('2026-09-01');
+    if (form === 'payment') { expect(text).toContain('000-SYNTHETIC-001'); expect(text).toContain('합성예금주'); }
+    else expect(packageText).not.toContain('000-SYNTHETIC-001');
+    expect(strFromU8(zip['Contents/content.hpf'])).toContain(`${form === 'commencement' ? '착공계' : title} 초안`);
+  });
+  it('never includes payment bank details in the standard contract package', () => {
+    const zip = unzipSync(generateContractHwpx({ ...emptyContractFields(), bankAccount: '000-BANK-PRIVATE', bankHolder: '합성 비공개 예금주' }));
+    expect(Object.values(zip).map((bytes) => strFromU8(bytes)).join('\n')).not.toContain('000-BANK-PRIVATE');
+    expect(Object.values(zip).map((bytes) => strFromU8(bytes)).join('\n')).not.toContain('합성 비공개 예금주');
   });
 });

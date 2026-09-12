@@ -12,7 +12,7 @@ describe('contract draft persistence', () => {
     const store = new FileStore(dir);
     const owner = store.createUser({ username: 'contract-owner', passwordHash: 'synthetic', displayName: '테스트', role: 'USER' });
     const project = store.createProject({ ownerId: owner.id, name: '테스트', contractCategory: 'construction', estimatedPrice: 0, organizationType: 'school', status: 'planning', wizardInput: null }, {});
-    const parsed = validateContractFields({ workName: '초안 1', contractAmount: '9007199254740993' });
+    const parsed = validateContractFields({ workName: '초안 1', contractAmount: '9007199254740993', claimAmount: '9007199254740881', bankAccount: '000-FILE-SYNTHETIC' });
     if (!parsed.ok) throw new Error('invalid fixture');
     const saved = await store.saveContractDraft(project.id, parsed.fields, 0, owner.id);
     expect(saved.ok).toBe(true);
@@ -26,6 +26,8 @@ describe('contract draft persistence', () => {
     expect((await reopened.getContractDraft(project.id, 1))?.fields.workName).toBe('초안 1');
     expect((await reopened.getContractDraft(project.id))?.revision).toBe(2);
     expect((await reopened.getContractDraft(project.id))?.fields.contractAmount).toBe('9007199254740993');
+    expect((await reopened.getContractDraft(project.id))?.fields.claimAmount).toBe('9007199254740881');
+    expect((await reopened.getContractDraft(project.id, 1))?.fields.bankAccount).toBe('000-FILE-SYNTHETIC');
     expect(await reopened.getContractDraft('other-project', 1)).toBeNull();
     expect(await reopened.saveContractDraft('missing', parsed.fields, 0, owner.id)).toEqual({ ok: false, code: 'NOT_FOUND' });
     expect(await reopened.saveContractDraft(project.id, parsed.fields, 2, 'missing-user')).toEqual({ ok: false, code: 'NOT_FOUND' });
