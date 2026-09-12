@@ -56,9 +56,10 @@ describe('private contract authoring API', () => {
   it('accepts maximum Korean field lengths but rejects oversized bodies', async () => {
     const fields = emptyContractFields();
     for (const [key, , , type] of CONTRACT_FIELD_DEFS) fields[key] = type === 'multiline' ? '가'.repeat(3000) : type === 'text' ? '가'.repeat(300) : '';
+    fields.scheduleRows = '합성공정 | 2026-09-12 | 2026-09-12';
     expect(Buffer.byteLength(JSON.stringify({ fields, expectedRevision: 2 }))).toBeGreaterThan(32768);
     expect((await app.inject({ method: 'PUT', url: route, headers, payload: { fields, expectedRevision: 2 } })).statusCode).toBe(200);
-    expect((await app.inject({ method: 'PUT', url: route, headers, payload: { fields: { notes: '가'.repeat(30000) }, expectedRevision: 3 } })).statusCode).toBe(413);
+    expect((await app.inject({ method: 'PUT', url: route, headers, payload: { fields: { notes: '가'.repeat(40000) }, expectedRevision: 3 } })).statusCode).toBe(413);
   });
   it('selects follow-up forms and enforces their own required fields and privacy', async () => {
     const p = store.createProject({ ownerId: owner.id, name: '후속 서식', contractCategory: 'construction', estimatedPrice: 0, organizationType: 'school', status: 'planning', wizardInput: null }, {});
@@ -84,6 +85,22 @@ describe('private contract authoring API', () => {
       expect(strFromU8(zip['Preview/PrvText.txt']).includes('000-PRIVATE-000')).toBe(form === 'payment');
     }
     expect((await app.inject({ url: `${url}.hwpx?revision=1&reviewed=true&form=completion`, headers })).statusCode).toBe(422);
+    const bundleUrl = `${url}.zip?revision=2&reviewed=true&forms=commencement,completion`;
+    const bundle = await app.inject({ url: bundleUrl, headers });
+    expect(bundle.statusCode).toBe(200);
+    expect(bundle.headers['cache-control']).toBe('no-store');
+    const entries = unzipSync(bundle.rawPayload);
+    expect(Object.keys(entries)).toEqual(['착공계-초안-v2.hwpx', '준공계-초안-v2.hwpx']);
+    for (const file of Object.values(entries)) {
+      expect(Object.values(unzipSync(file)).map((part) => strFromU8(part)).join('').includes('000-PRIVATE-000')).toBe(false);
+    }
+    expect((await app.inject({ url: bundleUrl })).statusCode).toBe(401);
+    expect((await app.inject({ url: bundleUrl, headers: { cookie: 'scg_session=synthetic-other-session' } })).statusCode).toBe(404);
+    for (const forms of ['', 'constructor', 'payment,payment', 'payment,', 'payment&forms=contract']) {
+      expect((await app.inject({ url: `${url}.zip?revision=2&reviewed=true&forms=${forms}`, headers })).statusCode).toBe(400);
+    }
+    expect((await app.inject({ url: `${url}.zip?revision=1&reviewed=true&forms=commencement,completion`, headers })).statusCode).toBe(422);
+    expect((await app.inject({ url: `${url}.zip?revision=2&forms=commencement`, headers })).statusCode).toBe(422);
     expect(JSON.stringify(store.listAudit()).includes('000-PRIVATE-000')).toBe(false);
     expect(JSON.stringify(store.getChunks()).includes('000-PRIVATE-000')).toBe(false);
   });

@@ -2,6 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { validateContractFields, contractMissingFields, emptyContractFields } from './contract.js';
 
 describe('contract input boundary', () => {
+  it('validates representative and schedule fields without inventing defaults', () => {
+    const valid = validateContractFields({ representativeName: '합성담당자', representativeBirthDate: '1990-02-28', scheduleRows: '철거 | 2028-02-29 | 2028-03-01' });
+    expect(valid.ok).toBe(true);
+    if (!valid.ok) throw new Error('invalid fixture');
+    expect(valid.fields.representativeLicense).toBe('');
+    expect(contractMissingFields(valid.fields, 'representative')).toContain('현장대리인계 제출일');
+    expect(validateContractFields({ scheduleRows: '철거 | 2027-02-29 | 2027-03-01' }).ok).toBe(false);
+  });
   it('allows incomplete drafts without inventing numeric/legal defaults', () => {
     const result = validateContractFields({ workName: '교실 공사' });
     expect(result.ok).toBe(true);

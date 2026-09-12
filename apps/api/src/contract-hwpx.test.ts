@@ -5,6 +5,25 @@ import { CONTRACT_FIELD_DEFS, emptyContractFields } from '@sen/shared';
 import { generateContractHwpx } from './contract-hwpx.js';
 
 describe('editable HWPX output', () => {
+  it('exports representative personal data only in its form and renders schedule rows as cells', () => {
+    const fields = { ...emptyContractFields(), representativeName: '합성대리인ONLY', representativeBirthDate: '1990-02-28', representativeType: '합성면허종별', representativeGrade: '합성등급', representativeLicense: 'SYNTHETIC-LICENSE', representativeNotes: '현장 전용 비고', representativeReportDate: '2026-09-12', representativeAttachments: '합성 첨부목록', startDate: '2026-09-01', endDate: '2026-09-30', scheduleRows: '철거 & <공정> | 2028-02-29 | 2028-03-01\n마감 | 2028-03-02 | 2028-03-04', scheduleReportDate: '2026-09-13' };
+    for (const form of ['contract', 'commencement', 'completion', 'payment', 'representative', 'schedule'] as const) {
+      const zip = unzipSync(generateContractHwpx(fields, form));
+      const xml = strFromU8(zip['Contents/section0.xml']);
+      const $ = load(xml, { xmlMode: true });
+      const body = $('hp\\:t').map((_, el) => $(el).text()).get().join('\n');
+      const all = Object.values(zip).map((part) => strFromU8(part)).join('');
+      expect(all.includes('합성대리인ONLY')).toBe(form === 'representative');
+      expect(all.includes('1990-02-28')).toBe(form === 'representative');
+      if (form === 'representative') for (const value of ['합성대리인ONLY', '합성면허종별', '합성등급', 'SYNTHETIC-LICENSE', '현장 전용 비고', '합성 첨부목록']) expect(body).toContain(value);
+      if (form === 'schedule') {
+        expect(body).toContain('철거 & <공정>');
+        expect(body).toContain('2028-02-29');
+        expect(body).toContain('2028-03-04');
+        expect(body).not.toContain('철거 & <공정> |');
+      }
+    }
+  });
   it('preserves entered values as text, keeps package references and excludes executable content', () => {
     const fields = { ...emptyContractFields(), workName: '학교 & <계약> 😀', contractAmount: '9007199254740993', notes: '첫 줄\n둘째 줄', agencyName: '발주학교', companyName: '테스트시공' };
     const bytes = generateContractHwpx(fields);
@@ -36,6 +55,7 @@ describe('editable HWPX output', () => {
   it('round-trips every field, long Korean text and line breaks without numeric coercion', () => {
     const fields = emptyContractFields();
     for (const [key, , , type] of CONTRACT_FIELD_DEFS) fields[key] = type === 'date' ? '2026-09-12' : type === 'amount' ? '9007199254740993' : type === 'multiline' ? `${key} 첫 줄\n${'가'.repeat(2900)}` : `${key} & <한글> "입력"`;
+    fields.scheduleRows = '합성공정 | 2026-09-12 | 2026-09-12';
     const zip = unzipSync(generateContractHwpx(fields));
     const $ = load(strFromU8(zip['Contents/section0.xml']), { xmlMode: true });
     const text = $('hp\\:t').map((_, el) => $(el).text()).get().join('\n');

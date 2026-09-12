@@ -12,10 +12,14 @@ The table XML structure was checked against the project's Apache-2.0 OXML table
 implementation; the local generator is TypeScript and has no Python runtime dependency.
 
 Contract field/wording source: the existing archived 2026.5 원클릭 distribution,
-`3.공사표준계약서`, `14.착공계`, `24.준공계`, `30.대금청구서`;
+`3.공사표준계약서`, `14.착공계`, `24.준공계`, `30.대금청구서`,
+`16.현장대리인계`, `17.공정표`;
 see `docs/harness/CONTRACT_FORMS_AUDIT.md`.
 Each form exports only its selected fields, including internal preview text.
 Bank fields are restricted to the payment form. Workbook formulas are not run.
+Representative identity fields are restricted to the representative form.
+The schedule is a manually entered period table, not the original daily bar chart.
+Batch ZIPs contain only explicitly selected forms from one immutable revision.
 The contract layout is a reflowed editable draft, not an exact Excel print facsimile.
 No rates, warranty periods or legal decisions are inherited automatically.
 

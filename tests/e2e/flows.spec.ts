@@ -5,6 +5,24 @@ import path from 'node:path';
 
 const API = process.env.API_URL ?? 'http://localhost:8787';
 
+// Keep the production limiter intact; reserve enough requests for one complete flow.
+test.beforeEach(async ({ request }, testInfo) => {
+  const response = await request.get(`${API}/api/health`);
+  expect([200, 429]).toContain(response.status());
+  const headers = response.headers();
+  const remaining = Number(headers['x-ratelimit-remaining']);
+  const resetSeconds = Number(headers['x-ratelimit-reset']);
+  expect(Number.isFinite(remaining)).toBe(true);
+  expect(Number.isFinite(resetSeconds)).toBe(true);
+  if (remaining < 60) {
+    expect(resetSeconds).toBeGreaterThanOrEqual(0);
+    expect(resetSeconds).toBeLessThanOrEqual(60);
+    const delay = resetSeconds * 1000 + 100;
+    testInfo.setTimeout(testInfo.timeout + delay);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+});
+
 test('공사표준계약서 입력·저장·재조회·수정·HWPX 다운로드', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -113,10 +131,42 @@ test('후속 서식 선택·공통정보 재사용·저장·HWPX 다운로드', 
   await expect(page.getByLabel('계좌번호', { exact: true })).toHaveValue('000-SYNTHETIC-000');
   await expect(page.getByLabel('청구금액(원)', { exact: true })).toHaveValue('9007199254740881');
   await downloadForm('대금청구서', 4);
+  await page.getByLabel('작성할 서식').selectOption('representative');
+  await page.getByLabel('착공일', { exact: true }).fill('2026-09-13');
+  await page.getByLabel('현장대리인 성명', { exact: true }).fill('합성현장대리인');
+  await page.getByLabel('현장대리인 생년월일', { exact: true }).fill('1990-02-28');
+  await page.getByLabel('현장대리인계 제출일', { exact: true }).fill('2026-09-14');
+  await page.getByRole('button', { name: '초안 저장', exact: true }).click();
+  await expect(page.getByTestId('contract-save-status')).toContainText('저장된 버전: 5');
+  await downloadForm('현장대리인계', 5);
+  await page.getByLabel('작성할 서식').selectOption('schedule');
+  await page.getByLabel('공정별 일정', { exact: true }).fill('철거 | 2026-09-13 | 2026-09-15\n마감 | 2026-09-16 | 2026-09-30');
+  await page.getByLabel('예정공정표 제출일', { exact: true }).fill('2026-09-14');
+  await page.getByRole('button', { name: '초안 저장', exact: true }).click();
+  await expect(page.getByTestId('contract-save-status')).toContainText('저장된 버전: 6');
+  await downloadForm('예정공정표', 6);
+  const zipButton = page.getByRole('button', { name: '선택 서식 ZIP 다운로드', exact: true });
+  await expect(zipButton).toBeDisabled();
+  await expect(page.getByLabel('묶음: 대금청구서', { exact: true })).not.toBeChecked();
+  await page.getByLabel('묶음: 착공계', { exact: true }).check();
+  await page.getByLabel('묶음: 현장대리인계', { exact: true }).check();
+  await page.getByLabel('묶음: 예정공정표', { exact: true }).check();
+  await page.getByLabel('선택한 모든 서식의 검토 필요 항목과 개인정보 포함 여부를 확인했습니다.').check();
+  await page.getByTestId('contract-bundle').screenshot({ path: path.join(artifacts, 'bundle-desktop.png') });
+  const zipPending = page.waitForEvent('download');
+  await zipButton.click();
+  const zipDownload = await zipPending;
+  expect(zipDownload.suggestedFilename()).toBe('공사서류-초안-v6.zip');
+  await zipDownload.saveAs(path.join(artifacts, zipDownload.suggestedFilename()));
+  await expect(page.getByLabel('작성할 서식')).toBeEnabled();
+  await page.getByLabel('묶음: 준공계', { exact: true }).check();
+  await expect(zipButton).toBeDisabled();
+  await page.getByLabel('작성할 서식').selectOption('payment');
   await page.getByRole('button', { name: '미리보기', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('heading', { name: '대금청구서 작성' }).scrollIntoViewIfNeeded();
   await page.screenshot({ path: path.join(artifacts, 'payment-mobile.png') });
+  await page.getByTestId('contract-bundle').screenshot({ path: path.join(artifacts, 'bundle-mobile.png') });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(errors).toEqual([]);
   console.log(`Synthetic follow-up evidence: ${artifacts}`);
@@ -251,7 +301,13 @@ test('상태·변경·일정·증빙을 한 상세 화면에서 관리', async (
   expect(await originalResponse.body()).toEqual(firstBytes);
 
   await page.getByLabel('변경 사유', { exact: true }).fill('사용자 입력 변경 기록');
+  const changeResponse = page.waitForResponse((response) => response.request().method() === 'POST' && response.url().endsWith(`/api/projects/${project.id}/changes`));
+  const reloadResponse = page.waitForResponse((response) => response.request().method() === 'GET' && response.url().endsWith(`/api/projects/${project.id}`));
+  const authResponse = page.waitForResponse((response) => response.request().method() === 'GET' && response.url().endsWith('/api/auth/me'));
   await page.getByRole('button', { name: '변경 기록 추가' }).click();
+  expect((await changeResponse).status()).toBe(200);
+  expect((await reloadResponse).status()).toBe(200);
+  expect((await authResponse).status()).toBe(200);
   await expect(page.getByText('사용자 입력 변경 기록')).toBeVisible();
 
   await page.getByLabel('마일스톤 제목').fill('준공검사 예정');

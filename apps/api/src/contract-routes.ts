@@ -1,11 +1,13 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AppStore, UserRecord } from '@sen/db';
+import { zipSync } from 'fflate';
 import { CONTRACT_FORMS, CONTRACT_TEMPLATE_VERSION, CONTRACT_TEMPLATE_VERSIONS, contractMissingFields, emptyContractFields, isContractFormKind, validateContractFields } from '@sen/shared';
 import { generateContractHwpx } from './contract-hwpx.js';
 import { attachmentDisposition } from './project-files.js';
+import { parseFormSelection, type ContractFormKind } from '@sen/shared';
 
 type Params = { id: string };
-type Query = { revision?: string; reviewed?: string; form?: string };
+type Query = { revision?: string; reviewed?: string; form?: string; forms?: string };
 const validRevision = (value: unknown): value is string => typeof value === 'string' && /^[1-9]\d{0,9}$/.test(value) && Number(value) <= 2147483647;
 
 export function registerContractRoutes(app: FastifyInstance, store: AppStore, requireUser: (req: FastifyRequest, reply: FastifyReply) => Promise<UserRecord | null>) {
@@ -30,7 +32,7 @@ export function registerContractRoutes(app: FastifyInstance, store: AppStore, re
     // Fill new fields only in the response; existing revision records remain unchanged.
     return { draft: draft && parsed?.ok ? { ...draft, fields: parsed.fields } : null, initialFields, templateVersion: CONTRACT_TEMPLATE_VERSION };
   });
-  app.put<{ Params: Params; Body: { fields?: unknown; expectedRevision?: unknown } }>('/api/projects/:id/contract', { bodyLimit: 65536 }, async (req, reply) => {
+  app.put<{ Params: Params; Body: { fields?: unknown; expectedRevision?: unknown } }>('/api/projects/:id/contract', { bodyLimit: 98304 }, async (req, reply) => {
     const user = await authorized(req, reply);
     if (!user) return;
     const parsed = validateContractFields(req.body?.fields);
@@ -53,5 +55,22 @@ export function registerContractRoutes(app: FastifyInstance, store: AppStore, re
     const missing = contractMissingFields(parsed.fields, form);
     if (missing.length || req.query.reviewed !== 'true') return reply.code(422).send({ error: missing.length ? '필수 항목을 입력하고 저장하세요.' : '검토 필요 항목과 초안임을 확인하세요.', missing });
     return reply.type('application/hwp+zip').header('Content-Disposition', attachmentDisposition(`${CONTRACT_FORMS[form].label}-초안-v${draft.revision}.hwpx`)).send(generateContractHwpx(parsed.fields, form));
+  });
+  app.get<{ Params: Params; Querystring: Query }>('/api/projects/:id/contract.zip', async (req, reply) => {
+    if (!(await authorized(req, reply))) return;
+    const selection = parseFormSelection(req.query.forms, Object.keys(CONTRACT_FORMS));
+    if (!selection) return reply.code(400).send({ error: '내려받을 서식을 중복 없이 선택하세요.' });
+    if (!validRevision(req.query.revision)) return reply.code(400).send({ error: '저장된 버전을 지정하세요.' });
+    const draft = await store.getContractDraft(req.params.id, Number(req.query.revision));
+    if (!draft) return reply.code(404).send({ error: '초안 버전이 없습니다.' });
+    const parsed = validateContractFields(draft.fields);
+    if (!parsed.ok || !CONTRACT_TEMPLATE_VERSIONS.some((version) => version === draft.templateVersion)) return reply.code(409).send({ error: '이 초안의 서식 버전 또는 입력값을 지원하지 않습니다.' });
+    const forms = selection as ContractFormKind[];
+    const missing = forms.flatMap((form) => contractMissingFields(parsed.fields, form).map((label) => `${CONTRACT_FORMS[form].label}: ${label}`));
+    if (missing.length || req.query.reviewed !== 'true') return reply.code(422).send({ error: missing.length ? '선택한 모든 서식의 필수 항목을 입력하고 저장하세요.' : '선택한 모든 서식이 초안임을 확인하세요.', missing });
+    // One immutable revision, all-or-nothing validation, no implicit sensitive forms or raw JSON.
+    const parts: Record<string, Uint8Array> = {};
+    for (const form of forms) parts[`${CONTRACT_FORMS[form].label}-초안-v${draft.revision}.hwpx`] = generateContractHwpx(parsed.fields, form);
+    return reply.type('application/zip').header('Content-Disposition', attachmentDisposition(`공사서류-초안-v${draft.revision}.zip`)).send(Buffer.from(zipSync(parts, { level: 0 })));
   });
 }

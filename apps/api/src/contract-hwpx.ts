@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
-import { CONTRACT_FORMS, contractFormFields, isContractFormKind, validateContractFields, type ContractFields, type ContractFieldKey, type ContractFormKind } from '@sen/shared';
+import { CONTRACT_FORMS, contractFormFields, isContractFormKind, parseScheduleRows, validateContractFields, type ContractFields, type ContractFieldKey, type ContractFormKind } from '@sen/shared';
 
 // Licensed package baseline; provenance and modifications are recorded with the asset.
 const baseline = unzipSync(fs.readFileSync(new URL('../assets/hwpx/Skeleton.hwpx', import.meta.url)));
@@ -49,7 +49,16 @@ export function generateContractHwpx(input: ContractFields, form: ContractFormKi
       ['계약자', '계약상대자'],
       [`기관명: ${v('agencyName')}\n주소: ${v('agencyAddress')}\n${v('agencyOfficerTitle')}: ${v('agencyOfficerName')} (인)`, `상호: ${v('companyName')}\n주소: ${v('companyAddress')}\n대표: ${v('companyRepresentative')} (인)`]
     ], [21260, 21260])
-  ].join('') : reportBody(form, v, p, table);
+  ].join('') : form === 'representative' ? [
+    p('현 장 대 리 인 계'), p('초안 · 담당자 검토 필요 (실제 제출·승인 문서가 아닙니다)'),
+    table([['공사명', v('workName')], ['공사기간', `${v('startDate')} ~ ${v('endDate')}`]], [10000, 32520]),
+    table([['구분', '현장대리인'], ['종별', v('representativeType')], ['기술경력·등급', v('representativeGrade')], ['면허번호', v('representativeLicense')], ['생년월일', v('representativeBirthDate')], ['성명', v('representativeName')], ['비고', v('representativeNotes')]], [10000, 32520]),
+    p('상기자를 공사의 현장대리인으로 정하여 종사하겠기에 현장대리인계를 제출합니다.'),
+    p('붙임 목록 (실제 파일은 별도 첨부)'), ...v('representativeAttachments').split('\n').map(p),
+    p(`제출일: ${v('representativeReportDate')}`),
+    table([['주소', v('companyAddress')], ['상호', v('companyName')], ['대표자', `${v('companyRepresentative')} (인)`]], [10000, 32520]),
+    p(`${v('agencyName')} ${v('recipientTitle')} 귀하`)
+  ].join('') : reportBody(form, v, p, table, f);
   const baseSection = strFromU8(baseline['Contents/section0.xml']);
   const root = baseSection.slice(0, baseSection.indexOf('<hp:p '));
   const properties = baseSection.match(/<hp:secPr\b[\s\S]*?<\/hp:secPr>/)?.[0];
@@ -76,13 +85,14 @@ export function generateContractHwpx(input: ContractFields, form: ContractFormKi
   return Buffer.from(zipSync(parts, { level: 6 }));
 }
 
-function reportBody(form: Exclude<ContractFormKind, 'contract'>, v: (key: ContractFieldKey) => string, p: (text: string) => string, table: (rows: string[][], widths: number[]) => string): string {
+function reportBody(form: Exclude<ContractFormKind, 'contract' | 'representative'>, v: (key: ContractFieldKey) => string, p: (text: string) => string, table: (rows: string[][], widths: number[]) => string, fields: ContractFields): string {
   // Source sheets 14.착공계, 24.준공계, 30.대금청구서. No workbook formulas are executed.
   const commonRows = [['공사명', v('workName')], ['계약금액(원)', v('contractAmount')]];
   const rows = form === 'payment'
     ? [...commonRows, ['준공금액(원)', v('completionAmount')], ['기지급액(원)', v('paidAmount')], ['청구금액(원)', v('claimAmount')], ['공제금액(원)', v('deductionAmount')]]
     : [...commonRows, ['계약일자', v('contractDate')], ['실제 착공일', v('actualStartDate')], ['준공기한', v('endDate')], ...(form === 'completion' ? [['실제 준공일', v('actualEndDate')]] : [])];
   const body = [p(form === 'commencement' ? '착공신고서' : CONTRACT_FORMS[form].label), p('초안 · 담당자 검토 필요 (실제 제출·승인·지급 처리가 아닙니다)'), table(rows, [13000, 29520])];
+  if (form === 'schedule') body.push(p('공정별 시작·종료일 (원본 일자별 막대 배치를 기간 표로 재구성)'), table([['공정', '시작일', '종료일'], ...parseScheduleRows(fields.scheduleRows)], [14520, 14000, 14000]), p(`제출일: ${v('scheduleReportDate')}`));
   if (form === 'commencement') body.push(p('붙임서류 (목록만 기재하며 실제 파일은 별도 첨부)'), ...v('startAttachments').split('\n').map(p), p('상기와 같이 공사를 착공하였기에 착공계를 제출합니다.'), p(`제출일: ${v('startReportDate')}`));
   if (form === 'completion') body.push(p('상기공사를 준공하였기에 준공계를 제출합니다.'), p(`제출일: ${v('completionReportDate')}`));
   if (form === 'payment') body.push(p('위와 같이 청구하오니 아래 계좌에 입금하여 주시기 바랍니다.'), p('지정계좌현황'), table([['은행명', v('bankName')], ['계좌번호', v('bankAccount')], ['예금주', v('bankHolder')]], [13000, 29520]), p(`청구일: ${v('claimDate')}`));

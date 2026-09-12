@@ -2,6 +2,35 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-12 선택 ZIP·현장대리인계·예정공정표(T-216)
+
+범위: 6종/57항목/v3, v1/v2 읽기 보존, 명시 선택한 동일 revision의 HWPX ZIP. 개인 입력값의 공개 검색/감사 로그 편입 없음. OCR/AI/RAG·운영 DB·배포·main 병합·push 제외.
+
+| 검증 | 결과 | 근거 |
+| --- | --- | --- |
+| 신규 파서/필드/출력/묶음 API TDD | PASS | 모듈 없음/필드 거부/ZIP 404/대표자 출력 없음 RED 확인 후 GREEN; 파서25, 관련4파일57 tests |
+| `pnpm lint`, `pnpm typecheck` | PASS | 전체 workspace, E2E 요청 대기 보완 후 재통과 |
+| `pnpm test` | PASS | 16 files, 214 tests |
+| `pnpm test:pg` | PASS | 4 files, 44 tests; 격리 PostgreSQL |
+| `pnpm build` | PASS | 전체 workspace |
+| `NEXT_STANDALONE=1 pnpm --filter web build` | PASS | standalone; 실제 배포 아님 |
+| `pnpm test:e2e` | PASS | 최종 Chromium 9/9, 1.1분; 6종 입력/저장/다운로드, ZIP 선택/검토 재확인/빈 선택 방지, 기존 업무 회귀 |
+| `pnpm compose:validate`, `git diff --check` | PASS | 정적 검증; 운영 Compose 실행 아님 |
+| 다운로드 ZIP/XML 독립 검사 | PASS | 개별 HWPX6개(대금 v3/v4 포함) + ZIP 내부3개, 각각 CRC/12 parts/8 XML·HPF·RDF strict parse; 선택한 3종만 포함, 계좌/현장대리인 정보 분리 |
+| 데스크톱/390px 모바일 | PASS | 묶음 화면 스크린샷 직접 확인, 가로 넘침 없음, 새 흐름 page/console error 없음 |
+| 실제 한글 열기/편집/인쇄 | DEFERRED | 사용자 지시로 건너뜀; ZIP/XML 통과는 한글 호환성 검증을 대신하지 않음 |
+
+전체 E2E 초기 8/9 실패: 기존 변경 기록 POST와 상세 GET은200이나 이후 `/api/auth/me` GET429로 화면 갱신 실패. 응답 상태로 원인을 확인했다. 테스트 beforeEach가 health의 `x-ratelimit-remaining/reset`으로 한 흐름의 요청 여유를 확보하도록 대기하며, 운영 120회/분 제한과 인증 코드는 변경하지 않았다. 최종 9/9 통과. Browser plugin not available: 기존 Playwright Chromium으로 검증했다.
+
+DeepSeek 실행: 현재 CLI 목록의 정확한 `opencode-go/deepseek-v4.1-flash`를 고정하고 격리 smoke 실제 marker/exit0 확인. 합성 명세로 순수 일정/선택 파서 및25테스트를 생성했고 Codex가 검토·통합·실행했다. 별도 합성 설계 검토도 exit0; 프로젝트 소스를 읽은 독립 코드 리뷰는 아니다. 검토 의견은 (1) 확인 체크의 영구 승인화: 법적 승인 기능이 아니므로 범위 밖, (2) 빈 선택 허용 주장: 실제 파서/API 거부 테스트와 불일치, (3) 구버전 신규서식 필수값: 원래 4종 호환 유지 및 신규서식 입력 필요가 의도된 동작, (4) 일정 셀 이동/저장 누락/XML 검증 누락: 정확한3열·revision 저장·공통 XML 검증으로 대조하여 미채택. 원본·프로젝트 코드·개인정보·운영 데이터·시크릿은 외부 모델에 보내지 않았다.
+
+합성 실행 증거(임시 경로, 영구 보관 아님):
+- DeepSeek 구현/설계 검토: `/tmp/contract-deepseek.m1bFG6/implementation.json`, `/tmp/contract-deepseek.m1bFG6/final-review.json`
+- 브라우저 다운로드/스크린샷: `/var/folders/j3/pvwfggzs74qfc1bkh1vyscqr0000gn/T/contract-followups-Npy7oC` (`bundle-desktop.png`, `bundle-mobile.png`, 6 HWPX, 3종 ZIP)
+- 원본 조사: 읽기 전용 Windows ZIP62개 구성원명 확인, 실패0; 도급내역서 식별 불가. T-217 원본 양식 확인 대기. 상세는 `CONTRACT_FORMS_AUDIT.md`.
+
+한계: 예정공정표는 기간 표이며 원본 일별 막대 배치가 아니다. 도급내역서·자동 원가/청구 산식은 미구현. NAS에서 이번 변경을 사용할 수 있는 상태로 배포한 것은 아니다.
+
 ## 2026-09-12 후속 서식 3종 작성(T-215)
 
 범위: 기존 공사표준계약서 + 착공계·준공계·대금청구서 선택, 47항목 공통 번들, 서식별 필수입력/미리보기/HWPX. 원본 XLSM은 읽기 전용 대조만 수행했다. OCR/AI/RAG·운영 DB·배포·push 제외.

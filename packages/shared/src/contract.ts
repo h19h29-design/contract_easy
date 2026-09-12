@@ -1,8 +1,10 @@
 import { isIsoDate } from './date.js';
+import { parseScheduleRows } from './contract-input.js';
+export { parseScheduleRows, parseFormSelection } from './contract-input.js';
 
 /** Source: 2026.5 배포 원클릭 XLSM / 3.공사표준계약서. No legal defaults. */
-export const CONTRACT_TEMPLATE_VERSION = 'sen-construction-2026-04-v2';
-export const CONTRACT_TEMPLATE_VERSIONS = ['sen-construction-2026-04-v1', CONTRACT_TEMPLATE_VERSION] as const;
+export const CONTRACT_TEMPLATE_VERSION = 'sen-construction-2026-04-v3';
+export const CONTRACT_TEMPLATE_VERSIONS = ['sen-construction-2026-04-v1', 'sen-construction-2026-04-v2', CONTRACT_TEMPLATE_VERSION] as const;
 const STANDARD_CONTRACT_FIELD_DEFS = [
   ['contractNumber', '계약번호', '계약정보', 'text', false],
   ['noticeNumber', '공고번호', '계약정보', 'text', false],
@@ -54,7 +56,17 @@ export const CONTRACT_FIELD_DEFS = [
   ['claimDate', '청구일', '대금 청구', 'date', false],
   ['bankName', '은행명', '지급계좌', 'text', false],
   ['bankAccount', '계좌번호', '지급계좌', 'text', false],
-  ['bankHolder', '예금주', '지급계좌', 'text', false]
+  ['bankHolder', '예금주', '지급계좌', 'text', false],
+  ['representativeName', '현장대리인 성명', '현장대리인', 'text', false],
+  ['representativeType', '현장대리인 종별', '현장대리인', 'text', false],
+  ['representativeGrade', '기술경력·등급', '현장대리인', 'text', false],
+  ['representativeLicense', '현장대리인 면허번호', '현장대리인', 'text', false],
+  ['representativeBirthDate', '현장대리인 생년월일', '현장대리인', 'date', false],
+  ['representativeNotes', '현장대리인 비고', '현장대리인', 'text', false],
+  ['representativeReportDate', '현장대리인계 제출일', '현장대리인', 'date', false],
+  ['representativeAttachments', '현장대리인계 붙임 목록', '현장대리인', 'multiline', false],
+  ['scheduleRows', '공정별 일정', '예정공정', 'multiline', false],
+  ['scheduleReportDate', '예정공정표 제출일', '예정공정', 'date', false]
 ] as const;
 
 export type ContractFieldKey = typeof CONTRACT_FIELD_DEFS[number][0];
@@ -94,6 +106,7 @@ export function validateContractFields(value: unknown): { ok: true; fields: Cont
   }
   if (fields.startDate && fields.endDate && fields.startDate > fields.endDate) return fail('준공일은 착공일보다 빠를 수 없습니다.');
   if (fields.actualStartDate && fields.actualEndDate && fields.actualStartDate > fields.actualEndDate) return fail('실제 준공일은 실제 착공일보다 빠를 수 없습니다.');
+  try { parseScheduleRows(fields.scheduleRows); } catch (error) { return fail(`공정별 일정: ${(error as Error).message}`); }
   return { ok: true, fields };
 }
 
@@ -129,6 +142,18 @@ export const CONTRACT_FORMS = {
     label: '대금청구서',
     fieldKeys: ['workName', 'contractAmount', 'agencyName', 'recipientTitle', 'companyName', 'companyAddress', 'companyRepresentative', 'completionAmount', 'paidAmount', 'claimAmount', 'deductionAmount', 'claimDate', 'bankName', 'bankAccount', 'bankHolder'],
     requiredKeys: ['workName', 'contractAmount', 'agencyName', 'recipientTitle', 'companyName', 'companyAddress', 'companyRepresentative', 'completionAmount', 'paidAmount', 'claimAmount', 'deductionAmount', 'claimDate', 'bankName', 'bankAccount', 'bankHolder'],
+    reviewKeys: []
+  },
+  representative: {
+    label: '현장대리인계',
+    fieldKeys: ['workName', 'startDate', 'endDate', 'agencyName', 'recipientTitle', 'companyName', 'companyAddress', 'companyRepresentative', 'representativeName', 'representativeType', 'representativeGrade', 'representativeLicense', 'representativeBirthDate', 'representativeNotes', 'representativeReportDate', 'representativeAttachments'],
+    requiredKeys: ['workName', 'startDate', 'endDate', 'agencyName', 'recipientTitle', 'companyName', 'companyAddress', 'companyRepresentative', 'representativeName', 'representativeReportDate'],
+    reviewKeys: ['representativeType', 'representativeGrade', 'representativeLicense', 'representativeBirthDate', 'representativeAttachments']
+  },
+  schedule: {
+    label: '예정공정표',
+    fieldKeys: [...REPORT_WORK_KEYS, ...REPORT_PARTY_KEYS, 'scheduleRows', 'scheduleReportDate'],
+    requiredKeys: [...REPORT_WORK_KEYS, ...REPORT_PARTY_KEYS, 'scheduleRows', 'scheduleReportDate'],
     reviewKeys: []
   }
 } as const satisfies Record<string, { label: string; fieldKeys: readonly ContractFieldKey[]; requiredKeys: readonly ContractFieldKey[]; reviewKeys: readonly ContractFieldKey[] }>;

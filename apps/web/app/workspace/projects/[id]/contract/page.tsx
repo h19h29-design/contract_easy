@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 // Direct browser-safe module: do not import the Node-dependent shared barrel.
-import { CONTRACT_FORMS, contractFormFields, contractMissingFields, isContractFormKind, type ContractDraft, type ContractFields, type ContractFieldKey } from '@sen/shared/src/contract';
+import { CONTRACT_FORMS, contractFormFields, contractMissingFields, isContractFormKind, type ContractDraft, type ContractFields, type ContractFieldKey, type ContractFormKind } from '@sen/shared/src/contract';
 import { api, API_URL } from '../../../../../lib/api';
 
 export default function ContractPage() {
@@ -22,6 +22,8 @@ export default function ContractPage() {
   const [busy, setBusy] = useState(false);
   const [reviewed, setReviewed] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [bundleForms, setBundleForms] = useState<ContractFormKind[]>([]);
+  const [bundleReviewed, setBundleReviewed] = useState(false);
   const dirty = fields !== null && JSON.stringify(fields) !== JSON.stringify(saved?.fields);
 
   useEffect(() => { setReviewed(false); }, [form]);
@@ -29,6 +31,7 @@ export default function ContractPage() {
   useEffect(() => {
     let active = true;
     setFields(null); setSaved(null); setError(''); setReviewed(false); setPreview(false);
+    setBundleForms([]); setBundleReviewed(false);
     api<{ draft: ContractDraft | null; initialFields: ContractFields }>(`/api/projects/${id}/contract`)
       .then((data) => { if (active) { setSaved(data.draft); setFields(data.draft?.fields ?? data.initialFields); } })
       .catch((e: Error) => { if (active) setError(e.message); });
@@ -45,10 +48,12 @@ export default function ContractPage() {
   function update(key: ContractFieldKey, value: string) {
     setFields((current) => current ? { ...current, [key]: value } : null);
     setReviewed(false);
+    setBundleReviewed(false);
   }
 
   async function save() {
     setBusy(true); setError(''); setReviewed(false);
+    setBundleReviewed(false);
     try {
       const result = await api<{ draft: ContractDraft }>(`/api/projects/${id}/contract`, { method: 'PUT', json: { fields, expectedRevision: saved?.revision ?? 0 } });
       setSaved(result.draft); setFields(result.draft.fields);
@@ -56,18 +61,19 @@ export default function ContractPage() {
     finally { setBusy(false); }
   }
 
-  async function download() {
-    if (!saved || dirty || !reviewed) return;
+  async function download(bundle = false) {
+    if (!saved || dirty || (bundle ? !bundleReviewed || !bundleForms.length : !reviewed)) return;
     setBusy(true); setError('');
     try {
-      const response = await fetch(`${API_URL}/api/projects/${id}/contract.hwpx?revision=${saved.revision}&reviewed=true&form=${form}`, { credentials: 'include', cache: 'no-store' });
+      const suffix = bundle ? `zip?forms=${bundleForms.join(',')}` : `hwpx?form=${form}`;
+      const response = await fetch(`${API_URL}/api/projects/${id}/contract.${suffix}&revision=${saved.revision}&reviewed=true`, { credentials: 'include', cache: 'no-store' });
       if (!response.ok) {
         const data = await response.json().catch(() => ({})) as { error?: string };
         throw new Error(data.error ?? '다운로드에 실패했습니다.');
       }
       const url = URL.createObjectURL(await response.blob());
       const anchor = document.createElement('a'); anchor.href = url;
-      anchor.download = `${definition.label}-초안-v${saved.revision}.hwpx`;
+      anchor.download = bundle ? `공사서류-초안-v${saved.revision}.zip` : `${definition.label}-초안-v${saved.revision}.hwpx`;
       document.body.appendChild(anchor); anchor.click(); anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) { setError((e as Error).message); }
@@ -77,6 +83,7 @@ export default function ContractPage() {
   const groups = [...new Set(fieldDefs.map(([, , group]) => group))];
   const missing = fields ? contractMissingFields(fields, form) : [];
   const legalMissing = fields ? fieldDefs.filter(([key]) => reviewKeys.includes(key) && !fields[key]).map(([, label]) => label) : [];
+  const bundleMissing = fields ? bundleForms.flatMap((kind) => contractMissingFields(fields, kind).map((label) => `${CONTRACT_FORMS[kind].label}: ${label}`)) : [];
 
   return <div className="container">
     <Link href={`/workspace/projects/${id}`} onClick={(event) => { if (dirty && !window.confirm('저장하지 않은 입력이 있습니다. 나가시겠습니까?')) event.preventDefault(); }}>← 프로젝트로</Link>
@@ -108,7 +115,9 @@ export default function ContractPage() {
           <legend><h2>{group}</h2></legend>
           {group === '담당자 확인 항목' && <p className="muted">원문을 대조한 담당자가 직접 입력하세요. 비어 있으면 문서에 [검토 필요]가 표시됩니다.</p>}
           {group === '하자담보책임' && <p className="muted">첫 버전은 공종 1행을 지원합니다. 복합공종은 내려받은 HWPX에서 공종별 행을 추가하세요.</p>}
-          {group === '착공 신고' && <p className="muted">현장대리인계·예정공정표·도급내역서는 자동 생성되지 않습니다. 직접 준비한 붙임 목록을 입력하세요.</p>}
+          {group === '착공 신고' && <p className="muted">현장대리인계·예정공정표는 서식을 바꿔 작성할 수 있습니다. 도급내역서는 별도로 준비하세요. 붙임 목록만으로 실제 첨부가 되지는 않습니다.</p>}
+          {group === '현장대리인' && <p className="muted">자격과 개인정보는 담당자가 확인하세요. 생년월일·면허번호는 이 서식에만 출력하며, 원본 증빙은 별도로 첨부합니다.</p>}
+          {group === '예정공정' && <p className="muted">한 줄에 공정 | 시작일 | 종료일을 입력하세요. 예: 철거 | 2026-09-13 | 2026-09-15. 최대 30행, 날짜는 YYYY-MM-DD입니다. 원본 막대 그래프 대신 공정별 기간 표로 출력하며 일정은 자동 산출하지 않습니다.</p>}
           <div className="form-grid">{fieldDefs.filter(([, , g]) => g === group).map(([key, label, , type]) => {
             const required = requiredKeys.includes(key);
             return <label className="field" key={key} htmlFor={`contract-${key}`}>
@@ -133,6 +142,23 @@ export default function ContractPage() {
         <label className="check-item"><input type="checkbox" checked={reviewed} disabled={!saved || dirty || busy || missing.length > 0} onChange={(e) => setReviewed(e.target.checked)} />검토 필요 항목을 확인했으며 이 문서는 초안임을 이해합니다.</label>
         <button className="btn-primary" disabled={!saved || dirty || busy || missing.length > 0 || !reviewed} onClick={() => void download()}>HWPX 다운로드</button>
         <p className="muted">저장 후 다운로드할 수 있습니다. 붙임서류는 목록만 기재되며 실제 파일·인감은 포함되지 않습니다.</p>
+      </section>
+      <section className="card" data-testid="contract-bundle">
+        <h2>서식 묶음 다운로드</h2>
+        <p>같은 저장 버전에서 선택한 HWPX만 ZIP으로 받습니다. 대금청구서는 계좌정보, 현장대리인계는 입력한 개인정보를 포함합니다. 필요한 서식만 선택하세요.</p>
+        <fieldset disabled={busy}>
+          <legend>묶음에 포함할 서식</legend>
+          {Object.entries(CONTRACT_FORMS).map(([key, value]) => {
+            const kind = key as ContractFormKind;
+            return <label className="check-item" key={kind}><input type="checkbox" aria-label={`묶음: ${value.label}`} checked={bundleForms.includes(kind)} onChange={(event) => {
+              setBundleForms((current) => event.target.checked ? [...current, kind] : current.filter((item) => item !== kind));
+              setBundleReviewed(false);
+            }} />{value.label}</label>;
+          })}
+        </fieldset>
+        {bundleMissing.length > 0 && <p>필수 입력: {bundleMissing.join(', ')}</p>}
+        <label className="check-item"><input type="checkbox" checked={bundleReviewed} disabled={!saved || dirty || busy || !bundleForms.length || bundleMissing.length > 0} onChange={(event) => setBundleReviewed(event.target.checked)} />선택한 모든 서식의 검토 필요 항목과 개인정보 포함 여부를 확인했습니다.</label>
+        <button className="btn-primary" disabled={!saved || dirty || busy || !bundleForms.length || bundleMissing.length > 0 || !bundleReviewed} onClick={() => void download(true)}>선택 서식 ZIP 다운로드</button>
       </section>
     </>}
   </div>;
