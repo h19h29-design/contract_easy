@@ -2,6 +2,30 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-12 현재 기능 시험 사용 배포(T-213)
+
+- 범위: OCR·답변 에이전트·유료 임베딩 제외. 기존 키워드 검색·마법사·문서·업무공간의 사용 가능 상태 확보.
+- NAS 진단: 서비스는 healthy였으나 `/data/app-store/chunks.json`, 공개 출처, API 이미지의 `wiki/generated`가 없어 검색/안내가 비어 있었다.
+- 수정: 청크 11,259개(OCR 0개), 출처 93건·고유 버전 307건을 배포했다. 원본 버전 레코드 385건 중 중복 ID는 추가하지 않았다. 공개 출처만 명시적으로 추출해 `ON CONFLICT DO NOTHING` 트랜잭션으로 추가했고 기존 운영 사용자/프로젝트/규칙은 수정하지 않았다.
+- 백업: `/volume2/contract_easy/data/backups/pre-preview-20260912.sql` 생성·non-empty 확인·600 권한. 운영 DB 복원/삭제는 실행하지 않았다.
+- API Dockerfile에 안내 문서 COPY 추가. Mac 아카이브가 생성한 AppleDouble 메타 파일은 별도 임시 폴더로 이동해 문서 16개만 포함했다.
+- 웹 공통 API 함수에서 로그인 세션의 CSRF 토큰을 미지정 POST 등에 전달하도록 수정(로그인 후 검색/로그아웃 경로). 세션 토큰·비밀번호는 출력하지 않았다.
+
+| 검증 | 결과 | 근거 |
+| --- | --- | --- |
+| `pnpm lint`, `pnpm typecheck` | PASS | exit 0 |
+| `pnpm test` | PASS | 11 files, 156 tests; CSRF 회귀 3건 포함 |
+| `pnpm test:pg` | PASS | 3 files, 43 tests |
+| `pnpm test:e2e` | PASS | Chromium 7/7, 격리 개발 데이터 사용 |
+| `pnpm build` | PASS | 전체 workspace, 웹 14/14 페이지 |
+| `pnpm compose:validate`, shell syntax, `git diff --check` | PASS | 설정/문법/공백 확인 |
+| NAS api/web build 및 up | PASS | 실제 Compose 재빌드·재기동 |
+| NAS 공개 API | PASS | 계약 검색 20건, 안내 16개, 출처 93개, 무근거 답변 거부 |
+| Mac→NAS 브라우저 접속 | BLOCKED | SSH h19h19 PermitOpen에 3300/8787 미포함. 두 포트 허용 승인 요청 |
+
+- 초기 lint는 병렬 E2E가 `test-results`를 재생성하는 동안 ENOENT로 실패했다. E2E 종료 후 순차 재실행 PASS.
+- 기존 날짜 표시 테스트가 동일 밀리초 생성 일정의 배열 순서에 의존해 1건 실패했다. 날짜→표시 상태 매핑 전체 일치를 검사하도록 고쳐 모든 상태를 검증하며 전체 테스트 PASS.
+
 ## 2026-08-30 최종 감사·검증
 
 | 명령 | 결과 | 핵심 |

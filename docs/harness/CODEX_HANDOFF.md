@@ -2,7 +2,7 @@
 
 ## 즉시 재개 지점
 
-다음 작업은 **공개 HTTPS 외부 입력 확보 후 Synology reverse proxy 구성**이다. T-211 NAS 내부 배포·파일럿·백업/격리 복구는 완료했으며, T-201 RAG/vector API 런타임 연결은 사용자 결정으로 보류한다.
+다음 작업은 **현재 기능으로 Mac 시험 사용 완료(T-213)**이다. OCR과 답변 에이전트는 사용자 결정으로 제외한다. NAS 검색 자료·출처·안내문서 배포를 보완했으며, SSH PermitOpen에 3300/8787 추가 승인 후 Mac 브라우저 검증을 진행한다. T-201 의미 검색 연결과 공개 HTTPS는 후속이다.
 
 현재 완료된 기반:
 - 공사계약 업무공간 핵심 기능과 운영 배포 정적 안전장치
@@ -10,7 +10,7 @@
 - GitHub와 공개 GitLab의 `main` 일치
 - 현재 Mac의 `origin`은 GitHub/GitLab 다중 push 구성
 
-현재 미완료:
+현재 배포 및 미완료:
 - NAS 내부 Compose 기동·migration·health·파일럿·legacy `evidence_path` 0건·백업/격리 복구 검증이 완료됐다.
 - 공개 HTTPS는 확정 hostname/DNS와 인증서가 없어 구성하지 않았다.
 - GitLab 서버 pull mirror는 제공되지 않아 현재 Mac 이외 환경의 자동 동기화는 별도 구성이 필요하다.

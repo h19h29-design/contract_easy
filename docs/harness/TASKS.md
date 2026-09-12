@@ -141,11 +141,18 @@
 - 증거: docs/harness/UNCOLLECTED.md (2차 갱신)
 
 ## NEXT (다음 세션 권장)
-1. **T-211 NAS 실환경 검증**: Container Manager 기동 후 `docker compose config/up`, `pnpm db:migrate`, HTTPS 역방향 프록시와 복구 리허설.
-2. 파일럿 운영: 테스트 운영자 흐름, 권한, 프로젝트 생성·전이·증빙, 장애·복구 체크리스트 실검증.
+1. **현재 기능 시험 사용**: Mac 접속 후 검색·안내·업무공간을 사용하고 필요한 기능을 정리한다. OCR과 답변 에이전트는 이번 범위에서 제외한다.
+2. **공개 HTTPS**: 외부 공개가 필요할 때 도메인/DNS/인증서를 구성한다. NAS 내부 배포·복구 리허설은 완료했다.
 3. 규칙 승인 실운용(`/admin/rules`에서 밴드 초안 3건을 원문 대조 후 사람이 승인 - 자동화 금지).
 4. **보류 — T-201 벡터 API 런타임 연결**: RAG/에이전트 도입 여부 결정 후 재개.
-5. HWP 표/서식 구조 보존과 OCR 후처리 품질 개선.
+5. HWP 표/서식과 첨부 원문 링크 품질 개선. OCR은 사용자 결정으로 제외.
+
+## T-213 현재 기능 Mac 시험 사용 배포 — IN_PROGRESS
+- 검색 청크 11,259개(OCR 0개), 공개 출처 93건·고유 버전 307건(원본 기록 385건의 ID 중복 제거)을 NAS에 추가 적재했다. 기존 운영 프로젝트·사용자·규칙은 변경하지 않았다.
+- API 이미지에 `wiki/generated`를 포함하고, 로그인 후 검색 POST/로그아웃의 CSRF 누락을 웹 공통 요청 함수에서 수정했다.
+- `scripts/connect-nas.sh`, `공사계약-접속.command`로 Mac에서 SSH 연결을 재개할 수 있다. SSH의 기존 PermitOpen에 두 서비스 포트 추가 승인이 필요하다.
+- 비밀번호는 Mac `~/agent-hub/secrets/contract_easy-admin-password`(600)에 보관한다.
+- 증거: `docs/harness/TEST_RESULTS.md`; OCR·LLM·유료 임베딩 실행 없음.
 
 ## T-199 macOS Codex 재개 환경 — DONE
 - Windows OpenCode 세션의 clean commit `10027fa`와 전체 Git 이력을 현재 작업공간으로 이전.

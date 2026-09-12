@@ -304,9 +304,10 @@ describe('프로젝트 생명주기 API', () => {
         expect((await projectRequest('POST', `/api/projects/${project.id}/events`, { kind: 'inspection', title: dueDate, dueDate })).statusCode).toBe(200);
       }
       const detail = await stateApp.app.inject({ method: 'GET', url: `/api/projects/${project.id}`, cookies: { scg_session: sessionToken } });
-      expect(detail.json().events.map((event: { dueDate: string; displayState: string }) => [event.dueDate, event.displayState])).toEqual([
-        ['2035-08-31', 'upcoming'], ['2035-08-30', 'today'], ['2035-08-29', 'overdue']
-      ]);
+      // 동일 밀리초에 생성된 일정의 순서와 무관하게 날짜별 표시 상태를 검증한다.
+      expect(Object.fromEntries(detail.json().events.map((event: { dueDate: string; displayState: string }) => [event.dueDate, event.displayState]))).toEqual({
+        '2035-08-31': 'upcoming', '2035-08-30': 'today', '2035-08-29': 'overdue'
+      });
     } finally { await stateApp.app.close(); }
   });
 });

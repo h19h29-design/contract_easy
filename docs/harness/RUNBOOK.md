@@ -1,10 +1,18 @@
 # RUNBOOK.md - 실행·운영 절차
 
 ## 0. 요구사항
-- Node 20+, pnpm 9+
+- Node 22.13+, pnpm 11.23.0
 - 선택: Docker 24+, Playwright Chromium, Ollama 또는 외부 임베딩 API
 
 ## 1. 로컬 개발
+### NAS 시험 사용(Mac)
+- 저장소의 `공사계약-접속.command`를 실행하거나 `bash scripts/connect-nas.sh`를 실행한다. 터미널이 열려 있는 동안 `http://127.0.0.1:3300`에서 사용한다.
+- SSH 계정의 PermitOpen에 `127.0.0.1:3300`, `127.0.0.1:8787`이 필요하다. 이미 포트가 사용 중이면 기존 연결을 확인하고 다른 프로세스를 임의 종료하지 않는다.
+- 업무공간 로그인 ID는 `admin`, 비밀번호는 `~/agent-hub/secrets/contract_easy-admin-password`(600)에서 확인한다.
+- 현재 범위는 키워드 검색·안내 문서·마법사·업무공간이다. OCR·AI 답변·의미 검색은 사용하지 않는다. 활성 규칙이 없어 판단값은 검토 필요로 표시한다.
+- 일부 첨부 청크의 원문 URL이 `file://`인 기존 한계는 남아 있다. 자료의 마지막 확인일은 수집 당시이며 최신 법적 기준을 자동 보증하지 않는다.
+
+### 개발 서버
 ```bash
 pnpm install
 pnpm crawl:preflight
