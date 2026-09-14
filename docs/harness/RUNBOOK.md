@@ -65,6 +65,8 @@ docker compose run --rm api node packages/db/dist/migrate.js
   `NEXT_PUBLIC_API_URL`, `SEN_CONTRACT_DATA_ROOT`)을 먼저 채운다. 비밀값은 Git·로그·명령 인자에 넣지 않는다.
 - `NEXT_PUBLIC_API_URL`은 웹 이미지 빌드 때 고정되므로 URL 변경 후에는 `web` 이미지를 다시 빌드한다.
 - `SEN_CONTRACT_DATA_ROOT`는 NAS 공유 볼륨의 절대 경로로 지정한다.
+- 컨테이너는 root가 아닌 `node`(uid 1000)로 실행된다. bind mount한 NAS 데이터 디렉터리는 배포 전에
+  `chown -R 1000:1000 "$SEN_CONTRACT_DATA_ROOT"`(또는 동등한 쓰기 권한 부여)가 필요하다. 기존 루트 소유 파일이 있으면 재배포 전에 일괄 변경한다.
 - API는 PostgreSQL 모드를 필수로 사용하며 기동 시 마이그레이션을 자동 적용한다. 위 명시적 명령은 사전 확인·재실행용이다.
 - 최초 기동에만 `ADMIN_INITIAL_PASSWORD`를 비밀 관리 경로에서 주입한다. 관리자 생성 후 값을 비우고 컨테이너를 재생성한다.
 - 웹/API 호스트 포트는 기본 `127.0.0.1` 바인딩이다. Synology 역방향 프록시에서 두 포트를 HTTPS 호스트명으로 연결한다.
