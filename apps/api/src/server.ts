@@ -97,17 +97,19 @@ export async function buildApp(ctxIn?: Partial<AppContext>) {
     { parseAs: 'buffer', bodyLimit: EVIDENCE_MAX_BYTES },
     (_req, body, done) => done(null, body)
   );
-  app.setErrorHandler((error, _req, reply) => {
-    if (error.code === 'FST_ERR_CTP_BODY_TOO_LARGE') {
+  app.setErrorHandler((error: unknown, _req, reply) => {
+    const err = error as { code?: string; statusCode?: number };
+    if (err.code === 'FST_ERR_CTP_BODY_TOO_LARGE') {
       return reply.code(413).send({ error: '증빙 파일 크기가 제한을 초과했습니다.' });
     }
-    if (error.statusCode && error.statusCode < 500) {
-      return reply.code(error.statusCode).send({ error: '요청을 처리할 수 없습니다.' });
+    if (err.statusCode && err.statusCode < 500) {
+      return reply.code(err.statusCode).send({ error: '요청을 처리할 수 없습니다.' });
     }
     return reply.code(500).send({ error: '서버 내부 오류가 발생했습니다.' });
   });
   await app.register(cookie);
-  await app.register(cors, { origin: cfg.webOrigin, credentials: true });
+  // @fastify/cors v11 defaults allow-methods to GET,HEAD,POST only; PATCH/PUT/DELETE mutations need explicit listing.
+  await app.register(cors, { origin: cfg.webOrigin, credentials: true, methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] });
   await app.register(rateLimit, {
     global: true,
     max: 120,

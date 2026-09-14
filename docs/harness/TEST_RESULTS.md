@@ -2,6 +2,30 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-15 GitLab 보안 게이트 통과용 의존성 업그레이드(T-212 후속)
+
+배경: GitLab pre-receive 보안 검사가 main 푸시를 거부. Gitleaks(`data/app-store/db.json`의 개발 세션 토큰), OSV 42건, Trivy HIGH/CRITICAL 16건.
+
+조치: `data/app-store/db.json` 추적 해제(gitignore 추가, 작업 DB는 런타임 생성물), fastify 4→5.12.4 + @fastify/* v11, next 14→15.5.25, drizzle-orm 0.34→0.45.2, vitest 2→4.1.11, tsx 4.23.13, adm-zip 0.6.1(zip-slip 수정판), pnpm overrides로 js-yaml 4.3.2·postcss 8.5.28.
+
+업그레이드로 드러난 실제 변경:
+- @fastify/cors v11은 기본 allow-methods가 GET,HEAD,POST만 → PATCH/PUT/DELETE 명시 추가(없으면 브라우저 프리플라이트가 mutation을 전부 차단).
+- Fastify 5 setErrorHandler의 error 타입이 unknown → 좁혀서 사용.
+- vitest 4는 poolOptions 제거 → PG 테스트에 fileParallelism:false+maxWorkers:1(없으면 동일 embedded PG에 동시 migration으로 실패).
+- next-env.d.ts는 Next 15 자동 생성 triple-slash reference 포함 → eslint ignore에 추가, CRLF→LF.
+
+| 검증 | 결과 |
+| --- | --- |
+| `osv-scanner scan --lockfile` | PASS — 42건 → 0건 |
+| `trivy fs --scanners vuln --severity HIGH,CRITICAL pnpm-lock.yaml` | PASS — 0건 |
+| `gitleaks git --log-opts=320cc45..HEAD` | PASS — 신규 커밋 범위 0건 |
+| `pnpm lint` / `pnpm typecheck` | PASS |
+| `pnpm test` | PASS — 16 files, 214 tests |
+| `pnpm test:pg` | PASS — 4 files, 44 tests |
+| `pnpm build` / `NEXT_STANDALONE=1` web build | PASS |
+| `pnpm test:e2e` | PASS — Chromium 9/9 |
+| `pnpm compose:validate`, `git diff --check` | PASS |
+
 ## 2026-09-12 선택 ZIP·현장대리인계·예정공정표(T-216)
 
 범위: 6종/57항목/v3, v1/v2 읽기 보존, 명시 선택한 동일 revision의 HWPX ZIP. 개인 입력값의 공개 검색/감사 로그 편입 없음. OCR/AI/RAG·운영 DB·배포·main 병합·push 제외.

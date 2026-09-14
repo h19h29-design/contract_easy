@@ -13,7 +13,7 @@
     "@sen/config": "workspace:*",
     "@sen/db": "workspace:*",
     "@sen/shared": "workspace:*",
-    "adm-zip": "^0.6.0",
+    "adm-zip": "^0.6.1",
     "cfb": "^1.2.2",
     "cheerio": "^1.0.0",
     "pdf-parse": "^2.4.5",

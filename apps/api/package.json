@@ -10,15 +10,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@fastify/cookie": "^9.1.0",
-    "@fastify/cors": "^8.5.0",
-    "@fastify/rate-limit": "^9.1.0",
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/cors": "^11.3.0",
+    "@fastify/rate-limit": "^11.2.0",
     "@sen/config": "workspace:*",
     "@sen/db": "workspace:*",
     "@sen/retrieval": "workspace:*",
     "@sen/rules": "workspace:*",
     "@sen/shared": "workspace:*",
-    "fastify": "^4.28.0",
+    "fastify": "^5.12.4",
     "fflate": "0.8.3"
   },
   "devDependencies": {

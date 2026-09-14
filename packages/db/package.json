@@ -12,7 +12,7 @@
   "dependencies": {
     "@sen/rules": "workspace:*",
     "@sen/shared": "workspace:*",
-    "drizzle-orm": "^0.34.0",
+    "drizzle-orm": "^0.45.2",
     "pg": "^8.13.0",
     "@sen/config": "workspace:*"
   },

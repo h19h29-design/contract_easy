@@ -12,7 +12,9 @@ export default defineConfig({
     environment: 'node',
     testTimeout: 120000,
     hookTimeout: 180000,
-    poolOptions: { threads: { singleThread: true } },
+    // vitest 4: poolOptions removed — run PG test files sequentially to avoid migration races.
+    fileParallelism: false,
+    maxWorkers: 1,
     pool: 'threads'
   }
 });
