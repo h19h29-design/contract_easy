@@ -231,8 +231,10 @@
 - 증거: `docker-compose.yml`, `.env.example`, `infra/docker/web.Dockerfile`,
   `apps/api/src/server.ts`, `scripts/validate-compose.mjs`, `docs/harness/RUNBOOK.md`.
 
-## T-212 GitHub/GitLab 원격 동기화 — BLOCKED(2026-09-12 정정)
-- 현재 GitHub `1f51fc4`, GitLab `320cc45`. GitLab pre-receive 보안검사 거부로 불일치. 아래는 과거 동기화 성공 기록이며 현재 완료 근거가 아니다.
+## T-212 GitHub/GitLab 원격 동기화 — DONE(2026-09-15)
+- GitLab pre-receive 보안 검사 통과 조치: `data/app-store/db.json` 추적 해제(Gitleaks), fastify5/next15.5/drizzle0.45/vitest4/tsx/adm-zip0.6.1 업그레이드 + js-yaml·postcss override(OSV 42→0, Trivy 의존성 0), Dockerfile 3종 비루트 `node` 사용자(Trivy DS-0002).
+- 업그레이드 회귀 수정: @fastify/cors v11 기본 allow-methods 축소 → PATCH/PUT/DELETE 명시, Fastify5 error unknown 좁히기, vitest4 poolOptions 제거 → fileParallelism:false.
+- 검증: lint/typecheck/test 214/PG 44/E2E 9/9/build/standalone/compose:validate 전부 PASS. 양쪽 `main` = `2546114`. NAS bind mount는 `chown -R 1000:1000` 필요(RUNBOOK 기록).
 - GitHub `h19h29-design/contract_easy`와 공개 GitLab `h19h19/contract_easy`의 `main`을 동일 커밋으로 맞췄다.
 - GitLab 서버의 pull mirror 방향은 현재 계정에서 제공되지 않아, 현재 Mac의 `origin` push URL을 GitHub와 GitLab 두 곳으로 구성했다.
 - `git push origin`은 두 원격에 순차 push한다. GitHub 웹이나 다른 checkout에서 GitHub만 갱신한 변경은 자동 추종하지 않으므로, 해당 환경에도 다중 push 설정 또는 별도 최소권한 자동화가 필요하다.

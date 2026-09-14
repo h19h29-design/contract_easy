@@ -2,7 +2,7 @@
 
 - 최종 갱신: 2026-09-12
 - 최우선: **계약 문서 작성 기능(T-214~T-216)**. 공사표준계약서·착공계·준공계·대금청구서·현장대리인계·예정공정표 6종의 선택·공통정보 재사용·비공개 버전 저장/수정·미리보기·HWPX 및 선택 ZIP 다운로드를 `codex/contract-hwpx`에서 구현했다. 57항목/v3 저장, v1/v2 읽기 호환. 실제 한글 열기/편집/인쇄 배치는 사용자 지시로 미검증 유지, NAS에는 아직 배포하지 않았다. 근거: `CONTRACT_FORMS_AUDIT.md`, `TEST_RESULTS.md`.
-- 원격 최신 정정: GitHub `main`은 `1f51fc4`, GitLab은 보안 pre-receive 검사 거부로 `320cc45`에 머물러 있다. 아래 이전 동기화 완료 문구는 과거 검증 상태이며 현재 양쪽은 불일치한다.
+- 원격 최신 정정: 2026-09-15 GitHub·GitLab `main` 모두 `2546114`로 동기화 완료. GitLab 보안 게이트(Gitleaks/OSV/Trivy/Syft/Semgrep) 통과를 위해 의존성 메이저 업그레이드(fastify5·next15.5·drizzle0.45·vitest4)·dev db.json 추적 해제·컨테이너 비루트 사용자를 적용했다.
 - 이번 배포: OCR·답변 에이전트·의미 검색은 제외하고 현재 업무 기능을 Mac에서 시험 사용한다. NAS에 누락됐던 공개 검색 청크 11,259개와 출처 93건을 적재하고 안내 문서를 API 이미지에 포함했다. Mac 접속은 SSH PermitOpen 3300/8787 허용 대기.
 - 기존 배포 기반: **T-211 NAS 내부 배포·파일럿·백업/격리 복구 검증 완료**. 운영 API 필수 환경 전달, PostgreSQL 강제, 브라우저 API URL build-time 주입, 내부 서비스 포트 차단과 host loopback 기본 바인딩을 반영했다. 원격 동기화는 현재 GitLab 검사 거부로 불일치다.
 - 다음 액션: 도급내역서 작성(T-217)은 실제 사용하는 원본 양식/위치 확인 대기. 선택 ZIP과 추가 붙임 2종은 T-216에서 구현했다. 예정공정표는 직접 입력한 기간 표이며 원본 막대형 인쇄 배치 복제가 아니다. 실제 한글 검증은 사용자 보류, 운영 반영·SSH 변경은 별도 승인 후 진행한다. T-201 RAG/vector API 런타임 연결은 사용자 결정으로 보류한다.
@@ -21,7 +21,7 @@
 | API(공개/업무공간/관리자) | DONE — 엄격한 2인 승인, 프로젝트 상태·변경·일정·비공개 증빙 API 및 IDOR 방어 포함 |
 | 웹 UI(한국어, 마법사/검색/워크스페이스/관리자) | 기존 기능 + 6종 선택/공통정보 재사용/선택 ZIP 시험 작성 화면 구현; 최신 검증은 TEST_RESULTS 참조 |
 | HWPX 문서 작성 | PARTIAL — 6종 입력/저장/다운로드 구현, 도급내역서 원본 확인 대기·실제 한글 검증 사용자 보류·NAS 배포 전 |
-| Git 원격 | BLOCKED — GitHub `1f51fc4`, GitLab `320cc45`; GitLab 보안검사 거부. 현재 Mac `origin`은 양쪽 다중 push 구성 |
+| Git 원격 | DONE — GitHub·GitLab `main` 모두 `2546114`. 보안 게이트 통과 후 동기화 |
 | Docker/NAS | DONE(내부 파일럿) — 5서비스 healthy/restart0, API/web·migration·legacy evidence_path 0건·백업/격리복구 PASS; 공개 HTTPS는 hostname/DNS/cert 외부 입력 대기 |
 
 ## 외부 입력 대기
