@@ -99,7 +99,8 @@ export class PgStore {
     );
     const { rows } = await this.pool.query('SELECT name FROM _migrations');
     const done = new Set((rows as Array<{ name: string }>).map((r) => r.name));
-    for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()) {
+    // macOS tar의 AppleDouble('._*.sql') 같은 숨김 파일을 걸러낸다.
+    for (const file of fs.readdirSync(dir).filter((f) => /^\d+.*\.sql$/.test(f)).sort()) {
       if (done.has(file)) continue;
       const sqlText = fs.readFileSync(path.join(dir, file), 'utf8');
       const client = await this.pool.connect();
