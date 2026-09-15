@@ -177,6 +177,7 @@
 5. HWP 표/서식과 첨부 원문 링크 품질 개선. OCR은 사용자 결정으로 제외.
 
 ## T-213 현재 기능 Mac 시험 사용 배포 — IN_PROGRESS
+- 2026-09-15 NAS 재배포 완료: `git archive`로 `87f026d`(HWPX 6종 포함)를 `/volume2/contract_easy/app`에 배포, 5서비스 healthy·loopback 바인딩·`_migrations` 0001/0002 확인. 이전 tar의 AppleDouble(`._*.sql`) 마이그레이션 크래시는 pg-store 파일명 필터로 재발 방지. 증거: `TEST_RESULTS.md` 2026-09-15 NAS 재배포.
 - 검색 청크 11,259개(OCR 0개), 공개 출처 93건·고유 버전 307건(원본 기록 385건의 ID 중복 제거)을 NAS에 추가 적재했다. 기존 운영 프로젝트·사용자·규칙은 변경하지 않았다.
 - API 이미지에 `wiki/generated`를 포함하고, 로그인 후 검색 POST/로그아웃의 CSRF 누락을 웹 공통 요청 함수에서 수정했다.
 - `scripts/connect-nas.sh`, `공사계약-접속.command`로 Mac에서 SSH 연결을 재개할 수 있다. SSH의 기존 PermitOpen에 두 서비스 포트 추가 승인이 필요하다.

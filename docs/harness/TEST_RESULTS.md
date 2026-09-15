@@ -2,6 +2,29 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-15 NAS 재배포 — HWPX 계약서식 포함 신규 코드 반영(T-213 후속)
+
+원인: 이전 동기화가 `COPYFILE_DISABLE` 없는 macOS tar로 만들어져 `._*.sql`(AppleDouble)이 이미지 안 drizzle 디렉터리에 섞였고, 마이그레이션 러너가 `.sql` 필터에 걸려 바이너리 쓰레기를 PostgreSQL로 보내 `invalid message format`으로 api가 재시작 루프.
+
+조치: `packages/db/src/pg-store.ts`의 마이그레이션 파일 필터를 `/^\\d+.*\\.sql$/`로 제한(commit `87f026d`). 배포물은 `git archive HEAD`로 생성해 추적 파일만 포함 — AppleDouble·node_modules·로컬 data 없음.
+
+| 검증 | 결과 | 핵심 |
+| --- | --- | --- |
+| `git archive` tar.gz | PASS | `._*` 0건, drizzle 2개 실제 SQL만, md5 일치(`2d2316fa…`) |
+| NAS 스테이징 해제 | PASS | `._*` 0건, node_modules 0건 |
+| `docker compose up -d --build` | PASS | api/web 재빌드·재생성, api Healthy 후 web Started |
+| 컨테이너 상태 | PASS | web·api·postgres·qdrant·valkey 5개 전부 healthy |
+| `_migrations` 조회 | PASS | 0001(08-30)·0002(09-15 02:53 UTC) 적용, 추가 적용 없이 기동 |
+| `curl 127.0.0.1:8787/api/health` | PASS | 200 |
+| `curl 127.0.0.1:3300/` | PASS | 200, `<title>서울시교육청 공사계약 통합지원</title>` |
+| `/api/projects` 무인증 | PASS | 401 `로그인이 필요합니다.`(인증 강제 정상) |
+| `/api/sources` | PASS | 200 |
+| 포트 바인딩 | PASS | web `127.0.0.1:3300`, api `127.0.0.1:8787`; postgres·qdrant·valkey host publish 없음 |
+| 잔여물 정리 | PASS | 오염 app 디렉터리·stray `api-run` 컨테이너·홈 tar 파일 삭제, `app.bak-20260915` 롤백 보존 |
+| `git push origin main` | PASS | GitHub·GitLab 모두 `dfd0b3d..87f026d`, GitLab 보안 스캔(Gitleaks/Semgrep/OSV/Trivy/Syft) PASS |
+
+잔여: 실제 한글 열기/편집 검증은 사용자 보류, 도급내역서(T-217) 원본 확인 대기, 공개 HTTPS는 hostname/DNS/인증서 외부 입력 대기, Mac 접속용 SSH PermitOpen 3300/8787 승인 대기.
+
 ## 2026-09-15 GitLab 보안 게이트 통과용 의존성 업그레이드(T-212 후속)
 
 배경: GitLab pre-receive 보안 검사가 main 푸시를 거부. Gitleaks(`data/app-store/db.json`의 개발 세션 토큰), OSV 42건, Trivy HIGH/CRITICAL 16건.
