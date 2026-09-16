@@ -7,6 +7,7 @@ COPY packages ./packages
 COPY workers ./workers
 RUN pnpm install --frozen-lockfile=false
 RUN pnpm --filter @sen/shared build && pnpm --filter @sen/config build \
+ && pnpm --filter @sen/rules build && pnpm --filter @sen/retrieval build \
  && pnpm --filter @sen/db build && pnpm --filter "@sen/crawler" build \
  && pnpm --filter "@sen/ingest" build
 

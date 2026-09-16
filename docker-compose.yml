@@ -106,7 +106,7 @@ services:
       - CRAWL_ALLOW_ATTACHMENTS=false
     volumes:
       - ${SEN_CONTRACT_DATA_ROOT:?SEN_CONTRACT_DATA_ROOT required}:/data
-    command: ["node", "dist/cli.js", "incremental"]
+    command: ["node", "workers/crawler/dist/cli.js", "incremental"]
     restart: "no"
 
   ingest:
@@ -116,9 +116,10 @@ services:
     profiles: ["jobs"]
     environment:
       - SEN_CONTRACT_DATA_ROOT=/data
+      - DATABASE_URL=${DATABASE_URL:-}
     volumes:
       - ${SEN_CONTRACT_DATA_ROOT:?SEN_CONTRACT_DATA_ROOT required}:/data
-    command: ["node", "../ingest/dist/cli.js", "all"]
+    command: ["node", "workers/ingest/dist/cli.js", "all"]
     restart: "no"
 
 volumes:

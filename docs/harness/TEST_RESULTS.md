@@ -2,6 +2,24 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-17 규칙 검토 자료 + 증분 수집·병합 인제스트·PG 동기화(T-213 후속)
+
+범위: 규칙 승인 지원 자료 작성, 계약길잡이 증분 수집, 변경분의 인덱스·PG 반영. 규칙 승인 자체는 사람 작업으로 수행하지 않음.
+
+| 검증 | 결과 | 핵심 |
+| --- | --- | --- |
+| `pnpm rules:queue` 재생성 | PASS | bands=3 candidates=1,363 → `RULE_REVIEW_QUEUE.md` |
+| 밴드 초안 원문 대조 자료 | PASS | `RULE_REVIEW_PACKET.md` — 3건 모두 용역 표 출처, 1건은 우선구매 표 오인용·모순, 공사 표(종합4억/전문2억/전기 등1.6억+1인수의2천만) 미반영·스코프 공백 확인 |
+| `pnpm crawl:incremental` | PASS | fetched=12 changed=12 failures=0, robots·간격 준수 |
+| 증분 병합 인제스트 | PASS | `scripts/merge-incremental-ingest.mts`: 기준 11,259 - 구 청크 869 + 신규 885 = **11,275**; candidates 1,366·bands 3·staleRemoved=0 재생성 |
+| `ingest:all` 부분 raw 주의 | 문서화 | raw 없는 source의 청크·후보를 통째로 버림(885/66으로 축소) → NAS 전체 인덱스로 복원+병합 방식으로 해소, wiki/generated는 git 복원 |
+| NAS PG `ingest:sync-db` | PASS | sources 93·versions 397(신규 고유 버전 +1: 공지사항 목록 v67)·attachments 161·chunks 11,275·rules 1,369·staleDraftsRemoved=0 |
+| PG 상태 확인 | PASS | source_versions 308·rules 1,369·rule_versions 1,369·document_chunks 11,275 |
+| NAS 파일 반영 | PASS | `chunks.json`(11,275)·`sources-public.json`(93) 업로드·md5 일치·bak 보존, api 재시작 후 `/api/search?q=수의계약` 20건 히트 |
+| jobs 이미지 결함 수정 | PASS | crawler.Dockerfile에 `@sen/rules`·`@sen/retrieval` 빌드 누락 추가, compose jobs 명령 경로 `dist/cli.js`/`../ingest` → `workers/*/dist/cli.js` 정정, `pnpm compose:validate` PASS, NAS `sen-contract-guide-crawler` 재빌드·dist 존재 확인 |
+
+비고: 12개 "changed" 중 실제 신규 콘텐츠는 공지사항 목록 1건(나머지는 과거 변형 재수집으로 sha 중복). 규칙 후보는 FileStore·PG 모두 1,369건 draft, active 0 유지 — 승인은 `/admin/rules`에서 사람이 수행.
+
 ## 2026-09-15 NAS 재배포 — HWPX 계약서식 포함 신규 코드 반영(T-213 후속)
 
 원인: 이전 동기화가 `COPYFILE_DISABLE` 없는 macOS tar로 만들어져 `._*.sql`(AppleDouble)이 이미지 안 drizzle 디렉터리에 섞였고, 마이그레이션 러너가 `.sql` 필터에 걸려 바이너리 쓰레기를 PostgreSQL로 보내 `invalid message format`으로 api가 재시작 루프.
