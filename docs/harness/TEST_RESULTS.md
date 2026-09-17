@@ -2,6 +2,20 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-17 공사 계약방법 밴드 초안 9건 생성·PG 동기화
+
+범위: 사전체크리스트-공사 표(MI…332)를 수작업 구조화해 마법사용 밴드 초안 생성. 승인(reviewed/active)은 수행하지 않음 — 사람 작업.
+
+| 검증 | 결과 | 핵심 |
+| --- | --- | --- |
+| `tsx scripts/create-construction-band-drafts.mts` | PASS | 9건 upsert(전부 draft), `validateActivatableRule` 전원 통과 |
+| `tsx scripts/verify-construction-bands.mts` | PASS | 메모리 active 간주 시뮬레이션 13/13 — 경계값(2천만/2억/1.6억)·other→REVIEW_REQUIRED·충돌 0 확인 |
+| `vitest run engine.test.ts store.test.ts` | PASS | 60/60 |
+| NAS PG `sync-db` | PASS | rules 1,369→**1,378** draft, versionsChanged=0(멱등), chunks 미전송(기존 11,275 유지) |
+| PG 확인 쿼리 | PASS | 신규 9건 scope·조건·method 일치, 전체 status=draft |
+
+비고: 기존 용역 표 초안 3건은 scope `{}`라 공사 밴드와 공존 시 충돌 위험 — 활성화 금지 권고를 `RULE_REVIEW_PACKET.md` §7에 기록.
+
 ## 2026-09-17 규칙 검토 자료 + 증분 수집·병합 인제스트·PG 동기화(T-213 후속)
 
 범위: 규칙 승인 지원 자료 작성, 계약길잡이 증분 수집, 변경분의 인덱스·PG 반영. 규칙 승인 자체는 사람 작업으로 수행하지 않음.

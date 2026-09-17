@@ -2,6 +2,7 @@
 
 - 최종 갱신: 2026-09-17
 - 최우선: **계약 문서 작성 기능(T-214~T-216)**. 공사표준계약서·착공계·준공계·대금청구서·현장대리인계·예정공정표 6종의 선택·공통정보 재사용·비공개 버전 저장/수정·미리보기·HWPX 및 선택 ZIP 다운로드를 `codex/contract-hwpx`에서 구현해 main에 병합하고 NAS에 배포했다. 57항목/v3 저장, v1/v2 읽기 호환. 실제 한글 열기/편집/인쇄 배치는 사용자 지시로 미검증 유지. 근거: `CONTRACT_FORMS_AUDIT.md`, `TEST_RESULTS.md`.
+- 2026-09-17 공사 밴드 초안: 사전체크리스트-공사 표를 수작업 구조화해 계약방법 밴드 초안 9건 생성(전부 draft, `construction.method.band.*`). construction은 종합/전문 구분 부재로 전문 2억 기준 보수 적용. NAS PG rules 1,378 draft 동기화. 승인은 `/admin/rules` 사람 작업 — 기존 용역 표 초안 3건은 활성화 금지 권고(`RULE_REVIEW_PACKET.md` §7).
 - 2026-09-17 증분 수집·규칙 검토 자료: 계약길잡이 12 seed 재수집(신규 고유 콘텐츠는 공지사항 목록 1건), 병합 인제스트로 검색 인덱스 11,275청크로 갱신하고 NAS 파일·PG(rules 1,369 draft) 동기화. `RULE_REVIEW_PACKET.md`에 밴드 초안 원문 대조 정리 — 승인은 `/admin/rules` 사람 작업.
 - 원격 최신 정정: 2026-09-15 GitHub·GitLab `main` 모두 `87f026d`로 동기화 완료. GitLab 보안 게이트(Gitleaks/OSV/Trivy/Syft/Semgrep) 통과를 위해 의존성 메이저 업그레이드(fastify5·next15.5·drizzle0.45·vitest4)·dev db.json 추적 해제·컨테이너 비루트 사용자를 적용했다.
 - 이번 배포: OCR·답변 에이전트·의미 검색은 제외하고 현재 업무 기능을 Mac에서 시험 사용한다. NAS에 누락됐던 공개 검색 청크 11,259개와 출처 93건을 적재하고 안내 문서를 API 이미지에 포함했다. Mac 접속은 SSH PermitOpen 3300/8787 허용 대기.
