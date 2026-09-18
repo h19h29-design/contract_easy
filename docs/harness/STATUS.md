@@ -2,6 +2,7 @@
 
 - 최종 갱신: 2026-09-17
 - 2026-09-18 규칙 검토 UI: `/admin/rules`에 적용 범위·가격 조건·검토 경고 표시를 추가해 공사 밴드 초안 9건이 화면에서 검토 가능해짐. NAS web 재빌드·healthy 확인.
+- 2026-09-18 REVIEWER 계정: 2인 승인 경로 개통을 위해 reviewer(REVIEWER) 생성(`scripts/create-user.mjs`). 비밀번호는 `~/agent-hub/secrets/contract_easy-reviewer-password`. 이제 reviewer 검토 → admin 활성화 순서로 밴드 초안을 승인할 수 있다.
 - 최우선: **계약 문서 작성 기능(T-214~T-216)**. 공사표준계약서·착공계·준공계·대금청구서·현장대리인계·예정공정표 6종의 선택·공통정보 재사용·비공개 버전 저장/수정·미리보기·HWPX 및 선택 ZIP 다운로드를 `codex/contract-hwpx`에서 구현해 main에 병합하고 NAS에 배포했다. 57항목/v3 저장, v1/v2 읽기 호환. 실제 한글 열기/편집/인쇄 배치는 사용자 지시로 미검증 유지. 근거: `CONTRACT_FORMS_AUDIT.md`, `TEST_RESULTS.md`.
 - 2026-09-17 공사 밴드 초안: 사전체크리스트-공사 표를 수작업 구조화해 계약방법 밴드 초안 9건 생성(전부 draft, `construction.method.band.*`). construction은 종합/전문 구분 부재로 전문 2억 기준 보수 적용. NAS PG rules 1,378 draft 동기화. 승인은 `/admin/rules` 사람 작업 — 기존 용역 표 초안 3건은 활성화 금지 권고(`RULE_REVIEW_PACKET.md` §7).
 - 2026-09-17 증분 수집·규칙 검토 자료: 계약길잡이 12 seed 재수집(신규 고유 콘텐츠는 공지사항 목록 1건), 병합 인제스트로 검색 인덱스 11,275청크로 갱신하고 NAS 파일·PG(rules 1,369 draft) 동기화. `RULE_REVIEW_PACKET.md`에 밴드 초안 원문 대조 정리 — 승인은 `/admin/rules` 사람 작업.

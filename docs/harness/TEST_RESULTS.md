@@ -2,6 +2,20 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-18 REVIEWER 계정 생성 — 규칙 2인 승인 경로 개통
+
+배경: 규칙 승인은 REVIEWER 검토 → 다른 ADMIN 활성화(SAME_ACTOR 차단)인데 NAS에 admin(ADMIN) 1개뿐이라 승인 불가능 상태였다.
+
+조치: `scripts/create-user.mjs`(비밀번호는 파일로만 전달)로 reviewer/REVIEWER 생성. 비밀번호는 Mac `~/agent-hub/secrets/contract_easy-reviewer-password`(600) 보관 — admin과 동일 정책.
+
+| 검증 | 결과 | 핵심 |
+| --- | --- | --- |
+| create-user.mjs 실행 | PASS | reviewer role=REVIEWER 생성(멱등: 재실행 시 "이미 존재" 확인) |
+| `/api/auth/login` reviewer | PASS | 200 |
+| 시크릿 처리 | PASS | 비밀번호 파일 경로 전달·NAS 임시 파일 삭제·채팅/로그 미노출 |
+
+승인 경로: reviewer 로그인 → 각 draft 원문 대조·검토 완료 → admin 로그인 → 활성화. 기존 용역 표 초안 3건은 활성화 금지(RULE_REVIEW_PACKET.md §7).
+
 ## 2026-09-18 규칙 검토 UI 보강·NAS web 재배포
 
 배경: `/admin/rules`가 scope·conditions·output.warnings를 표시하지 않아 신규 공사 밴드 초안의 검토 포인트(종합/전문 보수 적용·예외 미반영 경고)를 검토자가 볼 수 없었다.
