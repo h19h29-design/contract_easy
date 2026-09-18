@@ -5,7 +5,9 @@ import { api, type SessionInfo } from '../../../lib/api';
 
 interface RuleRow {
   id: string; version: number; status: 'draft' | 'reviewed' | 'active' | 'superseded';
-  output: { method?: string; message?: string };
+  scope: Record<string, string>;
+  conditions: Array<{ field: string; operator: string; value: number | [number, number] | string }>;
+  output: { method?: string; message?: string; warnings?: string[]; reviewRequired?: boolean };
   source: { title: string; url: string; effectiveFrom?: string | null; checkedAt: string };
   candidate?: { quotedSentence: string; contextBefore: string; contextAfter: string };
 }
@@ -16,6 +18,31 @@ interface RevisionForm {
 }
 
 const STATUS_BADGE: Record<string, string> = { draft: '', reviewed: 'info', active: 'ok', superseded: 'danger' };
+
+const CATEGORY_LABEL: Record<string, string> = {
+  '*': '전 구분', construction: '건설공사(종합/전문)', electric: '전기공사',
+  fire: '소방공사', ict: '정보통신공사', other: '기타'
+};
+
+function formatScope(scope: Record<string, string>): string {
+  const entries = Object.entries(scope);
+  if (entries.length === 0) return '(전체 적용 — scope 없음)';
+  return entries.map(([k, v]) => `${k}=${v}${CATEGORY_LABEL[v] ? `(${CATEGORY_LABEL[v]})` : ''}`).join(', ');
+}
+
+const OPS: Record<string, string> = { lt: '<', lte: '≤', gt: '>', gte: '≥', eq: '=' };
+
+function formatCondition(c: { field: string; operator: string; value: number | [number, number] | string }): string {
+  if (c.field === 'estimated_price') {
+    if (c.operator === 'between' && Array.isArray(c.value)) {
+      const [lo, hi] = c.value;
+      return hi <= 0 ? `추정가격 ≥ ${lo.toLocaleString()}원` : `${lo.toLocaleString()} ≤ 추정가격 < ${hi.toLocaleString()}원`;
+    }
+    if (typeof c.value === 'number') return `추정가격 ${OPS[c.operator] ?? c.operator} ${c.value.toLocaleString()}원`;
+  }
+  return `${c.field} ${c.operator} ${JSON.stringify(c.value)}`;
+}
+
 const emptyRevision = (rule: RuleRow): RevisionForm => ({
   method: rule.output.method ?? '', lower: '', lowerInclusive: true, upper: '', upperInclusive: true,
   message: rule.output.message ?? '', title: rule.source.title, url: rule.source.url,
@@ -97,10 +124,13 @@ export default function AdminRulesPage() {
           <h3><span className={`badge ${STATUS_BADGE[rule.status]}`}>{rule.status}</span> {rule.id}@{rule.version}</h3>
           <table className="data"><tbody>
             <tr><th>후보값</th><td>{rule.output.method ?? '(없음)'}</td></tr>
+            <tr><th>적용 범위</th><td>{formatScope(rule.scope ?? {})}</td></tr>
+            <tr><th>가격 조건</th><td>{(rule.conditions ?? []).map((c, i) => <div key={i}>{formatCondition(c)}</div>)}</td></tr>
             {rule.candidate && <><tr><th>원문 문장</th><td>{rule.candidate.quotedSentence}</td></tr><tr><th>앞 문맥</th><td className="muted">…{rule.candidate.contextBefore || '(없음)'}</td></tr><tr><th>뒤 문맥</th><td className="muted">{rule.candidate.contextAfter || '(없음)'}…</td></tr></>}
             <tr><th>메시지</th><td>{rule.output.message}</td></tr><tr><th>원문 제목</th><td>{rule.source.title}</td></tr>
             <tr><th>원문 URL</th><td><a href={rule.source.url} target="_blank" rel="noreferrer noopener">{rule.source.url}</a></td></tr>
             <tr><th>게시일/시행일</th><td>{rule.source.effectiveFrom ?? '미확인'}</td></tr><tr><th>마지막 확인일</th><td>{rule.source.checkedAt?.slice(0, 10)}</td></tr>
+            {(rule.output.warnings ?? []).length > 0 && <tr><th>검토 경고</th><td>{rule.output.warnings!.map((w, i) => <div key={i} className="muted">⚠ {w}</div>)}</td></tr>}
           </tbody></table>
           {rule.status === 'draft' && <div className="form-section">
             <label className="field">검토 의견<textarea value={reviewComment[key] ?? ''} onChange={(e) => setReviewComment((v) => ({ ...v, [key]: e.target.value }))} /></label>

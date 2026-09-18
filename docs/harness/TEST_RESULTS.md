@@ -2,6 +2,20 @@
 
 형식: 날짜 / 명령 / 결과 / 핵심출력. 모든 수치는 실제 실행 산출물 기준.
 
+## 2026-09-18 규칙 검토 UI 보강·NAS web 재배포
+
+배경: `/admin/rules`가 scope·conditions·output.warnings를 표시하지 않아 신규 공사 밴드 초안의 검토 포인트(종합/전문 보수 적용·예외 미반영 경고)를 검토자가 볼 수 없었다.
+
+조치: `apps/web/app/admin/rules/page.tsx`에 적용 범위(카테고리 라벨 포함)·가격 조건(≤/≥/between 서식)·검토 경고 행 추가. API는 원래 전체 규칙을 반환하므로 프론트만 수정.
+
+| 검증 | 결과 | 핵심 |
+| --- | --- | --- |
+| web `tsc --noEmit` | PASS | 오류 0 |
+| `pnpm lint` | PASS | 오류 0 |
+| NAS 파일 반영 | PASS | page.tsx md5 일치(`16b40ed9…`) |
+| `compose up -d --build web` | PASS | 재빌드 후 web healthy, `/` 200, api healthy 유지 |
+| 배포 번들 확인 | PASS | .next 청크에 "적용 범위/가격 조건/검토 경고" 포함 |
+
 ## 2026-09-17 공사 계약방법 밴드 초안 9건 생성·PG 동기화
 
 범위: 사전체크리스트-공사 표(MI…332)를 수작업 구조화해 마법사용 밴드 초안 생성. 승인(reviewed/active)은 수행하지 않음 — 사람 작업.

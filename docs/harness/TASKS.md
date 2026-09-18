@@ -177,6 +177,7 @@
 5. HWP 표/서식과 첨부 원문 링크 품질 개선. OCR은 사용자 결정으로 제외.
 
 ## T-213 현재 기능 Mac 시험 사용 배포 — IN_PROGRESS
+- 2026-09-18 규칙 검토 UI 보강: `/admin/rules`에 scope·가격 조건·검토 경고 표시 추가(공사 밴드 초안의 검토 포인트가 화면에 보이도록). NAS web 재빌드·healthy. 이제 승인 절차는 사람이 `/admin/rules`에서 원문 대조 후 수행한다.
 - 2026-09-17 공사 계약방법 밴드 초안 9건 생성: `scripts/create-construction-band-drafts.mts`(수작업 구조화·멱등)로 공사 표 기준 draft 작성, `scripts/verify-construction-bands.mts` 시뮬레이션 13/13 통과. NAS PG rules 1,378 draft. construction은 전문 2억 보수 적용(종합/전문 구분 입력 없음), other는 2천만 초과 시 REVIEW_REQUIRED. 기존 용역 표 초안 3건은 활성화 금지 권고 — `RULE_REVIEW_PACKET.md` §7.
 - 2026-09-17 규칙 검토 자료 + 증분 수집 반영: `RULE_REVIEW_PACKET.md`에 밴드 초안 3건의 원문 대조(전부 용역 표 출처·1건 오인용 모순·공사 표 미반영)와 스키마 검토 필요사항을 정리. `crawl:incremental` 12/12 changed 수집 후 `merge-incremental-ingest.mts`로 전체 인덱스 보존 병합(11,275청크)하고 NAS 파일·PG를 sync-db로 동기화(rules 1,369 draft). jobs 이미지의 rules/retrieval 빌드 누락과 compose job 명령 경로를 수정해 crawler 이미지 재빌드.
 - 2026-09-15 NAS 재배포 완료: `git archive`로 `87f026d`(HWPX 6종 포함)를 `/volume2/contract_easy/app`에 배포, 5서비스 healthy·loopback 바인딩·`_migrations` 0001/0002 확인. 이전 tar의 AppleDouble(`._*.sql`) 마이그레이션 크래시는 pg-store 파일명 필터로 재발 방지. 증거: `TEST_RESULTS.md` 2026-09-15 NAS 재배포.
